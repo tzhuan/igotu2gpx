@@ -1,0 +1,27 @@
+# Backup files
+*~
+.*.swp
+
+# Build related
+.build
+Makefile
+Makefile.*
+vc[789]0.[pi]db
+object_script.*
+
+/bin
+/core
+/core.*
+/vgcore.*
+
+/*.ncb
+/*.suo
+
+/tags
+/tags-qt4
+/logs/
+
+localconfig.pri
+localconfig.*.pri
+
+.output-background-make

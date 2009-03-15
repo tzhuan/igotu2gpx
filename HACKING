@@ -1,0 +1,4 @@
+The igotu 120 is in NMEA mode normally and can be switched to a binary protocol.
+
+Use portmon (http://technet.microsoft.com/en-us/sysinternals/bb896644.aspx) to
+capture a serial trace of @tripPC and feed it to "./serialdecoder.py logfilename".
