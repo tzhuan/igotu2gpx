@@ -16,67 +16,32 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU_SRC_IGOTU_COMMANDS_H_
-#define _IGOTU_SRC_IGOTU_COMMANDS_H_
+#ifndef _IGOTU_SRC_IGOTU_SERIALCONNECTION_H_
+#define _IGOTU_SRC_IGOTU_SERIALCONNECTION_H_
 
-#include "igotucommand.h"
+#include "dataconnection.h"
 
 namespace igotu
 {
 
-class IGOTU_EXPORT NmeaSwitchCommand : public IgotuCommand
+class SerialConnectionPrivate;
+
+class IGOTU_EXPORT SerialConnection : public DataConnection
 {
+    Q_DECLARE_TR_FUNCTIONS(SerialConnection)
 public:
-    NmeaSwitchCommand(DataConnection *connection, bool enable);
-};
+    SerialConnection(unsigned device);
+    ~SerialConnection();
 
-class IGOTU_EXPORT IdentificationCommand : public IgotuCommand
-{
-public:
-    IdentificationCommand(DataConnection *connection);
-
-    virtual QByteArray sendAndReceive(bool handleErrors = false);
-
-    unsigned serialNumber() const;
-    // 0x03: GT-120
-    unsigned model() const;
+    virtual void send(const QByteArray &query);
+    virtual QByteArray receive(unsigned expected);
 
 private:
-    unsigned id;
-    unsigned type;
+    DECLARE_PRIVATE(SerialConnection)
+protected:
+    DECLARE_PRIVATE_DATA(SerialConnection)
 };
 
-class IGOTU_EXPORT ReadCommand : public IgotuCommand
-{
-public:
-    ReadCommand(DataConnection *connection, unsigned pos, unsigned size);
-
-    virtual QByteArray sendAndReceive(bool handleErrors = false);
-
-    QByteArray data() const;
-
-private:
-    QByteArray result;
-};
-
-class IGOTU_EXPORT WriteCommand : public IgotuCommand
-{
-public:
-    WriteCommand(DataConnection *connection, unsigned pos,
-            const QByteArray &data);
-
-    virtual QByteArray sendAndReceive(bool handleErrors = false);
-
-    void setData(const QByteArray &data);
-    QByteArray data() const;
-
-    void setPosition(unsigned value);
-    unsigned position() const;
-
-private:
-    unsigned pos;
-    QByteArray contents;
-};
 } // namespace igotu
 
 #endif

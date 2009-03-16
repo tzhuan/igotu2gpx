@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU_SRC_LIB_PLUMBING_GLOBAL_H_
-#define _IGOTU_SRC_LIB_PLUMBING_GLOBAL_H_
+#ifndef _IGOTU_SRC_IGOTU_GLOBAL_H_
+#define _IGOTU_SRC_IGOTU_GLOBAL_H_
 
 #include <QtGlobal>
 

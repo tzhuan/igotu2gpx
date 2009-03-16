@@ -1,10 +1,13 @@
-CLEBS_REQUIRED *= boost-po libusb
+CLEBS_REQUIRED *= boost-po 
+unix:CLEBS_REQUIRED *= libusb
 unix:CLEBS_SUGGESTED *= chrpath
 
 include(clebs.pri)
 
 OBJECTS_DIR =
 TEMPLATE = subdirs
+
+clebsDirs(contrib/*)
 
 clebsDirs(src/igotu)
 clebsDirs(src/dumper, src/igotu)

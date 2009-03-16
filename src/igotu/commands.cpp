@@ -45,7 +45,8 @@ IdentificationCommand::IdentificationCommand(DataConnection *connection) :
 QByteArray IdentificationCommand::sendAndReceive(bool handleErrors)
 {
     const QByteArray result = IgotuCommand::sendAndReceive(handleErrors);
-    id = qFromLittleEndian<quint32>(reinterpret_cast<const uchar*>(result.data()));
+    id = qFromLittleEndian<quint32>(reinterpret_cast<const uchar*>
+            (result.data()));
     // TODO: or result[5], they are both 3 for a GT-120
     type = result[4];
     return result;
@@ -63,7 +64,8 @@ unsigned IdentificationCommand::model() const
 
 // ReadCommand =================================================================
 
-ReadCommand::ReadCommand(DataConnection *connection, unsigned pos, unsigned size) :
+ReadCommand::ReadCommand(DataConnection *connection, unsigned pos,
+        unsigned size) :
     IgotuCommand(connection)
 {
     QByteArray command(15, 0);
@@ -89,7 +91,8 @@ QByteArray ReadCommand::data() const
 
 // WriteCommand ================================================================
 
-WriteCommand::WriteCommand(DataConnection *connection, unsigned pos, const QByteArray &data) :
+WriteCommand::WriteCommand(DataConnection *connection, unsigned pos,
+        const QByteArray &data) :
     IgotuCommand(connection),
     pos(pos),
     contents(data)
@@ -109,7 +112,8 @@ QByteArray WriteCommand::sendAndReceive(bool handleErrors)
 {
     IgotuCommand::sendAndReceive(handleErrors);
     for (unsigned i = 0; i < (unsigned(contents.size()) + 6) / 7; ++i)
-        IgotuCommand(connection(), contents.mid(i * 7, 7)).sendAndReceive(handleErrors);
+        IgotuCommand(connection(), contents.mid(i * 7, 7))
+            .sendAndReceive(handleErrors);
     return QByteArray();
 }
 

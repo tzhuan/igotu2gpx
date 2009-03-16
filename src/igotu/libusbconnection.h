@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU_LIBUSBCONNECTION_H_
-#define _IGOTU_LIBUSBCONNECTION_H_
+#ifndef _IGOTU_SRC_IGOTU_LIBUSBCONNECTION_H_
+#define _IGOTU_SRC_IGOTU_LIBUSBCONNECTION_H_
 
 #include "dataconnection.h"
 
@@ -30,7 +30,7 @@ class IGOTU_EXPORT LibusbConnection : public DataConnection
 {
     Q_DECLARE_TR_FUNCTIONS(LibusbConnection)
 public:
-    LibusbConnection(int vendorId = 0x0df7, int productId = 0x0900);
+    LibusbConnection(unsigned vendorId = 0x0df7, unsigned productId = 0x0900);
     ~LibusbConnection();
 
     virtual void send(const QByteArray &query);

@@ -1,5 +1,6 @@
 BASEDIR = ../..
-CLEBS *= boost libusb pch builddll
+CLEBS *= boost qextserialport pch builddll
+unix:CLEBS *= libusb
 TARGET = igotu
 include($$BASEDIR/clebs.pri)
 
@@ -9,7 +10,9 @@ SOURCES *= \
     commands.cpp \
     dataconnection.cpp \
     igotucommand.cpp \
-    libusbconnection.cpp \
+    serialconnection.cpp \
+
+unix:SOURCES *= libusbconnection.cpp
 
 HEADERS *= \
     commands.h \
@@ -17,8 +20,10 @@ HEADERS *= \
     exception.h \
     global.h \
     igotucommand.h \
-    libusbconnection.h \
     pch.h \
+    serialconnection.h \
+
+unix:HEADERS *= libusbconnection.h
 
 unix:ctags.commands  = echo !_TAG_FILE_FORMAT 2 dummy > $$BASEDIR/tags;
 unix:ctags.commands += echo !_TAG_FILE_SORTED 1 dummy >> $$BASEDIR/tags;

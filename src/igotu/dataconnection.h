@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU_CONNECTION_H_
-#define _IGOTU_CONNECTION_H_
+#ifndef _IGOTU_SRC_IGOTU_DATACONNECTION_H_
+#define _IGOTU_SRC_IGOTU_DATACONNECTION_H_
 
 #include "global.h"
 

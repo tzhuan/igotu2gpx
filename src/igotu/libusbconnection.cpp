@@ -36,7 +36,8 @@ namespace igotu
 class LibusbConnectionPrivate
 {
 public:
-    static struct usb_device *find_device(int vendor, int product);
+    static QList<struct usb_device*> find_devices(unsigned vendor,
+            unsigned product);
 
     QByteArray receiveBuffer;
     boost::shared_ptr<struct usb_dev_handle> handle;
@@ -44,22 +45,25 @@ public:
 
 // LibusbConnectionPrivate =====================================================
 
-struct usb_device *LibusbConnectionPrivate::find_device(int vendor, int product)
+QList<struct usb_device*> LibusbConnectionPrivate::find_devices(unsigned vendor,
+        unsigned product)
 {
+    QList<struct usb_device*> result;
+
     for (struct usb_bus *bus = usb_get_busses(); bus; bus = bus->next) {
         for (struct usb_device *dev = bus->devices; dev; dev = dev->next) {
             if (dev->descriptor.idVendor == vendor
-                && dev->descriptor.idProduct == product)
-                return dev;
+                && (product == 0 || dev->descriptor.idProduct == product))
+                result.append(dev);
         }
     }
 
-    return NULL;
+    return result;
 }
 
 // LibusbConnection ============================================================
 
-LibusbConnection::LibusbConnection(int vendorId, int productId) :
+LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId) :
     dataPtr(new LibusbConnectionPrivate)
 {
     D(LibusbConnection);
@@ -69,11 +73,20 @@ LibusbConnection::LibusbConnection(int vendorId, int productId) :
     usb_find_busses();
     usb_find_devices();
 
-    struct usb_device *dev = d->find_device(vendorId, productId);
-    if (!dev)
+    QList<struct usb_device*> devs = d->find_devices(vendorId, productId);
+    // Just in case, try without a product id
+    if (devs.isEmpty())
+        devs = d->find_devices(vendorId, 0);
+    if (devs.isEmpty())
         throw IgotuError(tr("Unable to find device %1")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
-    d->handle.reset(usb_open(dev), usb_close);
+
+    Q_FOREACH (struct usb_device *dev, devs) {
+        d->handle.reset(usb_open(dev), usb_close);
+        if (d->handle)
+            break;
+    }
+
     if (!d->handle)
         throw IgotuError(tr("Unable to open device %1")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
@@ -95,7 +108,7 @@ void LibusbConnection::send(const QByteArray &query)
     D(LibusbConnection);
 
     d->receiveBuffer.clear();
-//    qDebug() << "Sending" << query.toHex();
+
     if (usb_control_msg(d->handle.get(), 0x21, 0x09, 0x0200, 0x0000,
                 const_cast<char*>(query.data()), query.size(), 1000) < 0)
         throw IgotuError(tr("Unable to send data to the device"));
@@ -118,8 +131,8 @@ QByteArray LibusbConnection::receive(unsigned expected)
         if (toRead == 0)
             return result;
         QByteArray data(0x10, 0);
-        int received = usb_interrupt_read(d->handle.get(), 0x00000081, data.data(),
-                0x10, 20);
+        int received = usb_interrupt_read(d->handle.get(), 0x00000081,
+                data.data(), 0x10, 20);
         if (received < 0)
             throw IgotuError(tr("Unable to read data from the device"));
         d->receiveBuffer += data.left(received);

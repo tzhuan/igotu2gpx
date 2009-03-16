@@ -57,7 +57,8 @@ int main()
 
         for (unsigned i = 0;; ++i) {
             printf("Dumping datablock %u...\n", i + 1);
-            QByteArray data = ReadCommand(connection.get(), i * 0x1000, 0x1000).sendAndReceive();
+            QByteArray data = ReadCommand(connection.get(), i * 0x1000, 0x1000)
+                .sendAndReceive();
             if (data == QByteArray(0x1000, 0xff))
                 break;
             file.write(data);
