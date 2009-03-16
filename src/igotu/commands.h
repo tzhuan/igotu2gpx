@@ -38,9 +38,12 @@ public:
     virtual QByteArray sendAndReceive(bool handleErrors = false);
 
     unsigned serialNumber() const;
+    // 0x03: GT-120
+    unsigned model() const;
 
 private:
     unsigned id;
+    unsigned type;
 };
 
 class IGOTU_EXPORT ReadCommand : public IgotuCommand

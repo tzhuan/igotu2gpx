@@ -46,12 +46,19 @@ QByteArray IdentificationCommand::sendAndReceive(bool handleErrors)
 {
     const QByteArray result = IgotuCommand::sendAndReceive(handleErrors);
     id = qFromLittleEndian<quint32>(reinterpret_cast<const uchar*>(result.data()));
+    // TODO: or result[5], they are both 3 for a GT-120
+    type = result[4];
     return result;
 }
 
 unsigned IdentificationCommand::serialNumber() const
 {
     return id;
+}
+
+unsigned IdentificationCommand::model() const
+{
+    return type;
 }
 
 // ReadCommand =================================================================

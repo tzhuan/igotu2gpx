@@ -45,7 +45,7 @@ int IgotuCommandPrivate::receiveResponseSize()
     if (data[0] != '\x93')
         throw IgotuError(IgotuCommand::tr("Invalid reply packet: %1")
                 .arg(QString::fromAscii(data.toHex())));
-    return qFromBigEndian<qint16>(reinterpret_cast<uchar*>(data.data() + 1));
+    return qFromBigEndian<qint16>(reinterpret_cast<const uchar*>(data.data() + 1));
 }
 
 QByteArray IgotuCommandPrivate::receiveResponseRemainder(unsigned size)

@@ -8,6 +8,7 @@ TEMPLATE = subdirs
 
 clebsDirs(src/igotu)
 clebsDirs(src/dumper, src/igotu)
+clebsDirs(src/info, src/igotu)
 
 license.files = LICENSE
 license.path = $$DOCDIR
