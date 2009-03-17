@@ -3,7 +3,7 @@ CLEBS *= builddll
 
 include($$BASEDIR/clebs.pri)
 
-TARGET = qextserialport
+TARGET = igotuserialport
 
 HEADERS *= \
 	qextserialbase.h \

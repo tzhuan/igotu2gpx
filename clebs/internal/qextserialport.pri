@@ -3,7 +3,7 @@ clebsCheck(qextserialport) {
 }
 
 clebsDependency(qextserialport) {
-    LIBS *= -lqextserialport -L$$DESTDIR
+    LIBS *= -ligotuserialport -L$$DESTDIR
 
     CLEBS *= chrpath
 

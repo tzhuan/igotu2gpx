@@ -149,7 +149,7 @@ QByteArray IgotuCommand::sendAndReceive(bool handleErrors)
         unsigned size;
         try {
             size = d->sendCommand(d->command);
-        } catch (const std::exception &e) {
+        } catch (const std::exception&) {
             if (handleErrors)
                 continue;
             throw;

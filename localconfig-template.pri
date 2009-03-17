@@ -15,3 +15,11 @@
 
 # Uncomment to disable certain modules although all dependencies are available
 #CLEBS_DISABLED *= examples unittests
+
+#win32:BOOSTROOT = $$BASEDIR/../api/boost
+#win32:BOOSTINCLUDEDIR = $${BOOSTROOT}/include/boost-1_33_1
+#win32:BOOSTLIBDIR = $${BOOSTROOT}/lib
+#win32:BOOSTLIBDIR_RELEASE = $${BOOSTLIBDIR}
+#win32:BOOSTLIBDIR_DEBUG = $${BOOSTLIBDIR}
+#win32:BOOSTPOLIB_RELEASE = boost_program_options-vc71-mt-1_33_1
+#win32:BOOSTPOLIB_DEBUG = boost_program_options-vc71-mt-gd-1_33_1

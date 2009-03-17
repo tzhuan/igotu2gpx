@@ -268,7 +268,7 @@ associated with the class is not currently open.
 void Win_QextSerialPort::flush() {
     LOCK_MUTEX();
     if (isOpen()) {
-        FlushFileBuffers(Win_Handle);
+        PurgeComm(Win_Handle, PURGE_RXCLEAR | PURGE_TXCLEAR);
     }
     UNLOCK_MUTEX();
 }
