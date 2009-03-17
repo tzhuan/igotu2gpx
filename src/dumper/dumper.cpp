@@ -19,21 +19,85 @@
 #include "igotu/commands.h"
 #include "igotu/exception.h"
 #include "igotu/libusbconnection.h"
+#include "igotu/optionutils.h"
 
+#include <boost/program_options.hpp>
 #include <boost/scoped_ptr.hpp>
 
 #include <QFile>
+#include <QFileInfo>
+
+#include <iostream>
 
 using namespace igotu;
 
-int main()
+namespace po = boost::program_options;
+
+int main(int argc, char *argv[])
 {
+    QCoreApplication app(argc, argv);
+
+    QString file, usb, serial;
+
+    po::options_description options("Options");
+    options.add_options()
+        ("help", "this help message")
+        ("file,f", po::value<QString>(&file),
+         "output file")
+        ("usb-device,u", po::value<QString>(&usb),
+         "connect via usb to the device specified by [vendor]:[product]")
+        ("serial-device,s", po::value<QString>(&serial),
+         "connect via RS232 to the serial port with the number [port]")
+    ;
+    po::positional_options_description positionalOptions;
+    positionalOptions.add("file", 1);
+
+    po::variables_map variables;
+
+    try {
+        po::store(po::command_line_parser(arguments())
+                .options(options)
+                .positional(positionalOptions).run(), variables);
+        po::notify(variables);
+
+        if (variables.count("help")) {
+            std::cout << "Usage:\n  "
+                << qPrintable(QFileInfo(app.applicationFilePath()).fileName())
+                << " [OPTIONS...] [file]\n\n";
+            std::cout << options << "\n";
+            return 1;
+        }
+    } catch (const std::exception &e) {
+        printf("Unable to parse command line: %s\n", e.what());
+        return 2;
+    }
+
     boost::scoped_ptr<DataConnection> connection;
     try {
-        connection.reset(new LibusbConnection);
+        if (variables.count("usb-device") ||
+#ifdef Q_OS_LINUX
+            variables.count("serial-device") == 0 ||
+#endif
+            false) {
+            QStringList parts = usb.split(QLatin1Char(':'));
+            unsigned vendor = 0, product = 0;
+            if (parts.size() > 0)
+                vendor = parts[0].toUInt(NULL, 16);
+            if (parts.size() > 1)
+                product = parts[1].toUInt(NULL, 16);
+            connection.reset(new LibusbConnection(vendor, product));
+        } else if (variables.count("serial-device") ||
+#ifdef Q_OS_WIN32
+            variables.count("usb-device") == 0 ||
+#endif
+            false) {
+            // TODO: serial port
+        } else {
+            // TODO: throw exception
+        }
     } catch (const std::exception &e) {
         printf("Exception: %s\n", e.what());
-        return 1;
+        return 3;
     }
 
     // Just some dummy NMEA read, seems to help?
@@ -50,6 +114,7 @@ int main()
         IdentificationCommand id(connection.get());
         id.sendAndReceive();
         printf("S/N: %u\n", id.serialNumber());
+        printf("Model: %u\n", id.model());
 
         QFile file(QLatin1String("igotu.dump"));
         if (!file.open(QIODevice::WriteOnly))

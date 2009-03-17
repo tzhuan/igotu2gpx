@@ -1,5 +1,5 @@
 BASEDIR = ../..
-CLEBS *= libigotu
+CLEBS *= libigotu boost-po
 TARGET = dumper
 include($$BASEDIR/clebs.pri)
 

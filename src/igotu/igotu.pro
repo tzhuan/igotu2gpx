@@ -10,6 +10,7 @@ SOURCES *= \
     commands.cpp \
     dataconnection.cpp \
     igotucommand.cpp \
+    optionutils.cpp \
     serialconnection.cpp \
 
 unix:SOURCES *= libusbconnection.cpp
@@ -20,6 +21,7 @@ HEADERS *= \
     exception.h \
     global.h \
     igotucommand.h \
+    optionutils.h \
     pch.h \
     serialconnection.h \
 

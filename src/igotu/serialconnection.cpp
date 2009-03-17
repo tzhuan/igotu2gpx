@@ -40,15 +40,13 @@ SerialConnection::SerialConnection(unsigned device) :
 
 #if defined(Q_OS_WIN32)
     const QString portTemplate(QLatin1String("COM%1"));
-    const unsigned portOffset = 1;
 #elif defined(Q_OS_LINUX)
     const QString portTemplate(QLatin1String("/dev/ttyS%1"));
-    const unsigned portOffset = 0;
 #else
     #error "Serial port names not known for this OS"
 #endif
 
-    d->port.reset(new QextSerialPort(portTemplate.arg(portOffset + device),
+    d->port.reset(new QextSerialPort(portTemplate.arg(device),
                 QextSerialPort::Polling));
     d->port->open(QIODevice::ReadWrite);
     d->port->setBaudRate(BAUD9600);

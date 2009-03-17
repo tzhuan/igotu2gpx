@@ -20,6 +20,8 @@
 #include "exception.h"
 #include "igotucommand.h"
 
+#include <QtEndian>
+
 #include <numeric>
 
 namespace igotu

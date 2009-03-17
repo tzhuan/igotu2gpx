@@ -18,6 +18,8 @@
 
 #include "commands.h"
 
+#include <QtEndian>
+
 namespace igotu
 {
 

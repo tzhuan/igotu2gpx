@@ -1,0 +1,1 @@
+@"%MSVCDir%\bin\link.exe" %*

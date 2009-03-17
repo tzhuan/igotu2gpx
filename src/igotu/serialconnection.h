@@ -21,6 +21,10 @@
 
 #include "dataconnection.h"
 
+#include <boost/scoped_ptr.hpp>
+
+#include <QCoreApplication>
+
 namespace igotu
 {
 

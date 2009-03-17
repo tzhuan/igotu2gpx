@@ -19,16 +19,11 @@
 #include "exception.h"
 #include "libusbconnection.h"
 
-#include <sys/time.h>
+#include <boost/shared_ptr.hpp>
 
-#include <signal.h>
 #include <usb.h>
 
 #include <QtCore>
-
-#include <cassert>
-#include <cstdio>
-#include <numeric>
 
 namespace igotu
 {
@@ -72,6 +67,11 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId) :
     usb_set_debug(255);
     usb_find_busses();
     usb_find_devices();
+
+    if (vendorId == 0)
+        vendorId = 0x0df7;
+    if (productId == 0)
+        productId = 0x0900;
 
     QList<struct usb_device*> devs = d->find_devices(vendorId, productId);
     // Just in case, try without a product id

@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2009  Michael Hofmann <mh21@piware.de>                       *
+ * Copyright (C) 2008  Michael Hofmann <mh21@piware.de>                       *
  *                                                                            *
  * This program is free software; you can redistribute it and/or modify       *
  * it under the terms of the GNU General Public License as published by       *
@@ -16,37 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU_SRC_IGOTU_LIBUSBCONNECTION_H_
-#define _IGOTU_SRC_IGOTU_LIBUSBCONNECTION_H_
-
-#include "dataconnection.h"
-
-#include <boost/scoped_ptr.hpp>
-
-#include <QCoreApplication>
+#include "optionutils.h"
 
 namespace igotu
 {
 
-class LibusbConnectionPrivate;
-
-class IGOTU_EXPORT LibusbConnection : public DataConnection
+std::vector<std::string> arguments()
 {
-    Q_DECLARE_TR_FUNCTIONS(LibusbConnection)
-public:
-    LibusbConnection(unsigned vendorId = 0x0df7, unsigned productId = 0x0900);
-    ~LibusbConnection();
-
-    virtual void send(const QByteArray &query);
-    virtual QByteArray receive(unsigned expected);
-
-private:
-    DECLARE_PRIVATE(LibusbConnection)
-protected:
-    DECLARE_PRIVATE_DATA(LibusbConnection)
-};
+    std::vector<std::string> result;
+    Q_FOREACH (const QString &argument, QCoreApplication::arguments().mid(1))
+        result.push_back(std::string(argument.toLocal8Bit().constData()));
+    return result;
+}
 
 } // namespace igotu
-
-#endif
 
