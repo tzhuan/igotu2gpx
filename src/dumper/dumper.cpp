@@ -41,19 +41,19 @@ int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
 
-    QString file, usb, serial;
+    QString filePath, usb, serial;
 
     po::options_description options("Options");
     options.add_options()
         ("help", "this help message")
-        ("file,f", po::value<QString>(&file),
+        ("file,f", po::value<QString>(&filePath),
          "output file")
 #ifdef Q_OS_LINUX
         ("usb-device,u", po::value<QString>(&usb),
-         "connect via usb to the device specified by [vendor]:[product]")
+         "connect via usb to the device specified by vendor:product")
 #endif
         ("serial-device,s", po::value<QString>(&serial),
-         "connect via RS232 to the serial port with the number [port]")
+         "connect via RS232 to the serial port with the specfied number")
     ;
     po::positional_options_description positionalOptions;
     positionalOptions.add("file", 1);
@@ -66,10 +66,10 @@ int main(int argc, char *argv[])
                 .positional(positionalOptions).run(), variables);
         po::notify(variables);
 
-        if (variables.count("help")) {
+        if (variables.count("help") || filePath.isEmpty()) {
             std::cout << "Usage:\n  "
                 << qPrintable(QFileInfo(app.applicationFilePath()).fileName())
-                << " [OPTIONS...] [file]\n\n";
+                << " [OPTIONS...] file\n\n";
             std::cout << options << "\n";
             return 1;
         }
@@ -85,9 +85,9 @@ int main(int argc, char *argv[])
             variables.count("usb-device") == 0 ||
 #endif
             false) {
-            connection.reset(new SerialConnection(serial.isEmpty() ? 
+            connection.reset(new SerialConnection(serial.isEmpty() ?
 #ifdef Q_OS_WIN32
-                                    1 
+                                    1
 #else
                                     0
 #endif
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
         printf("S/N: %u\n", id.serialNumber());
         printf("Model: %u\n", id.model());
 
-        QFile file(QLatin1String("igotu.dump"));
+        QFile file(filePath);
         if (!file.open(QIODevice::WriteOnly))
             throw IgotuError(QCoreApplication::tr("Unable to write to file"));
 

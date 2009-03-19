@@ -11,8 +11,10 @@ SOURCES *= \
     commands.cpp \
     dataconnection.cpp \
     igotucommand.cpp \
+    igotupoints.cpp \
     optionutils.cpp \
     serialconnection.cpp \
+    xmlutils.cpp \
 
 unix:SOURCES *= libusbconnection.cpp
 
@@ -22,16 +24,18 @@ HEADERS *= \
     exception.h \
     global.h \
     igotucommand.h \
+    igotupoints.h \
     optionutils.h \
     pch.h \
     serialconnection.h \
+    xmlutils.h \
 
 unix:HEADERS *= libusbconnection.h
 
 unix:ctags.commands  = echo !_TAG_FILE_FORMAT 2 dummy > $$BASEDIR/tags;
 unix:ctags.commands += echo !_TAG_FILE_SORTED 1 dummy >> $$BASEDIR/tags;
 unix:ctags.commands += sed -i \'s/ /\\t/g\' $$BASEDIR/tags;
-unix:ctags.commands += cd $$BASEDIR && ctags -R --c++-kinds=+p-n --fields=+iaS --extra=+fq --exclude=.build -f - src | sed \'s/rba:://g;s/\tnamespace:rba//g\' | LC_ALL=C sort >> tags; || cd .
+unix:ctags.commands += cd $$BASEDIR && ctags -R --c++-kinds=+p-n --fields=+iaS --extra=+fq --exclude=.build -f - src | sed \'s/rba:://g;s/\tnamespace:rba//g\' | LC_ALL=C sort >> tags || cd .
 win32:ctags.commands = cd $$BASEDIR && ctags -R --c++-kinds=+p-n --fields=+iaS --extra=+fq --exclude=.build src || cd .
 ctags.target = CTAGS
 QMAKE_EXTRA_TARGETS *= ctags
@@ -60,4 +64,3 @@ win32 {
     qt4.path = $$BINDIR
     INSTALLS *= qt4
 }
-																	

@@ -1,5 +1,5 @@
 BASEDIR = ../..
-CLEBS *= libigotu
+CLEBS *= libigotu boost-po
 TARGET = info
 include($$BASEDIR/clebs.pri)
 

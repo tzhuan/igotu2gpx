@@ -17,70 +17,92 @@
  ******************************************************************************/
 
 #include "igotu/exception.h"
+#include "igotu/igotupoints.h"
+#include "igotu/optionutils.h"
 
-#include <boost/scoped_ptr.hpp>
+#include <boost/program_options.hpp>
 
 #include <QCoreApplication>
 #include <QFile>
+#include <QFileInfo>
 
 #include <QtEndian>
 
+#include <iostream>
+
 using namespace igotu;
 
-int main()
+namespace po = boost::program_options;
+
+int main(int argc, char *argv[])
 {
+    QCoreApplication app(argc, argv);
+
+    QString filePath, usb, serial;
+
+    po::options_description options("Options");
+    options.add_options()
+        ("help", "this help message")
+        ("file,f", po::value<QString>(&filePath),
+         "input file")
+        ("gpx,g",
+         "output in gpx format")
+    ;
+    po::positional_options_description positionalOptions;
+    positionalOptions.add("file", 1);
+
+    po::variables_map variables;
+
     try {
-        QFile file(QLatin1String("igotu.dump"));
+        po::store(po::command_line_parser(arguments())
+                .options(options)
+                .positional(positionalOptions).run(), variables);
+        po::notify(variables);
+
+        if (variables.count("help") || filePath.isEmpty()) {
+            std::cout << "Usage:\n  "
+                << qPrintable(QFileInfo(app.applicationFilePath()).fileName())
+                << " [OPTIONS...] file\n\n";
+            std::cout << options << "\n";
+            return 1;
+        }
+    } catch (const std::exception &e) {
+        printf("Unable to parse command line: %s\n", e.what());
+        return 2;
+    }
+
+    try {
+        QFile file(filePath);
         if (!file.open(QIODevice::ReadOnly))
             throw IgotuError(QCoreApplication::tr("Unable to read file"));
 
         QByteArray data = file.readAll();
 
-        // First 0x1000 bytes seem to be config area
-        printf("Log interval: %us\n", data[0x107] + 1);
-        printf("Interval change: %s\n", data[0x108] == '\x00' ?
-                "disabled" : "enabled");
-        //0x0109: 0xa0 -> above 15km/h
-        //0x0109: 0x15 -> above 10km/h
-        printf("Above %u?, use %us\n", unsigned(data[0x109]), data[0x10a] + 1);
+        IgotuPoints igotuPoints(data);
 
-        for (unsigned i = 0x1000; i < unsigned(data.size()); i += 0x20) {
-            QByteArray record = data.mid(i, 32);
+        if (variables.count("gpx")) {
+            printf("%s", qPrintable(igotuPoints.gpx()));
+        } else {
+            printf("Log interval: %us\n", igotuPoints.logInterval());
+            printf("Interval change: %s\n", igotuPoints.isIntervalChangeEnabled() ?
+                    "disabled" : "enabled");
+            // TODO
+            // 0x0109: 0xa0 -> above 15km/h
+            // 0x0109: 0x15 -> above 10km/h
+            printf("Above %u?, use %us\n", unsigned(data[0x109]), data[0x10a] + 1);
 
-            QByteArray hexrecord = record.toHex();
-            hexrecord.replace(2, 10, "__________");
-            hexrecord.replace(24, 28, "____________________________");
-//            hexrecord.replace(2, 10, "DDDDDDSSSS");
-//            hexrecord.replace(24, 28, "AAAAAAAAOOOOOOOOEEEEEEEESSSS");
-
-            unsigned flg = uchar(record[0]);
-            unsigned date = qFromBigEndian<quint32>
-                (reinterpret_cast<const uchar*>(record.data())) & 0x00ffffff;
-            unsigned sec = qFromBigEndian<quint16>
-                (reinterpret_cast<const uchar*>(record.data()) + 4);
-
-            int lat = qFromBigEndian<qint32>
-                (reinterpret_cast<const uchar*>(record.data()) + 12);
-            int lon = qFromBigEndian<qint32>
-                (reinterpret_cast<const uchar*>(record.data()) + 16);
-            int ele = qFromBigEndian<qint32>
-                (reinterpret_cast<const uchar*>(record.data()) + 20);
-            int spe = qFromBigEndian<qint16>
-                (reinterpret_cast<const uchar*>(record.data()) + 24);
-
-            printf("Record %u\n", (i - 0x1000) / 0x20);
-            printf("  Unknown %s\n", hexrecord.data());
-            if (flg & 0x04)
-                printf("  Waypoint\n");
-            // TODO: the year is only good until 2016?
-            printf("  Date %04u-%02u-%02uT%02u:%02u:%06.3fZ\n",
-                    2000 + ((date >> 20) & 0xf), (date >> 16) & 0xf,
-                    (date >> 11) & 0x1f, (date >> 6) & 0x1f,
-                    date & 0x3f, 1e-3 * sec);
-            printf("  Latitude %.6f\n", 1e-7 * lat);
-            printf("  Longitude %.6f\n", 1e-7 * lon);
-            printf("  Elevation %.1f m\n", 1e-2 * ele);
-            printf("  Speed %.1f km/s\n", 1e-2 * spe * 3.6);
+            unsigned index = 0;
+            Q_FOREACH (const IgotuPoint &igotuPoint, igotuPoints.points()) {
+                printf("Record %u\n", index++);
+                printf("  Unknown %s\n", igotuPoint.unknownDataDump().data());
+                if (igotuPoint.isWayPoint())
+                    printf("  Waypoint\n");
+                printf("  Date %s\n", qPrintable(igotuPoint.dateTime().toString(Qt::ISODate)));
+                printf("  Latitude %.6f\n", igotuPoint.latitude());
+                printf("  Longitude %.6f\n", igotuPoint.longitude());
+                printf("  Elevation %.1f m\n", igotuPoint.elevation());
+                printf("  Speed %.1f km/s\n", igotuPoint.speed());
+            }
         }
     } catch (const std::exception &e) {
         printf("Exception: %s\n", e.what());
