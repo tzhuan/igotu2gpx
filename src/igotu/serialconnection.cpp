@@ -54,7 +54,7 @@ SerialConnection::SerialConnection(unsigned device) :
     d->port->setParity(PAR_NONE);
     d->port->setDataBits(DATA_8);
     d->port->setStopBits(STOP_1);
-    d->port->setTimeout(400);
+    d->port->setTimeout(100);
 
     if (!d->port || !d->port->isOpen())
         throw IgotuError(tr("Unable to open RS232 port to device"));
@@ -89,7 +89,8 @@ QByteArray SerialConnection::receive(unsigned expected)
         if (toRead == 0)
             return result;
         QByteArray data(0x2000, 0);
-        int received = d->port->read(data.data(), 0x2000);
+//        QByteArray data(toRead, 0);
+        int received = d->port->read(data.data(), data.size());
         if (received < 0)
             throw IgotuError(tr("Unable to read data from the device"));
         d->receiveBuffer += data.left(received);
