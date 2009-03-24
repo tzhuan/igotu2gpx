@@ -65,8 +65,20 @@ double IgotuPoint::elevation() const
 
 double IgotuPoint::speed() const
 {
-    return 1e-2 * 3.6 * qFromBigEndian<qint16>
+    return 1e-2 * 3.6 * qFromBigEndian<quint16>
         (reinterpret_cast<const uchar*>(record.data()) + 24);
+}
+
+unsigned IgotuPoint::unknown1() const
+{
+    return qFromBigEndian<quint16>
+        (reinterpret_cast<const uchar*>(record.data()) + 26);
+}
+
+unsigned IgotuPoint::unknown2() const
+{
+    return qFromBigEndian<quint16>
+        (reinterpret_cast<const uchar*>(record.data()) + 28);
 }
 
 QDateTime IgotuPoint::dateTime() const

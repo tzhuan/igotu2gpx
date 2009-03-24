@@ -1,4 +1,121 @@
-The igotu 120 is in NMEA mode normally and can be switched to a binary protocol.
+Debugging
+---------
 
 Use portmon (http://technet.microsoft.com/en-us/sysinternals/bb896644.aspx) to
-capture a serial trace of @tripPC and feed it to "./serialdecoder.py logfilename".
+capture a serial trace of @tripPC and feed it to "serialdecoder.py logfilename".
+
+USB transport
+-------------
+
+The i-gotU GT-120 has a vendor id of 0x0df7 and a product id of 0x0900.
+
+Data can be read from interrupt endpoint 0x81 with sth. like
+  usb_interrupt_read(handle, 0x81, buf, size, timeout);
+
+Writes are done with control messages:
+  usb_control_msg(handle, 0x21, 0x09, 0x0200, 0x0000, data, size, timeout);
+
+Binary protocol
+---------------
+
+Commands are sent in 8 byte chunks. Each chunk is acknowledged by the gps
+tracker. Most commands consist of 2 chunks. The last byte of all commands
+contains a checksum (SS) so that the sum of all command bytes is zero.
+
+Response:
+  Data: 93 XX XX
+  XX: big endian size (>= 0) or error code (< 0):
+      fffe: seems to be a recoverable error
+
+NmeaSwitch:
+  Command chunk 1: 93 01 01 XX 00 00 00 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 00 00
+  XX: 00 to enable, 03 to disable NMEA output
+
+Id:
+  Command chunk 1: 93 0a 00 00 00 00 00 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 00 0a XX XX XX XX YY ZZ ?? ?? ?? ??
+  XX: little endian serial number
+  YY: model type? (3 for GT-120)
+  ZZ: model type? (3 for GT-120)
+
+Read:
+  Command chunk 1: 93 05 07 XX XX 04 03 YY
+  Response:        93 00 00
+  Command chunk 2: YY YY 00 00 00 00 00 SS
+  Response:        93 XX XX DD...
+  XX: big endian read size (always 1000 for @trip PC)
+  YY: big endian read position
+  DD: read data
+
+Write (not tested):
+  Command chunk 1: 93 06 07 XX XX 04 02 YY
+  Response:        93 00 00
+  Command chunk 2: YY YY 00 00 00 00 00 SS
+  Response:        93 XX XX
+  Data chunk n:    DD DD DD DD DD DD DD SS
+  Response:        93 00 00
+  XX: big endian write size (always 0100 for @trip PC)
+  YY: big endian write position
+  DD: write data
+  needs ceil(size / 7) data chunks
+
+Command used after write (not tested):
+  Command chunk 1: 93 05 04 XX XX 01 05 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 XX XX 00
+  XX: big endian size, always 0001
+
+Command used after write (not tested):
+  Command chunk 1: 93 06 04 00 01 01 06 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 00 00
+
+Command used after read of first block (not tested):
+  Command chunk 1: 93 05 04 XX XX 01 9F 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 XX XX C2 20 15
+  XX: big endian size, always 0003
+
+Command used after read of first block (not tested):
+  Command chunk 1: 93 0B 03 00 1D 00 00 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 00 03 19 02 58
+
+Flash layout
+------------
+
+The first data block of 0x1000 bytes contains configuration data, all other
+data blocks contain the gps trackpoints.
+
+Configuration data:
+  0x0107: logging interval (number of seconds - 1)
+  0x0108: zero if automatic logging interval change disabled
+
+Trackpoints are stored in records of 0x20 bytes:
+  0x00: uint8 flags
+        0x04: waypoint
+  0x01: uint8 YYYYMMMM
+        YY year - 2000
+        MM month (starting with 1)
+  0x02: uint16b DDDDDHHHHHMMMMMM
+        DD day of month (starting with 1)
+        HH hour
+        MM minute
+  0x04: uint16b seconds * 1000 + milliseconds
+  0x06: 6 bytes unknown
+  0x0c: int32b latitude * 1e7 (in degrees)
+  0x10: int32b longitude * 1e7 (in degrees)
+  0x14: int32b elevation * 1e2 (in m)
+  0x18: uint16b speed * 1e2 (in m/s)
+  0x1a: uint16b unknown 1
+  0x1c: uint16b unknown 2
+  0x1d: 2 bytes unknown

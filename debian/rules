@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+
+include /usr/share/cdbs/1/rules/debhelper.mk
+include /usr/share/cdbs/1/class/qmake.mk
+
+DEB_QMAKE_ARGS := RELEASE=0 PREFIXDIR=/usr
+
+install/igotu2gpx::
+	rm debian/igotu2gpx/usr/lib/*.so
+	rm debian/igotu2gpx/usr/share/doc/igotu2gpx/LICENSE

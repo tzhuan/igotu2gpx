@@ -171,13 +171,13 @@ RCC_DIR = $$OBJECTS_DIR/rcc
 unix {
     isEmpty(PREFIXDIR):PREFIXDIR = /usr/local
     isEmpty(CONFDIR):CONFDIR = /etc
-    isEmpty(DATADIR):DATADIR = $$PREFIXDIR/share/rba
-    isEmpty(DOCDIR):DOCDIR = $$PREFIXDIR/share/doc/rba
+    isEmpty(DATADIR):DATADIR = $$PREFIXDIR/share/igotu2gpx
+    isEmpty(DOCDIR):DOCDIR = $$PREFIXDIR/share/doc/igotu2gpx
     isEmpty(APPDIR):APPDIR = $$PREFIXDIR/share/applications
     isEmpty(ICONDIR):ICONDIR = $$PREFIXDIR/share/icons/hicolor
     isEmpty(BINDIR):BINDIR = $$PREFIXDIR/bin
     isEmpty(LIBDIR):LIBDIR = $$PREFIXDIR/lib
-    isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIXDIR/lib/rba
+    isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIXDIR/lib/igotu2gpx
 }
 win32 {
     isEmpty(PREFIXDIR):PREFIXDIR = $${DESTDIR}-installed

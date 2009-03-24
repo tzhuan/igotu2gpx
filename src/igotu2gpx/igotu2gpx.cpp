@@ -200,6 +200,8 @@ int main(int argc, char *argv[])
                     printf("  Longitude %.6f\n", igotuPoint.longitude());
                     printf("  Elevation %.1f m\n", igotuPoint.elevation());
                     printf("  Speed %.1f km/s\n", igotuPoint.speed());
+                    printf("  Unknown 1 %u\n", igotuPoint.unknown1());
+                    printf("  Unknown 2 %u\n", igotuPoint.unknown2());
                 }
             } else {
                 IgotuPoints igotuPoints(contents);

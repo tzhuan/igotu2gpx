@@ -75,6 +75,9 @@ public:
 
     bool isValid() const;
 
+    unsigned unknown1() const;
+    unsigned unknown2() const;
+
     QByteArray unknownDataDump() const;
 
 private:
