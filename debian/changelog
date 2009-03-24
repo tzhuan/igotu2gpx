@@ -1,5 +1,11 @@
-igotu2gpx (0.1-1) UNRELEASED; urgency=low
+igotu2gpx (0.1-2) intrepid; urgency=low
+
+  * Packaging fix: include libusb-dev dependency.
+
+ -- Michael Hofmann <mh21@piware.de>  Tue, 24 Mar 2009 23:43:48 +0100
+
+igotu2gpx (0.1-1) intrepid; urgency=low
 
   * Initial release.
 
- -- Michael Hofmann <mh21@piware.de>  Fri, 24 Mar 2009 22:12:56 +0100
+ -- Michael Hofmann <mh21@piware.de>  Tue, 24 Mar 2009 23:19:53 +0100

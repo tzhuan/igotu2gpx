@@ -3,7 +3,7 @@ Section: utils
 Priority: extra
 Maintainer: Michael Hofmann <mh21@piware.de>
 Build-Depends: cdbs, debhelper, libqt4-dev, libboost-dev,
- libboost-program-options-dev
+ libboost-program-options-dev, libusb-dev
 Standards-Version: 3.8.0
 Homepage: http://mh21.de/igotu2gpx/
 
