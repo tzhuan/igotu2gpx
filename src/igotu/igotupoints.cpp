@@ -41,8 +41,8 @@ IgotuPoint::~IgotuPoint()
 
 bool IgotuPoint::isValid() const
 {
-    // TODO
-    return true;
+    // TODO:this is too simple, location and time information can still be valid
+    return (uchar(record[0]) & ~0x04) == 0;
 }
 
 double IgotuPoint::longitude() const
@@ -153,13 +153,15 @@ QString IgotuPoints::gpx() const
             << qSetRealNumberPrecision(2)
             << xmlIndent(2) << "<ele>" << point.elevation() << "</ele>\n"
             << xmlIndent(2) << "<time>" << point.dateTime().toString
-                (QLatin1String("yyyy-MM-ddThh:mm:ss.zzz")) << "</time>\n"
+                (QLatin1String("yyyy-MM-dd'T'hh:mm:ss.zzz'Z'")) << "</time>\n"
             << xmlIndent(1) << "</wpt>\n";
     }
 
     out << xmlIndent(1) << "<trk>\n";
     out << xmlIndent(2) << "<trkseg>\n";
     Q_FOREACH (const IgotuPoint &point, points()) {
+        if (!point.isValid())
+            continue;
         out << xmlIndent(3) << "<trkpt "
             << qSetRealNumberPrecision(6)
             << "lat=\"" << point.latitude() << "\" "
@@ -167,7 +169,7 @@ QString IgotuPoints::gpx() const
             << qSetRealNumberPrecision(2)
             << xmlIndent(4) << "<ele>" << point.elevation() << "</ele>\n"
             << xmlIndent(4) << "<time>" << point.dateTime().toString
-                (QLatin1String("yyyy-MM-ddThh:mm:ss.zzz")) << "</time>\n"
+                (QLatin1String("yyyy-MM-dd'T'hh:mm:ss.zzz'Z'")) << "</time>\n"
             << xmlIndent(4) << "<speed>" << point.speed() << "</speed>\n"
             << xmlIndent(3) << "</trkpt>\n";
     }
