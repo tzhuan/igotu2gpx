@@ -1,7 +1,7 @@
 BASEDIR = ../..
 CLEBS *= libigotu boost-po
-TARGET = dumper
+TARGET = igotu2gpx
 include($$BASEDIR/clebs.pri)
 
 SOURCES *= \
-    dumper.cpp \
+    igotu2gpx.cpp \

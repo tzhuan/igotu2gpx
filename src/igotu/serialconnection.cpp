@@ -41,7 +41,7 @@ SerialConnection::SerialConnection(unsigned device) :
 #if defined(Q_OS_WIN32)
     const QString portTemplate(QLatin1String("COM%1"));
 #elif defined(Q_OS_LINUX)
-    const QString portTemplate(QLatin1String("/dev/ttyS%1"));
+    const QString portTemplate(QLatin1String("/dev/ttyUSB%1"));
 #else
     #error "Serial port names not known for this OS"
 #endif
@@ -49,11 +49,6 @@ SerialConnection::SerialConnection(unsigned device) :
     d->port.reset(new QextSerialPort(portTemplate.arg(device),
                 QextSerialPort::Polling));
     d->port->open(QIODevice::ReadWrite);
-    d->port->setBaudRate(BAUD9600);
-    d->port->setFlowControl(FLOW_OFF);
-    d->port->setParity(PAR_NONE);
-    d->port->setDataBits(DATA_8);
-    d->port->setStopBits(STOP_1);
     d->port->setTimeout(100);
 
     if (!d->port || !d->port->isOpen())
