@@ -16,67 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU_SRC_IGOTU_COMMANDS_H_
-#define _IGOTU_SRC_IGOTU_COMMANDS_H_
+#ifndef _IGOTU_BZR_SRC_IGOTU_VERBOSE_H_
+#define _IGOTU_BZR_SRC_IGOTU_VERBOSE_H_
 
-#include "igotucommand.h"
+#include "global.h"
 
 namespace igotu
 {
 
-class IGOTU_EXPORT NmeaSwitchCommand : public IgotuCommand
+class IGOTU_EXPORT Verbose
 {
 public:
-    NmeaSwitchCommand(DataConnection *connection, bool enable);
+    static int verbose();
+    static void setVerbose(int value);
 };
 
-class IGOTU_EXPORT IdentificationCommand : public IgotuCommand
-{
-public:
-    IdentificationCommand(DataConnection *connection);
-
-    virtual QByteArray sendAndReceive();
-
-    unsigned serialNumber() const;
-    QString modelName() const;
-    unsigned modelNumber() const;
-
-private:
-    unsigned id;
-    unsigned type;
-};
-
-class IGOTU_EXPORT ReadCommand : public IgotuCommand
-{
-public:
-    ReadCommand(DataConnection *connection, unsigned pos, unsigned size);
-
-    virtual QByteArray sendAndReceive();
-
-    QByteArray data() const;
-
-private:
-    QByteArray result;
-};
-
-class IGOTU_EXPORT WriteCommand : public IgotuCommand
-{
-public:
-    WriteCommand(DataConnection *connection, unsigned pos,
-            const QByteArray &data);
-
-    virtual QByteArray sendAndReceive();
-
-    void setData(const QByteArray &data);
-    QByteArray data() const;
-
-    void setPosition(unsigned value);
-    unsigned position() const;
-
-private:
-    unsigned pos;
-    QByteArray contents;
-};
 } // namespace igotu
 
 #endif

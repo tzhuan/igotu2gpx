@@ -21,6 +21,7 @@
 #include "igotu/igotupoints.h"
 #include "igotu/optionutils.h"
 #include "igotu/serialconnection.h"
+#include "igotu/verbose.h"
 
 #include <boost/program_options.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -69,6 +70,8 @@ int main(int argc, char *argv[])
         ("raw", po::value<QString>(&rawPath),
          "output the raw flash contents of the gps tracker")
 
+        ("verbose,v",
+         "increase the amount of informative messages")
         ("action", po::value<QString>(&action),
          "dump the trackpoints (dump) or show general info (info)")
     ;
@@ -95,6 +98,7 @@ int main(int argc, char *argv[])
         return 2;
     }
 
+    Verbose::setVerbose(variables.count("verbose"));
     // Make connection
 
     boost::scoped_ptr<DataConnection> connection;
@@ -146,11 +150,11 @@ int main(int argc, char *argv[])
     try {
         if (action == QLatin1String("info")) {
             if (connection) {
-                NmeaSwitchCommand(connection.get(), false).sendAndReceive(true);
+                NmeaSwitchCommand(connection.get(), false).sendAndReceive();
                 IdentificationCommand id(connection.get());
                 id.sendAndReceive();
                 printf("S/N: %u\n", id.serialNumber());
-                printf("Model: %u\n", id.model());
+                printf("Model: %s\n", qPrintable(id.modelName()));
 
                 contents += ReadCommand(connection.get(), 0, 0x1000)
                     .sendAndReceive();
@@ -168,9 +172,9 @@ int main(int argc, char *argv[])
                     unsigned(contents[0x109]), contents[0x10a] + 1);
         } else {
             if (connection) {
-                NmeaSwitchCommand(connection.get(), false).sendAndReceive(true);
+                NmeaSwitchCommand(connection.get(), false).sendAndReceive();
                 for (unsigned i = 0;; ++i) {
-                    printf("Dumping datablock %u...\n", i + 1);
+                    fprintf(stderr, "Dumping datablock %u...\n", i + 1);
                     QByteArray data = ReadCommand(connection.get(), i * 0x1000,
                             0x1000).sendAndReceive();
                     if (data == QByteArray(0x1000, char(0xff)))

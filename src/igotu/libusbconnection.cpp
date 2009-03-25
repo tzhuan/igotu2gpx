@@ -18,6 +18,7 @@
 
 #include "exception.h"
 #include "libusbconnection.h"
+#include "verbose.h"
 
 #include <boost/shared_ptr.hpp>
 
@@ -64,7 +65,8 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId) :
     D(LibusbConnection);
 
     usb_init();
-    usb_set_debug(255);
+    if (Verbose::verbose() > 0)
+        usb_set_debug(255);
     usb_find_busses();
     usb_find_devices();
 
@@ -107,11 +109,21 @@ void LibusbConnection::send(const QByteArray &query)
 {
     D(LibusbConnection);
 
+    // Purge igotu transmit buffer?
     d->receiveBuffer.clear();
+    usb_interrupt_read(d->handle.get(), 0x81,
+            QByteArray(1024, '\0').data(), 16, 1);
 
-    if (usb_control_msg(d->handle.get(), 0x21, 0x09, 0x0200, 0x0000,
-                const_cast<char*>(query.data()), query.size(), 1000) < 0)
-        throw IgotuError(tr("Unable to send data to the device"));
+    int result = usb_control_msg(d->handle.get(), 0x21, 0x09, 0x0200, 0x0000,
+                const_cast<char*>(query.data()), query.size(), 1000);
+
+    if (result < 0)
+        throw IgotuError(tr("Unable to send data to the device: %1")
+                .arg(QString::fromLocal8Bit(strerror(-result))));
+    if (result != query.size())
+        throw IgotuError(tr("Unable to send data to the device: Tried "
+                    "to send %1 bytes, but only succeeded sending %2 bytes")
+                .arg(query.size(), result));
 }
 
 QByteArray LibusbConnection::receive(unsigned expected)
@@ -119,24 +131,29 @@ QByteArray LibusbConnection::receive(unsigned expected)
     D(LibusbConnection);
 
     unsigned toRead = expected;
-    QByteArray result;
-    Q_FOREVER {
+    QByteArray data;
+    unsigned emptyCount = 0;
+    while (emptyCount < 3) {
         // This is not ideal, the receive needs to be initiated before the
         // actual send(), and the receives need to stick closely together,
         // otherwise data gets lost
         unsigned toRemove = qMin(unsigned(d->receiveBuffer.size()), toRead);
-        result += d->receiveBuffer.left(toRemove);
+        data += d->receiveBuffer.left(toRemove);
         d->receiveBuffer.remove(0, toRemove);
         toRead -= toRemove;
         if (toRead == 0)
-            return result;
+            break;
         QByteArray data(0x10, 0);
-        int received = usb_interrupt_read(d->handle.get(), 0x00000081,
+        int result = usb_interrupt_read(d->handle.get(), 0x00000081,
                 data.data(), 0x10, 20);
-        if (received < 0)
-            throw IgotuError(tr("Unable to read data from the device"));
-        d->receiveBuffer += data.left(received);
+        if (result < 0)
+            throw IgotuError(tr("Unable to read data from the device: %1")
+                .arg(QString::fromLocal8Bit(strerror(-result))));
+        if (result == 0)
+            ++emptyCount;
+        d->receiveBuffer += data.left(result);
     }
+    return data;
 }
 
 } // namespace

@@ -19,6 +19,7 @@
 #include "dataconnection.h"
 #include "exception.h"
 #include "igotucommand.h"
+#include "verbose.h"
 
 #include <QtEndian>
 
@@ -37,6 +38,7 @@ public:
     DataConnection *connection;
     QByteArray command;
     bool receiveRemainder;
+    bool ignoreProtocolErrors;
 };
 
 // IgotuCommandPrivate =========================================================
@@ -44,8 +46,13 @@ public:
 int IgotuCommandPrivate::receiveResponseSize()
 {
     QByteArray data(connection->receive(3));
+    if (data.size() != 3)
+        throw IgotuProtocolError(IgotuCommand::tr
+                ("Response too short: expected %u, got %u bytes")
+                .arg(3).arg(data.size()));
     if (data[0] != '\x93')
-        throw IgotuError(IgotuCommand::tr("Invalid reply packet: %1")
+        throw IgotuProtocolError(IgotuCommand::tr
+                ("Invalid reply packet: %1")
                 .arg(QString::fromAscii(data.toHex())));
     return qFromBigEndian<qint16>(reinterpret_cast<const uchar*>
             (data.data() + 1));
@@ -53,7 +60,12 @@ int IgotuCommandPrivate::receiveResponseSize()
 
 QByteArray IgotuCommandPrivate::receiveResponseRemainder(unsigned size)
 {
-    return connection->receive(size);
+    const QByteArray result = connection->receive(size);
+    if (unsigned(result.size()) != size)
+        throw IgotuProtocolError(IgotuCommand::tr
+                ("Response remainder too short: expected %u, got %u bytes")
+                .arg(size).arg(result.size()));
+    return result;
 }
 
 unsigned IgotuCommandPrivate::sendCommand(const QByteArray &data)
@@ -63,23 +75,19 @@ unsigned IgotuCommandPrivate::sendCommand(const QByteArray &data)
     command += QByteArray(pieces * 8 - command.size(), 0);
     command[command.size() - 1] = -std::accumulate(command.data() + 0,
             command.data() + command.size() - 2, 0);
-    Q_FOREVER {
-        bool failed = false;
-        int responseSize;
-        for (unsigned i = 0; i < pieces && !failed; ++i) {
-            connection->send(command.mid(i * 8, 8));
-            responseSize = receiveResponseSize();
-            if (responseSize < 0) {
-                failed = true;
-            } else if (responseSize != 0 && i + 1 < pieces) {
-                throw IgotuError
-                    (IgotuCommand::tr("Non-empty intermediate reply packet: %1")
-                        .arg(QString::fromAscii(data.toHex())));
-            }
-        }
-        if (!failed)
-            return responseSize;
+    int responseSize;
+    for (unsigned i = 0; i < pieces; ++i) {
+        connection->send(command.mid(i * 8, 8));
+        responseSize = receiveResponseSize();
+        if (responseSize < 0)
+            throw IgotuDeviceError
+                (IgotuCommand::tr("Device responded with error code: %1").arg(responseSize));
+        if (responseSize != 0 && i + 1 < pieces)
+            throw IgotuProtocolError
+                (IgotuCommand::tr("Non-empty intermediate reply packet: %1")
+                    .arg(QString::fromAscii(data.toHex())));
     }
+    return responseSize;
 }
 
 // IgotuCommand ================================================================
@@ -93,6 +101,7 @@ IgotuCommand::IgotuCommand(DataConnection *connection, const QByteArray
     d->connection = connection;
     d->command = command;
     d->receiveRemainder = receiveRemainder;
+    d->ignoreProtocolErrors = false;
 }
 
 IgotuCommand::~IgotuCommand()
@@ -141,22 +150,80 @@ void IgotuCommand::setReceiveRemainder(bool value)
     d->receiveRemainder = value;
 }
 
-QByteArray IgotuCommand::sendAndReceive(bool handleErrors)
+bool IgotuCommand::ignoreProtocolErrors() const
+{
+    D(const IgotuCommand);
+
+    return d->ignoreProtocolErrors;
+}
+
+void IgotuCommand::setIgnoreProtocolErrors(bool value)
 {
     D(IgotuCommand);
 
-    Q_FOREVER {
-        unsigned size;
-        try {
-            size = d->sendCommand(d->command);
-        } catch (const std::exception&) {
-            if (handleErrors)
-                continue;
-            throw;
+    d->ignoreProtocolErrors = value;
+}
+
+QByteArray IgotuCommand::sendAndReceive()
+{
+    D(IgotuCommand);
+
+    unsigned protocolErrors = 0;
+    unsigned deviceErrors = 0;
+    try {
+        Q_FOREVER {
+            unsigned size;
+            QByteArray remainder;
+
+            try {
+                size = d->sendCommand(d->command);
+                if (size > 0 && d->receiveRemainder)
+                    remainder = d->receiveResponseRemainder(size);
+            } catch (const IgotuProtocolError &e) {
+                // ignore protocol errors if switched to NMEA mode
+                if (d->ignoreProtocolErrors) {
+                    if (Verbose::verbose() > 0) {
+                        fprintf(stderr, "Command: %s\n", d->command.toHex().data());
+                        fprintf(stderr, "Failed protocol (ignored): %s\n", e.what());
+                    }
+                    return remainder;
+                }
+                // Assume this was caused by some spurious NMEA messages
+                ++protocolErrors;
+                if (protocolErrors <= 3) {
+                    if (Verbose::verbose() > 0) {
+                        fprintf(stderr, "Command: %s\n", d->command.toHex().data());
+                        fprintf(stderr, "Failed protocol: %s\n", e.what());
+                    }
+                    continue;
+                }
+                throw;
+            } catch (const IgotuDeviceError &e) {
+                // Device error codes mean we can try again
+                ++deviceErrors;
+                if (deviceErrors <= 3) {
+                    if (Verbose::verbose() > 0) {
+                        fprintf(stderr, "Command: %s\n", d->command.toHex().data());
+                        fprintf(stderr, "Device failure: %s\n", e.what());
+                    }
+                    continue;
+                }
+                throw;
+            }
+
+            if (Verbose::verbose() > 0) {
+                fprintf(stderr, "Command: %s\n", d->command.toHex().data());
+                fprintf(stderr, "Result size: 0x%04x\n", size);
+                fprintf(stderr, "Result data: %s\n", remainder.toHex().data());
+            }
+            return remainder;
         }
-        if (size && d->receiveRemainder)
-            return d->receiveResponseRemainder(size);
-        return QByteArray();
+    } catch (const std::exception &e) {
+        if (Verbose::verbose() > 0) {
+            fprintf(stderr, "Command: %s\n", d->command.toHex().data());
+            fprintf(stderr, "Failed: %s\n", e.what());
+        }
+        throw;
     }
 }
 

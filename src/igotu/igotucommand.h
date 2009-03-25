@@ -49,7 +49,10 @@ public:
     bool receiveRemainder() const;
     void setReceiveRemainder(bool value);
 
-    virtual QByteArray sendAndReceive(bool handleErrors = false);
+    bool ignoreProtocolErrors() const;
+    void setIgnoreProtocolErrors(bool value);
+
+    virtual QByteArray sendAndReceive();
 
 private:
     DECLARE_PRIVATE(IgotuCommand)

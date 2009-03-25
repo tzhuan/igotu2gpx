@@ -14,6 +14,7 @@ SOURCES *= \
     igotupoints.cpp \
     optionutils.cpp \
     serialconnection.cpp \
+    verbose.cpp \
     xmlutils.cpp \
 
 unix:SOURCES *= libusbconnection.cpp
@@ -28,6 +29,7 @@ HEADERS *= \
     optionutils.h \
     pch.h \
     serialconnection.h \
+    verbose.h \
     xmlutils.h \
 
 unix:HEADERS *= libusbconnection.h

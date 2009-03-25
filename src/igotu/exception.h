@@ -70,6 +70,30 @@ private:
     const QByteArray message;
 };
 
+/** Exception for igotu protocol errors. These are errors where the device
+ * response does not conform to its own protocol.
+ */
+class IGOTU_EXPORT IgotuProtocolError: public IgotuError
+{
+public:
+    IgotuProtocolError(const QString &message) throw() :
+        IgotuError(message)
+    {
+    }
+};
+
+/** Exception for igotu device errors. These are errors where the device
+ * response correctly, but with an error code.
+ */
+class IGOTU_EXPORT IgotuDeviceError: public IgotuError
+{
+public:
+    IgotuDeviceError(const QString &message) throw() :
+        IgotuError(message)
+    {
+    }
+};
+
 } // namespace igotu
 
 #endif

@@ -16,68 +16,48 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU_SRC_IGOTU_COMMANDS_H_
-#define _IGOTU_SRC_IGOTU_COMMANDS_H_
+#include "verbose.h"
 
-#include "igotucommand.h"
+#include <QMutex>
 
 namespace igotu
 {
 
-class IGOTU_EXPORT NmeaSwitchCommand : public IgotuCommand
+class VerbosePrivate
 {
 public:
-    NmeaSwitchCommand(DataConnection *connection, bool enable);
-};
+    VerbosePrivate() :
+        level(0)
+    {
+    }
 
-class IGOTU_EXPORT IdentificationCommand : public IgotuCommand
-{
-public:
-    IdentificationCommand(DataConnection *connection);
+    int verbose()
+    {
+        QMutexLocker locker(&lock);
+        return level;
+    }
 
-    virtual QByteArray sendAndReceive();
-
-    unsigned serialNumber() const;
-    QString modelName() const;
-    unsigned modelNumber() const;
+    void setVerbose(int value)
+    {
+        QMutexLocker locker(&lock);
+        level = value;
+    }
 
 private:
-    unsigned id;
-    unsigned type;
+    int level;
+    QMutex lock;
 };
 
-class IGOTU_EXPORT ReadCommand : public IgotuCommand
+Q_GLOBAL_STATIC(VerbosePrivate, verbosePrivate)
+
+int Verbose::verbose()
 {
-public:
-    ReadCommand(DataConnection *connection, unsigned pos, unsigned size);
+    return verbosePrivate()->verbose();
+}
 
-    virtual QByteArray sendAndReceive();
-
-    QByteArray data() const;
-
-private:
-    QByteArray result;
-};
-
-class IGOTU_EXPORT WriteCommand : public IgotuCommand
+void Verbose::setVerbose(int value)
 {
-public:
-    WriteCommand(DataConnection *connection, unsigned pos,
-            const QByteArray &data);
+    verbosePrivate()->setVerbose(value);
+}
 
-    virtual QByteArray sendAndReceive();
-
-    void setData(const QByteArray &data);
-    QByteArray data() const;
-
-    void setPosition(unsigned value);
-    unsigned position() const;
-
-private:
-    unsigned pos;
-    QByteArray contents;
-};
 } // namespace igotu
-
-#endif
-

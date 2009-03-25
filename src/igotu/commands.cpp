@@ -32,6 +32,9 @@ NmeaSwitchCommand::NmeaSwitchCommand(DataConnection *connection, bool enable) :
     command.replace(0, 3, "\x93\x01\x01");
     command[3] = enable ? '\x00' : '\x03';
     setCommand(command);
+
+    if (enable)
+        setIgnoreProtocolErrors(true);
 }
 
 // IdentificationCommand =======================================================
@@ -44,13 +47,14 @@ IdentificationCommand::IdentificationCommand(DataConnection *connection) :
     setCommand(command);
 }
 
-QByteArray IdentificationCommand::sendAndReceive(bool handleErrors)
+QByteArray IdentificationCommand::sendAndReceive()
 {
-    const QByteArray result = IgotuCommand::sendAndReceive(handleErrors);
+    const QByteArray result = IgotuCommand::sendAndReceive();
     id = qFromLittleEndian<quint32>(reinterpret_cast<const uchar*>
             (result.data()));
-    // TODO: or result[5], they are both 3 for a GT-120
-    type = result[4];
+    type = qFromLittleEndian<quint16>(reinterpret_cast<const uchar*>
+            (result.data() + 4));
+    // TODO: there should be some firmware revision number in here
     return result;
 }
 
@@ -59,9 +63,18 @@ unsigned IdentificationCommand::serialNumber() const
     return id;
 }
 
-unsigned IdentificationCommand::model() const
+unsigned IdentificationCommand::modelNumber() const
 {
     return type;
+}
+
+QString IdentificationCommand::modelName() const
+{
+    return type == 0x0303 ? QLatin1String("i-gotU GT-120") :
+        QString::fromLatin1("Unknown (0x%1). "
+                "Please email mh21@piware.de with the name of your gps tracker "
+                "and '0x%1'.")
+        .arg(QString::number(type, 16));
 }
 
 // ReadCommand =================================================================
@@ -81,9 +94,9 @@ ReadCommand::ReadCommand(DataConnection *connection, unsigned pos,
     setCommand(command);
 }
 
-QByteArray ReadCommand::sendAndReceive(bool handleErrors)
+QByteArray ReadCommand::sendAndReceive()
 {
-    return (result = IgotuCommand::sendAndReceive(handleErrors));
+    return (result = IgotuCommand::sendAndReceive());
 }
 
 QByteArray ReadCommand::data() const
@@ -110,12 +123,11 @@ WriteCommand::WriteCommand(DataConnection *connection, unsigned pos,
     setCommand(command);
 }
 
-QByteArray WriteCommand::sendAndReceive(bool handleErrors)
+QByteArray WriteCommand::sendAndReceive()
 {
-    IgotuCommand::sendAndReceive(handleErrors);
+    IgotuCommand::sendAndReceive();
     for (unsigned i = 0; i < (unsigned(contents.size()) + 6) / 7; ++i)
-        IgotuCommand(connection(), contents.mid(i * 7, 7))
-            .sendAndReceive(handleErrors);
+        IgotuCommand(connection(), contents.mid(i * 7, 7)).sendAndReceive();
     return QByteArray();
 }
 
