@@ -1,3 +1,9 @@
+igotu2gpx (0.1.1-1) intrepid; urgency=low
+
+  * New upstream release. Much improved usb transport.
+
+ -- Michael Hofmann <mh21@piware.de>  Thu, 26 Mar 2009 08:19:54 +0100
+
 igotu2gpx (0.1-2) intrepid; urgency=low
 
   * Packaging fix: include libusb-dev dependency.
