@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
     // Command line parsing (uses C++ output)
 
     QString rawPath, action, imagePath, usb, serial;
+    unsigned sectorCount = 0;
 
     po::options_description options("Options");
     options.add_options()
@@ -69,6 +70,8 @@ int main(int argc, char *argv[])
          "output a detailed representation of the track")
         ("raw", po::value<QString>(&rawPath),
          "output the raw flash contents of the gps tracker")
+        ("count", po::value<unsigned>(&sectorCount),
+         "limits the number of sectors read (4096 bytes each)")
 
         ("verbose,v",
          "increase the amount of informative messages")
@@ -136,6 +139,8 @@ int main(int argc, char *argv[])
                 throw IgotuError(QCoreApplication::tr
                         ("Unable to read file '%1'").arg(imagePath));
             contents = file.readAll();
+            if (sectorCount > 0)
+                contents = contents.left(sectorCount * 0x1000);
         } else {
             throw IgotuError(QCoreApplication::tr("Please specify either "
                         "--usb-device, --serial-device or --image"));
@@ -173,7 +178,7 @@ int main(int argc, char *argv[])
         } else {
             if (connection) {
                 NmeaSwitchCommand(connection.get(), false).sendAndReceive();
-                for (unsigned i = 0;; ++i) {
+                for (unsigned i = 0; sectorCount == 0 || i < sectorCount; ++i) {
                     fprintf(stderr, "Dumping datablock %u...\n", i + 1);
                     QByteArray data = ReadCommand(connection.get(), i * 0x1000,
                             0x1000).sendAndReceive();
