@@ -2,7 +2,7 @@ Debugging
 ---------
 
 Use portmon (http://technet.microsoft.com/en-us/sysinternals/bb896644.aspx) to
-capture a serial trace of @tripPC and feed it to "serialdecoder.py logfilename".
+capture a serial trace of @trip PC and feed it to "serialdecoder.py logfilename".
 
 USB transport
 -------------
@@ -40,8 +40,8 @@ Id:
   Command chunk 2: 00 00 00 00 00 00 00 SS
   Response:        93 00 0a XX XX XX XX YY ZZ ?? ?? ?? ??
   XX: little endian serial number
-  YY: model type? (3 for GT-120)
-  ZZ: model type? (3 for GT-120)
+  YY: major version number
+  ZZ: minor version number
 
 Read:
   Command chunk 1: 93 05 07 XX XX 04 03 YY

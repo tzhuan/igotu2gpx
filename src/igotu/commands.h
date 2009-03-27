@@ -38,12 +38,11 @@ public:
     virtual QByteArray sendAndReceive();
 
     unsigned serialNumber() const;
-    QString modelName() const;
-    unsigned modelNumber() const;
+    QString firmwareVersion() const;
 
 private:
     unsigned id;
-    unsigned type;
+    QString version;
 };
 
 class IGOTU_EXPORT ReadCommand : public IgotuCommand

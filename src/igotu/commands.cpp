@@ -52,9 +52,10 @@ QByteArray IdentificationCommand::sendAndReceive()
     const QByteArray result = IgotuCommand::sendAndReceive();
     id = qFromLittleEndian<quint32>(reinterpret_cast<const uchar*>
             (result.data()));
-    type = qFromLittleEndian<quint16>(reinterpret_cast<const uchar*>
-            (result.data() + 4));
-    // TODO: there should be some firmware revision number in here
+    version = QString().sprintf("%u.%02u",
+            *reinterpret_cast<const uchar*>(result.data() + 4),
+            *reinterpret_cast<const uchar*>(result.data() + 5));
+    // TODO: there should be some more info (model number etc) in here
     return result;
 }
 
@@ -63,18 +64,9 @@ unsigned IdentificationCommand::serialNumber() const
     return id;
 }
 
-unsigned IdentificationCommand::modelNumber() const
+QString IdentificationCommand::firmwareVersion() const
 {
-    return type;
-}
-
-QString IdentificationCommand::modelName() const
-{
-    return type == 0x0303 ? QLatin1String("i-gotU GT-120") :
-        QString::fromLatin1("Unknown (0x%1). "
-                "Please email mh21@piware.de with the name of your gps tracker "
-                "and '0x%1'.")
-        .arg(QString::number(type, 16));
+    return version;
 }
 
 // ReadCommand =================================================================

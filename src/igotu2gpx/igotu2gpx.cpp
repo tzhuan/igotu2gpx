@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
                 IdentificationCommand id(connection.get());
                 id.sendAndReceive();
                 printf("S/N: %u\n", id.serialNumber());
-                printf("Model: %s\n", qPrintable(id.modelName()));
+                printf("Firmware version: %s\n", qPrintable(id.firmwareVersion()));
 
                 contents += ReadCommand(connection.get(), 0, 0x1000)
                     .sendAndReceive();

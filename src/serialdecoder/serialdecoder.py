@@ -115,9 +115,10 @@ while len(parts) > 0:
                     format_query(query, 4), size)
         # Identification
         elif query.startswith('\x93\x0a'):
-            idresponse = unpack_from('<I6s', response)
-            print 'Identification: s/n %d, unknown %s (%s, returned %d)' % (idresponse[0],
-                    idresponse[1].encode('hex'), format_query(query, 2), size)
+            idresponse = unpack_from('<IBB4s', response)
+            print 'Identification: s/n %d, version %u.%02u, unknown %s (%s, returned %d)' % (idresponse[0],
+                    idresponse[1], idresponse[2], idresponse[3].encode('hex'),
+                    format_query(query, 2), size)
         # Read
         elif query.startswith('\x93\x05\x07') and query[5:7] == '\x04\x03':
             readquery = unpack_from('>xxxHxxBH', query)
