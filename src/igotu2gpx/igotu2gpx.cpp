@@ -34,6 +34,9 @@
 #ifdef Q_OS_LINUX
 #include "igotu/libusbconnection.h"
 #endif
+#ifdef Q_OS_WIN32
+#include "igotu/win32serialconnection.h"
+#endif
 
 using namespace igotu;
 
@@ -108,19 +111,15 @@ int main(int argc, char *argv[])
     QByteArray contents;
 
     try {
-        if (variables.count("serial-device") ||
+        if (false) {
+            // Dummy
 #ifdef Q_OS_WIN32
+        } else if (variables.count("serial-device") ||
             (variables.count("usb-device") == 0 &&
-             variables.count("image") == 0) ||
+             variables.count("image") == 0)) {
+            connection.reset(new Win32SerialConnection(serial.isEmpty() ?
+                        3 : serial.toUInt()));
 #endif
-            false) {
-            connection.reset(new SerialConnection(serial.isEmpty() ?
-#ifdef Q_OS_WIN32
-                                    3
-#else
-                                    0
-#endif
-                                    : serial.toUInt()));
 #ifdef Q_OS_LINUX
         } else if (variables.count("usb-device") ||
             (variables.count("serial-device") == 0 &&
@@ -132,6 +131,9 @@ int main(int argc, char *argv[])
             if (parts.size() > 1)
                 product = parts[1].toUInt(NULL, 16);
             connection.reset(new LibusbConnection(vendor, product));
+        } else if (variables.count("serial-device")) {
+            connection.reset(new SerialConnection(serial.isEmpty() ?
+                        0 : serial.toUInt()));
 #endif
         } else if (variables.count("image")) {
             QFile file(imagePath);

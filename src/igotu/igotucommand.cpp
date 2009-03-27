@@ -48,7 +48,7 @@ int IgotuCommandPrivate::receiveResponseSize()
     QByteArray data(connection->receive(3));
     if (data.size() != 3)
         throw IgotuProtocolError(IgotuCommand::tr
-                ("Response too short: expected %u, got %u bytes")
+                ("Response too short: expected %1, got %2 bytes")
                 .arg(3).arg(data.size()));
     if (data[0] != '\x93')
         throw IgotuProtocolError(IgotuCommand::tr
@@ -63,7 +63,7 @@ QByteArray IgotuCommandPrivate::receiveResponseRemainder(unsigned size)
     const QByteArray result = connection->receive(size);
     if (unsigned(result.size()) != size)
         throw IgotuProtocolError(IgotuCommand::tr
-                ("Response remainder too short: expected %u, got %u bytes")
+                ("Response remainder too short: expected %1, got %2 bytes")
                 .arg(size).arg(result.size()));
     return result;
 }

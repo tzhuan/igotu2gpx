@@ -18,6 +18,7 @@ SOURCES *= \
     xmlutils.cpp \
 
 unix:SOURCES *= libusbconnection.cpp
+win32:SOURCES *= win32serialconnection.cpp
 
 HEADERS *= \
     commands.h \
@@ -33,6 +34,7 @@ HEADERS *= \
     xmlutils.h \
 
 unix:HEADERS *= libusbconnection.h
+win32:HEADERS *= win32serialconnection.h
 
 unix:ctags.commands  = echo !_TAG_FILE_FORMAT 2 dummy > $$BASEDIR/tags;
 unix:ctags.commands += echo !_TAG_FILE_SORTED 1 dummy >> $$BASEDIR/tags;
