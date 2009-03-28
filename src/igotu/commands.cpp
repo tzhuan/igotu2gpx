@@ -55,7 +55,17 @@ QByteArray IdentificationCommand::sendAndReceive()
     version = QString().sprintf("%u.%02u",
             *reinterpret_cast<const uchar*>(result.data() + 4),
             *reinterpret_cast<const uchar*>(result.data() + 5));
-    // TODO: there should be some more info (model number etc) in here
+    switch (*reinterpret_cast<const uchar*>(result.data() + 4)) {
+    case 2:
+        name = QLatin1String("GT-100");
+        break;
+    case 3:
+        name = QLatin1String("GT-120");
+        break;
+    default:
+        name = QLatin1String("Unknown model");
+        break;
+    }
     return result;
 }
 
@@ -67,6 +77,11 @@ unsigned IdentificationCommand::serialNumber() const
 QString IdentificationCommand::firmwareVersion() const
 {
     return version;
+}
+
+QString IdentificationCommand::deviceName() const
+{
+    return name;
 }
 
 // ReadCommand =================================================================

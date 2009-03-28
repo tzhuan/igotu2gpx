@@ -39,10 +39,12 @@ public:
 
     unsigned serialNumber() const;
     QString firmwareVersion() const;
+    QString deviceName() const;
 
 private:
     unsigned id;
     QString version;
+    QString name;
 };
 
 class IGOTU_EXPORT ReadCommand : public IgotuCommand
