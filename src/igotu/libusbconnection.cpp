@@ -93,6 +93,19 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId) :
         throw IgotuError(tr("Unable to open device %1")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
 
+    char buf[256];
+    if (usb_get_driver_np(d->handle.get(), 0, buf, sizeof(buf)) == 0) {
+        if (Verbose::verbose() > 0)
+            fprintf(stderr, "Interface 0 already claimed by driver '%s', "
+                    "detaching\n", buf);
+
+        int result = usb_detach_kernel_driver_np(d->handle.get(), 0);
+        if (result < 0)
+            throw IgotuError(tr("Unable to detach kernel driver '%1' from device: %1")
+                    .arg(QString::fromAscii(buf),
+                        QString::fromLocal8Bit(strerror(-result))));
+    }
+
     if (usb_claim_interface(d->handle.get(), 0) != 0)
         throw IgotuError(tr("Unable to claim interface 0 on device %1")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
