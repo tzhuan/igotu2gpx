@@ -47,6 +47,19 @@ private:
     QString name;
 };
 
+class IGOTU_EXPORT CountCommand : public IgotuCommand
+{
+public:
+    CountCommand(DataConnection *connection);
+
+    virtual QByteArray sendAndReceive();
+
+    unsigned trackPointCount() const;
+
+private:
+    unsigned count;
+};
+
 class IGOTU_EXPORT ReadCommand : public IgotuCommand
 {
 public:

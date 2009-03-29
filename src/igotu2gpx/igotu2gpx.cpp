@@ -163,6 +163,9 @@ int main(int argc, char *argv[])
                 printf("S/N: %u\n", id.serialNumber());
                 printf("Firmware version: %s\n", qPrintable(id.firmwareVersion()));
                 printf("Model: %s\n", qPrintable(id.deviceName()));
+                CountCommand count(connection.get());
+                count.sendAndReceive();
+                printf("Number of trackpoints: %u\n", count.trackPointCount());
 
                 contents += ReadCommand(connection.get(), 0, 0x1000)
                     .sendAndReceive();

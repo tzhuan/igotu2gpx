@@ -17,6 +17,7 @@
  ******************************************************************************/
 
 #include "commands.h"
+#include "exception.h"
 
 #include <QtEndian>
 
@@ -50,6 +51,8 @@ IdentificationCommand::IdentificationCommand(DataConnection *connection) :
 QByteArray IdentificationCommand::sendAndReceive()
 {
     const QByteArray result = IgotuCommand::sendAndReceive();
+    if (result.size() < 6)
+        throw IgotuError(tr("Response too short"));
     id = qFromLittleEndian<quint32>(reinterpret_cast<const uchar*>
             (result.data()));
     version = QString().sprintf("%u.%02u",
@@ -82,6 +85,33 @@ QString IdentificationCommand::firmwareVersion() const
 QString IdentificationCommand::deviceName() const
 {
     return name;
+}
+
+// CountCommand ================================================================
+
+CountCommand::CountCommand(DataConnection *connection) :
+    IgotuCommand(connection)
+{
+    QByteArray command(15, 0);
+    command.replace(0, 3, "\x93\x0b\x03");
+    command.replace(4, 1, "\x1d");
+    setCommand(command);
+}
+
+QByteArray CountCommand::sendAndReceive()
+{
+    const QByteArray result = IgotuCommand::sendAndReceive();
+    const QByteArray temp = '\x00' + result;
+    if (result.size() < 3)
+        throw IgotuError(tr("Response too short"));
+    count = qFromBigEndian<quint32>(reinterpret_cast<const uchar*>
+            (temp.data()));
+    return result;
+}
+
+unsigned CountCommand::trackPointCount() const
+{
+    return count;
 }
 
 // ReadCommand =================================================================

@@ -43,6 +43,22 @@ Id:
   YY: major version number
   ZZ: minor version number
 
+Number of data points:
+  Command chunk 1: 93 0B 03 00 1D 00 00 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 00 03 XX XX XX
+  XX: big endian number of data points
+
+Internal memory read? (used for number of datapoints):
+  Command chunk 1: 93 0B XX YY YY 00 00 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 00 XX DD...
+  XX: read size
+  YY: big endian read position
+  DD: read data
+
 Read:
   Command chunk 1: 93 05 07 XX XX 04 03 YY
   Response:        93 00 00
@@ -83,12 +99,6 @@ Command used after read of first block (not tested):
   Command chunk 2: 00 00 00 00 00 00 00 SS
   Response:        93 XX XX C2 20 15
   XX: big endian size, always 0003
-
-Command used after read of first block (not tested):
-  Command chunk 1: 93 0B 03 00 1D 00 00 00
-  Response:        93 00 00
-  Command chunk 2: 00 00 00 00 00 00 00 SS
-  Response:        93 00 03 19 02 58
 
 Flash layout
 ------------
