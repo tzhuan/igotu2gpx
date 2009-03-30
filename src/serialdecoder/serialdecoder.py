@@ -119,6 +119,17 @@ while len(parts) > 0:
             print 'Identification: s/n %d, version %u.%02u, unknown %s (%s, returned %d)' % (idresponse[0],
                     idresponse[1], idresponse[2], idresponse[3].encode('hex'),
                     format_query(query, 2), size)
+        # Count
+        elif query.startswith('\x93\x0b\x03') and query[4] == '\x1d':
+            countresponse = unpack_from('>xH', response)
+            print 'Trackpoint count: count %d (%s, returned %d)' % (
+                    countresponse[0], format_query(query, 5), size)
+        # Memory read
+        elif query.startswith('\x93\x0b'):
+            readquery = unpack_from('>xxBH', query)
+            print 'Memory read: pos %04x, size %02x (%s, returned %d)' % (
+                    readquery[1], readquery[0],
+                    format_query(query, 5), size)
         # Read
         elif query.startswith('\x93\x05\x07') and query[5:7] == '\x04\x03':
             readquery = unpack_from('>xxxHxxBH', query)

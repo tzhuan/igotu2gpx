@@ -182,14 +182,18 @@ int main(int argc, char *argv[])
             printf("Above %u? (TODO), use %us\n",
                     unsigned(contents[0x109]), contents[0x10a] + 1);
         } else {
+            int count = -1;
             if (connection) {
                 NmeaSwitchCommand(connection.get(), false).sendAndReceive();
-                for (unsigned i = 0; sectorCount == 0 || i < sectorCount; ++i) {
+                CountCommand countCommand(connection.get());
+                countCommand.sendAndReceive();
+                count = countCommand.trackPointCount();
+                for (unsigned i = 0;
+                        (sectorCount == 0 && i < 1 + unsigned(count + 0x7f) / 0x80) ||
+                        i < sectorCount; ++i) {
                     fprintf(stderr, "Dumping datablock %u...\n", i + 1);
                     QByteArray data = ReadCommand(connection.get(), i * 0x1000,
                             0x1000).sendAndReceive();
-                    if (data == QByteArray(0x1000, char(0xff)))
-                        break;
                     contents += data;
                 }
                 NmeaSwitchCommand(connection.get(), true).sendAndReceive();
@@ -201,7 +205,7 @@ int main(int argc, char *argv[])
                                 "file '%1'").arg(rawPath));
                 file.write(contents);
             } else if (variables.count("details")) {
-                IgotuPoints igotuPoints(contents);
+                IgotuPoints igotuPoints(contents, count);
                 unsigned index = 0;
                 Q_FOREACH (const IgotuPoint &igotuPoint, igotuPoints.points()) {
                     printf("Record %u\n", index++);
@@ -219,7 +223,7 @@ int main(int argc, char *argv[])
                     printf("  Unknown 2 %u\n", igotuPoint.unknown2());
                 }
             } else {
-                IgotuPoints igotuPoints(contents);
+                IgotuPoints igotuPoints(contents, count);
                 printf("%s", qPrintable(igotuPoints.gpx()));
             }
         }

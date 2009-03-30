@@ -89,7 +89,7 @@ class IgotuPointsPrivate;
 class IGOTU_EXPORT IgotuPoints
 {
 public:
-    IgotuPoints(const QByteArray &dump);
+    IgotuPoints(const QByteArray &dump, int count = -1);
     ~IgotuPoints();
 
     QList<IgotuPoint> points() const;
@@ -101,6 +101,7 @@ public:
 
 private:
     QByteArray dump;
+    int count;
 };
 
 } // namespace igotu

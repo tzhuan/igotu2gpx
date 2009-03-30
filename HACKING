@@ -47,7 +47,7 @@ Number of data points:
   Command chunk 1: 93 0B 03 00 1D 00 00 00
   Response:        93 00 00
   Command chunk 2: 00 00 00 00 00 00 00 SS
-  Response:        93 00 03 XX XX XX
+  Response:        93 00 03 ?? XX XX
   XX: big endian number of data points
 
 Internal memory read? (used for number of datapoints):

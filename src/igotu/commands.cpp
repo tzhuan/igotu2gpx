@@ -50,6 +50,7 @@ IdentificationCommand::IdentificationCommand(DataConnection *connection) :
 
 QByteArray IdentificationCommand::sendAndReceive()
 {
+    // TODO: what are the other 4 bytes?
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (result.size() < 6)
         throw IgotuError(tr("Response too short"));
@@ -100,12 +101,12 @@ CountCommand::CountCommand(DataConnection *connection) :
 
 QByteArray CountCommand::sendAndReceive()
 {
+    // TODO: what is the first byte?
     const QByteArray result = IgotuCommand::sendAndReceive();
-    const QByteArray temp = '\x00' + result;
     if (result.size() < 3)
         throw IgotuError(tr("Response too short"));
-    count = qFromBigEndian<quint32>(reinterpret_cast<const uchar*>
-            (temp.data()));
+    count = qFromBigEndian<quint16>(reinterpret_cast<const uchar*>
+            (result.data() + 1));
     return result;
 }
 

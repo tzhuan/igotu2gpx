@@ -41,6 +41,9 @@ IgotuPoint::~IgotuPoint()
 
 bool IgotuPoint::isValid() const
 {
+    // This test is used by @trip PC
+    if (latitude() == 0 && longitude() == 0)
+        return false;
     // TODO:this is too simple, location and time information can still be valid
     return (uchar(record[0]) & ~0x04) == 0;
 }
@@ -110,9 +113,14 @@ QByteArray IgotuPoint::unknownDataDump() const
 
 // IgotuPoints ===================================================================
 
-IgotuPoints::IgotuPoints(const QByteArray &dump) :
-    dump(dump)
+IgotuPoints::IgotuPoints(const QByteArray &dump, int count) :
+    dump(dump),
+    count(count)
 {
+    if (this->count == -1)
+        this->count = (dump.size() - 0x1000) / 0x20;
+    if (this->count < 0)
+        this->count = 0;
 }
 
 IgotuPoints::~IgotuPoints()
@@ -122,8 +130,8 @@ IgotuPoints::~IgotuPoints()
 QList<IgotuPoint> IgotuPoints::points() const
 {
     QList<IgotuPoint> result;
-    for (unsigned i = 0x1000; i < unsigned(dump.size()); i += 0x20) {
-        IgotuPoint point(dump.mid(i, 32));
+    for (unsigned j = 0; j < unsigned(count); ++j) {
+        IgotuPoint point(dump.mid(0x1000 + j * 0x20, 32));
         if (point.isValid())
             result.append(point);
     }
