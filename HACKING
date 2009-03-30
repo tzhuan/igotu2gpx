@@ -112,7 +112,9 @@ Configuration data:
 
 Trackpoints are stored in records of 0x20 bytes:
   0x00: uint8 flags
-        0x04: waypoint
+        0x04: waypoint (type = -1)
+        0x20: unknown  (type = -4)
+        0x40: unknown  (type = -2)
   0x01: uint8 YYYYMMMM
         YY year - 2000
         MM month (starting with 1)
@@ -121,11 +123,16 @@ Trackpoints are stored in records of 0x20 bytes:
         HH hour
         MM minute
   0x04: uint16b seconds * 1000 + milliseconds
-  0x06: 6 bytes unknown
+  0x06: uint16b: AAAAEEEEEEEEEEEE
+        AA unknown, found values 0 (common) and 1 (for flags = 0x12)
+        EE expected horizontal position error (EHPE) / 16
+  0x08: uint32b satellite map (one bit per satellite)
   0x0c: int32b latitude * 1e7 (in degrees)
   0x10: int32b longitude * 1e7 (in degrees)
   0x14: int32b elevation * 1e2 (in m)
   0x18: uint16b speed * 1e2 (in m/s)
-  0x1a: uint16b unknown 1
-  0x1c: uint16b unknown 2
-  0x1d: 2 bytes unknown
+  0x1a: uint16b course * 1e2 (in degrees)
+  0x1c: uint8 timeout in s
+  0x1d: uint8 MSVs_QCN
+  0x1e: uint8 weight criteria
+  0x1f: uint8 sleep time

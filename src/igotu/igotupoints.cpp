@@ -72,16 +72,10 @@ double IgotuPoint::speed() const
         (reinterpret_cast<const uchar*>(record.data()) + 24);
 }
 
-unsigned IgotuPoint::unknown1() const
+double IgotuPoint::course() const
 {
-    return qFromBigEndian<quint16>
+    return 1e-2 * qFromBigEndian<quint16>
         (reinterpret_cast<const uchar*>(record.data()) + 26);
-}
-
-unsigned IgotuPoint::unknown2() const
-{
-    return qFromBigEndian<quint16>
-        (reinterpret_cast<const uchar*>(record.data()) + 28);
 }
 
 QDateTime IgotuPoint::dateTime() const
@@ -103,14 +97,6 @@ bool IgotuPoint::isWayPoint() const
     return record[0] & 0x04;
 }
 
-QByteArray IgotuPoint::unknownDataDump() const
-{
-    QByteArray hexRecord = record.toHex();
-    hexRecord.replace(2, 10, "__________");
-    hexRecord.replace(24, 28, "____________________________");
-    return hexRecord;
-}
-
 // IgotuPoints ===================================================================
 
 IgotuPoints::IgotuPoints(const QByteArray &dump, int count) :
@@ -130,11 +116,8 @@ IgotuPoints::~IgotuPoints()
 QList<IgotuPoint> IgotuPoints::points() const
 {
     QList<IgotuPoint> result;
-    for (unsigned j = 0; j < unsigned(count); ++j) {
-        IgotuPoint point(dump.mid(0x1000 + j * 0x20, 32));
-        if (point.isValid())
-            result.append(point);
-    }
+    for (unsigned j = 0; j < unsigned(count); ++j)
+        result.append(IgotuPoint(dump.mid(0x1000 + j * 0x20, 32)));
     return result;
 }
 

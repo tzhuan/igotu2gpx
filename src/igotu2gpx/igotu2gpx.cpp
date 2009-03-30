@@ -208,9 +208,7 @@ int main(int argc, char *argv[])
                 IgotuPoints igotuPoints(contents, count);
                 unsigned index = 0;
                 Q_FOREACH (const IgotuPoint &igotuPoint, igotuPoints.points()) {
-                    printf("Record %u\n", index++);
-                    printf("  Unknown %s\n",
-                            igotuPoint.unknownDataDump().data());
+                    printf("Record %u\n", ++index);
                     if (igotuPoint.isWayPoint())
                         printf("  Waypoint\n");
                     printf("  Date %s\n", qPrintable(igotuPoint.dateTime()
@@ -219,8 +217,8 @@ int main(int argc, char *argv[])
                     printf("  Longitude %.6f\n", igotuPoint.longitude());
                     printf("  Elevation %.1f m\n", igotuPoint.elevation());
                     printf("  Speed %.1f km/s\n", igotuPoint.speed());
-                    printf("  Unknown 1 %u\n", igotuPoint.unknown1());
-                    printf("  Unknown 2 %u\n", igotuPoint.unknown2());
+                    printf("  Course %.2f degrees\n", igotuPoint.course());
+                    // TODO: more info: timeout, satellite map, etc.
                 }
             } else {
                 IgotuPoints igotuPoints(contents, count);
