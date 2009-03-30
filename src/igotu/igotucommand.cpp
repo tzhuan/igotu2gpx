@@ -190,7 +190,7 @@ QByteArray IgotuCommand::sendAndReceive()
                 }
                 // Assume this was caused by some spurious NMEA messages
                 ++protocolErrors;
-                if (protocolErrors <= 3) {
+                if (protocolErrors <= 5) {
                     if (Verbose::verbose() > 0) {
                         fprintf(stderr, "Command: %s\n", d->command.toHex().data());
                         fprintf(stderr, "Failed protocol: %s\n", e.what());

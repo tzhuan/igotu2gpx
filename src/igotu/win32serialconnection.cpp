@@ -71,10 +71,12 @@ void Win32SerialConnection::send(const QByteArray &query)
 {
     D(Win32SerialConnection);
 
-    d->receiveBuffer.clear();
-    PurgeComm(d->handle, PURGE_RXCLEAR | PURGE_TXCLEAR);
-
     DWORD result;
+
+    d->receiveBuffer.clear();
+    char dummy[0x10];
+    ReadFile(d->handle, dummy, sizeof(dummy), &result, NULL);
+
     if (!WriteFile(d->handle, query.data(), query.size(), &result, NULL))
         throw IgotuError(tr("Unable to send data to the device"));
     if (result != query.size())
@@ -97,7 +99,7 @@ QByteArray Win32SerialConnection::receive(unsigned expected)
         toRead -= toRemove;
         if (toRead == 0)
             break;
-        QByteArray data(0x10, 0);
+        QByteArray data(toRead, 0);
         DWORD result;
         if (!ReadFile(d->handle, data.data(), data.size(), &result, NULL))
             throw IgotuError(tr("Unable to read data from the device"));
