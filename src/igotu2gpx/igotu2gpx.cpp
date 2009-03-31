@@ -41,74 +41,14 @@ using namespace igotu;
 
 namespace po = boost::program_options;
 
-int main(int argc, char *argv[])
+po::variables_map variables;
+QByteArray contents;
+boost::scoped_ptr<DataConnection> connection;
+QString imagePath, usb, serial;
+unsigned sectorCount = 0;
+
+void makeConnection()
 {
-    QCoreApplication app(argc, argv);
-
-    // Command line parsing (uses C++ output)
-
-    QString rawPath, action, imagePath, usb, serial;
-    unsigned sectorCount = 0;
-
-    po::options_description options("Options");
-    options.add_options()
-        ("help", "this help message")
-
-        ("image,i", po::value<QString>(&imagePath),
-         "instead of connecting to the gps tracker, use the specified image "
-         "file (saved by \"dump --raw\")")
-#ifdef Q_OS_LINUX
-        ("usb-device,u", po::value<QString>(&usb),
-         "connect via usb to the device specified by vendor:product "
-         "(this is the default on Linux)")
-#endif
-        ("serial-device,s", po::value<QString>(&serial),
-         "connect via RS232 to the serial port with the specfied number "
-         "(this is the default on Windows)")
-
-        ("gpx",
-         "output in gpx format (this is the default)")
-        ("details",
-         "output a detailed representation of the track")
-        ("raw", po::value<QString>(&rawPath),
-         "output the raw flash contents of the gps tracker")
-        ("count", po::value<unsigned>(&sectorCount),
-         "limits the number of sectors read (4096 bytes each)")
-
-        ("verbose,v",
-         "increase the amount of informative messages")
-        ("action", po::value<QString>(&action),
-         "dump the trackpoints (dump) or show general info (info)")
-    ;
-    po::positional_options_description positionalOptions;
-    positionalOptions.add("action", 1);
-
-    po::variables_map variables;
-
-    try {
-        po::store(po::command_line_parser(arguments())
-                .options(options)
-                .positional(positionalOptions).run(), variables);
-        po::notify(variables);
-
-        if (variables.count("help") || action.isEmpty()) {
-            std::cout << "Usage:\n  "
-                << qPrintable(QFileInfo(app.applicationFilePath()).fileName())
-                << " dump|info [OPTIONS...]\n\n";
-            std::cout << options << "\n";
-            return 1;
-        }
-    } catch (const std::exception &e) {
-        std::cout << "Unable to parse command line: " << e.what() << "\n";
-        return 2;
-    }
-
-    Verbose::setVerbose(variables.count("verbose"));
-    // Make connection
-
-    boost::scoped_ptr<DataConnection> connection;
-    QByteArray contents;
-
     try {
         if (false) {
             // Dummy
@@ -145,8 +85,118 @@ int main(int argc, char *argv[])
         }
     } catch (const std::exception &e) {
         printf("Unable to create gps tracker connection: %s\n", e.what());
-        return 3;
+        exit(3);
     }
+}
+
+void dump(const QByteArray &data)
+{
+    printf("Complete dump:\n");
+    for (unsigned i = 0; i < unsigned(data.size() + 15) / 16; ++i) {
+        const QByteArray chunk = data.mid(i * 16, 16);
+        printf("%04x  ", i * 16);
+        for (unsigned j = 0; j < unsigned(chunk.size()); ++j) {
+            printf("%02x ", uchar(chunk[j]));
+            if (j % 4 == 3)
+                printf(" ");
+        }
+        printf("\n");
+    }
+}
+
+void dumpDiff(const QByteArray &oldData, const QByteArray &newData)
+{
+    printf("Difference dump:\n");
+    for (unsigned i = 0; i < unsigned(oldData.size() + 15) / 16; ++i) {
+        const QByteArray oldChunk = oldData.mid(i * 16, 16);
+        const QByteArray newChunk = newData.mid(i * 16, 16);
+        if (oldChunk == newChunk)
+            continue;
+        printf("%04x Before  ", i * 16);
+        for (unsigned j = 0; j < unsigned(oldChunk.size()); ++j) {
+            if (oldChunk[j] == newChunk[j])
+                printf("__ ");
+            else
+                printf("%02x ", uchar(oldChunk[j]));
+            if (j % 4 == 3)
+                printf(" ");
+        }
+        printf("\n");
+        printf("%04x After   ", i * 16);
+        for (unsigned j = 0; j < unsigned(newChunk.size()); ++j) {
+            if (oldChunk[j] == newChunk[j])
+                printf("__ ");
+            else
+                printf("%02x ", uchar(newChunk[j]));
+            if (j % 4 == 3)
+                printf(" ");
+        }
+        printf("\n");
+    }
+}
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication app(argc, argv);
+
+    // Command line parsing (uses C++ output)
+
+    QString rawPath, action;
+
+    po::options_description options("Options");
+    options.add_options()
+        ("help", "this help message")
+
+        ("image,i", po::value<QString>(&imagePath),
+         "instead of connecting to the gps tracker, use the specified image "
+         "file (saved by \"dump --raw\")")
+#ifdef Q_OS_LINUX
+        ("usb-device,u", po::value<QString>(&usb),
+         "connect via usb to the device specified by vendor:product "
+         "(this is the default on Linux)")
+#endif
+        ("serial-device,s", po::value<QString>(&serial),
+         "connect via RS232 to the serial port with the specfied number "
+         "(this is the default on Windows)")
+
+        ("gpx",
+         "output in gpx format (this is the default)")
+        ("details",
+         "output a detailed representation of the track")
+        ("raw", po::value<QString>(&rawPath),
+         "output the raw flash contents of the gps tracker")
+        ("count", po::value<unsigned>(&sectorCount),
+         "limits the number of sectors read (4096 bytes each)")
+
+        ("verbose,v",
+         "increase the amount of informative messages")
+        ("action", po::value<QString>(&action),
+         "dump the trackpoints (dump) or show general info (info)")
+    ;
+    po::positional_options_description positionalOptions;
+    positionalOptions.add("action", 1);
+
+    try {
+        po::store(po::command_line_parser(arguments())
+                .options(options)
+                .positional(positionalOptions).run(), variables);
+        po::notify(variables);
+
+        if (variables.count("help") || action.isEmpty()) {
+            std::cout << "Usage:\n  "
+                << qPrintable(QFileInfo(app.applicationFilePath()).fileName())
+                << " dump|info [OPTIONS...]\n\n";
+            std::cout << options << "\n";
+            return 1;
+        }
+    } catch (const std::exception &e) {
+        std::cout << "Unable to parse command line: " << e.what() << "\n";
+        return 2;
+    }
+
+    Verbose::setVerbose(variables.count("verbose"));
+
+    makeConnection();
 
     // Process action
 
@@ -177,6 +227,36 @@ int main(int argc, char *argv[])
             // 0x0109: 0x15 -> above 10km/h
             printf("Above %u? (TODO), use %us\n",
                     unsigned(contents[0x109]), contents[0x10a] + 1);
+        } else if (action == QLatin1String("diff")) {
+            if (!connection)
+                throw IgotuError(QCoreApplication::tr("Unable to determine"
+                            " difference when using an image file"));
+
+            fprintf(stderr, "Saving current tracker configuration...\n");
+            NmeaSwitchCommand(connection.get(), false).sendAndReceive();
+            QByteArray oldData = ReadCommand(connection.get(), 0, 0x1000)
+                .sendAndReceive();
+            NmeaSwitchCommand(connection.get(), true).sendAndReceive();
+
+            connection.reset();
+            fprintf(stderr, "Please change the setting your are interested in"
+                    " in @trip PC and press RETURN when ready...");
+            Q_FOREVER {
+                int result = getchar();
+                if (result == EOF || result == 10)
+                    break;
+                printf("%i", result);
+            }
+            makeConnection();
+
+            fprintf(stderr, "Saving new tracker configuration...\n");
+            NmeaSwitchCommand(connection.get(), false).sendAndReceive();
+            QByteArray newData = ReadCommand(connection.get(), 0, 0x1000)
+                .sendAndReceive();
+            NmeaSwitchCommand(connection.get(), true).sendAndReceive();
+
+            dump(newData);
+            dumpDiff(oldData, newData);
         } else {
             int count = -1;
             if (connection) {
