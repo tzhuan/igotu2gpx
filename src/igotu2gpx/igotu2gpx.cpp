@@ -20,7 +20,6 @@
 #include "igotu/exception.h"
 #include "igotu/igotupoints.h"
 #include "igotu/optionutils.h"
-#include "igotu/serialconnection.h"
 #include "igotu/verbose.h"
 
 #include <boost/program_options.hpp>
@@ -131,9 +130,6 @@ int main(int argc, char *argv[])
             if (parts.size() > 1)
                 product = parts[1].toUInt(NULL, 16);
             connection.reset(new LibusbConnection(vendor, product));
-        } else if (variables.count("serial-device")) {
-            connection.reset(new SerialConnection(serial.isEmpty() ?
-                        0 : serial.toUInt()));
 #endif
         } else if (variables.count("image")) {
             QFile file(imagePath);

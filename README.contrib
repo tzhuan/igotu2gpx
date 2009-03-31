@@ -1,4 +1,0 @@
-QextSerialPort:
-    cvs -z3 -d:pserver:anonymous@qextserialport.cvs.sourceforge.net:/cvsroot/qextserialport co -P qextserialport
-    public domain
-    modified to call PurgeComm on flush

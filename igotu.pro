@@ -7,8 +7,6 @@ include(clebs.pri)
 OBJECTS_DIR =
 TEMPLATE = subdirs
 
-clebsDirs(contrib/*)
-
 clebsDirs(src/igotu)
 clebsDirs(src/igotu2gpx, src/igotu)
 

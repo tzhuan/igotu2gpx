@@ -1,5 +1,5 @@
 BASEDIR = ../..
-CLEBS *= boost qextserialport pch builddll
+CLEBS *= boost pch builddll
 unix:CLEBS *= libusb
 CLEBS_INSTALL *= boost-po
 TARGET = igotu
@@ -13,7 +13,6 @@ SOURCES *= \
     igotucommand.cpp \
     igotupoints.cpp \
     optionutils.cpp \
-    serialconnection.cpp \
     verbose.cpp \
     xmlutils.cpp \
 
@@ -29,7 +28,6 @@ HEADERS *= \
     igotupoints.h \
     optionutils.h \
     pch.h \
-    serialconnection.h \
     verbose.h \
     xmlutils.h \
 
