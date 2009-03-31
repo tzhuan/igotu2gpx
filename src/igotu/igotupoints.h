@@ -40,6 +40,10 @@ public:
     IgotuPoint(const QByteArray &record);
     ~IgotuPoint();
 
+    bool isValid() const;
+    bool isWayPoint() const;
+
+    QDateTime dateTime() const;
     // in degrees
     double longitude() const;
     // in degrees
@@ -51,11 +55,18 @@ public:
     // in degrees
     double course() const;
 
-    QDateTime dateTime() const;
+    QList<unsigned> satellites() const;
+    // in m
+    double ehpe() const;
 
-    bool isWayPoint() const;
+    unsigned flags() const;
+    // in seconds
+    unsigned timeout() const;
+    unsigned msvsQcn() const;
+    unsigned weightCriteria() const;
+    unsigned sleepTime() const;
 
-    bool isValid() const;
+    QByteArray hex() const;
 
 private:
     QByteArray record;

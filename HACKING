@@ -35,10 +35,10 @@ NmeaSwitch:
   XX: 00 to enable, 03 to disable NMEA output
 
 Id:
-  Command chunk 1: 93 0a 00 00 00 00 00 00
+  Command chunk 1: 93 0A 00 00 00 00 00 00
   Response:        93 00 00
   Command chunk 2: 00 00 00 00 00 00 00 SS
-  Response:        93 00 0a XX XX XX XX YY ZZ ?? ?? ?? ??
+  Response:        93 00 0A XX XX XX XX YY ZZ ?? ?? ?? ??
   XX: little endian serial number
   YY: major version number
   ZZ: minor version number
@@ -54,30 +54,30 @@ Internal memory read? (used for number of datapoints):
   Command chunk 1: 93 0B XX YY YY 00 00 00
   Response:        93 00 00
   Command chunk 2: 00 00 00 00 00 00 00 SS
-  Response:        93 00 XX DD...
+  Response:        93 00 XX ZZ...
   XX: read size
   YY: big endian read position
-  DD: read data
+  ZZ: read data
 
 Read:
   Command chunk 1: 93 05 07 XX XX 04 03 YY
   Response:        93 00 00
   Command chunk 2: YY YY 00 00 00 00 00 SS
-  Response:        93 XX XX DD...
+  Response:        93 XX XX ZZ...
   XX: big endian read size (always 1000 for @trip PC)
   YY: big endian read position
-  DD: read data
+  ZZ: read data
 
 Write (not tested):
   Command chunk 1: 93 06 07 XX XX 04 02 YY
   Response:        93 00 00
   Command chunk 2: YY YY 00 00 00 00 00 SS
   Response:        93 XX XX
-  Data chunk n:    DD DD DD DD DD DD DD SS
+  Data chunk n:    ZZ ZZ ZZ ZZ ZZ ZZ ZZ SS
   Response:        93 00 00
   XX: big endian write size (always 0100 for @trip PC)
   YY: big endian write position
-  DD: write data
+  ZZ: write data
   needs ceil(size / 7) data chunks
 
 Command used after write (not tested):
@@ -125,7 +125,7 @@ Trackpoints are stored in records of 0x20 bytes:
   0x04: uint16b seconds * 1000 + milliseconds
   0x06: uint16b: AAAAEEEEEEEEEEEE
         AA unknown, found values 0 (common) and 1 (for flags = 0x12)
-        EE expected horizontal position error (EHPE) / 16
+        EE EHPE * 1e2 / 16 (in m)
   0x08: uint32b satellite map (one bit per satellite)
   0x0c: int32b latitude * 1e7 (in degrees)
   0x10: int32b longitude * 1e7 (in degrees)

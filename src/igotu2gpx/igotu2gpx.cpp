@@ -218,7 +218,16 @@ int main(int argc, char *argv[])
                     printf("  Elevation %.1f m\n", igotuPoint.elevation());
                     printf("  Speed %.1f km/s\n", igotuPoint.speed());
                     printf("  Course %.2f degrees\n", igotuPoint.course());
-                    // TODO: more info: timeout, satellite map, etc.
+                    printf("  EHPE %.2f m\n", igotuPoint.ehpe());
+                    printf("  Satellites:");
+                    Q_FOREACH (unsigned satellite, igotuPoint.satellites())
+                        printf(" %u", satellite);
+                    printf("\n");
+                    printf("  Flags 0x%02x\n", igotuPoint.flags());
+                    printf("  Timeout %u s\n", igotuPoint.timeout());
+                    printf("  MSVs_QCN %u\n", igotuPoint.msvsQcn());
+                    printf("  Weight criteria 0x%02x\n", igotuPoint.weightCriteria());
+                    printf("  Sleep time %u\n", igotuPoint.sleepTime());
                 }
             } else {
                 IgotuPoints igotuPoints(contents, count);

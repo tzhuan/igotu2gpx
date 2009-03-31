@@ -48,34 +48,76 @@ bool IgotuPoint::isValid() const
     return (uchar(record[0]) & ~0x04) == 0;
 }
 
+unsigned IgotuPoint::flags() const
+{
+    return uchar(record[0]);
+}
+
 double IgotuPoint::longitude() const
 {
     return 1e-7 * qFromBigEndian<qint32>
-        (reinterpret_cast<const uchar*>(record.data()) + 16);
+        (reinterpret_cast<const uchar*>(record.data()) + 0x10);
 }
 
 double IgotuPoint::latitude() const
 {
     return 1e-7 * qFromBigEndian<qint32>
-        (reinterpret_cast<const uchar*>(record.data()) + 12);
+        (reinterpret_cast<const uchar*>(record.data()) + 0x0c);
 }
 
 double IgotuPoint::elevation() const
 {
     return 1e-2 * qFromBigEndian<qint32>
-        (reinterpret_cast<const uchar*>(record.data()) + 20);
+        (reinterpret_cast<const uchar*>(record.data()) + 0x14);
 }
 
 double IgotuPoint::speed() const
 {
     return 1e-2 * 3.6 * qFromBigEndian<quint16>
-        (reinterpret_cast<const uchar*>(record.data()) + 24);
+        (reinterpret_cast<const uchar*>(record.data()) + 0x18);
 }
 
 double IgotuPoint::course() const
 {
     return 1e-2 * qFromBigEndian<quint16>
-        (reinterpret_cast<const uchar*>(record.data()) + 26);
+        (reinterpret_cast<const uchar*>(record.data()) + 0x1a);
+}
+
+double IgotuPoint::ehpe() const
+{
+    return 1e-2 * 0x10 * (qFromBigEndian<quint16>
+            (reinterpret_cast<const uchar*>(record.data()) + 0x06) & 0x0fff);
+}
+
+unsigned IgotuPoint::timeout() const
+{
+    return uchar(record[0x1c]);
+}
+
+unsigned IgotuPoint::msvsQcn() const
+{
+    return uchar(record[0x1d]);
+}
+
+unsigned IgotuPoint::weightCriteria() const
+{
+    return uchar(record[0x1e]);
+}
+
+unsigned IgotuPoint::sleepTime() const
+{
+    return uchar(record[0x1f]);
+}
+
+QList<unsigned> IgotuPoint::satellites() const
+{
+    QList<unsigned> result;
+    unsigned map = qFromBigEndian<quint32>
+        (reinterpret_cast<const uchar*>(record.data()) + 0x08);
+    for (unsigned i = 0; i < 32; ++i)
+        if (map & (1 << i))
+            result << i + 1;
+    return result;
 }
 
 QDateTime IgotuPoint::dateTime() const
@@ -95,6 +137,11 @@ QDateTime IgotuPoint::dateTime() const
 bool IgotuPoint::isWayPoint() const
 {
     return record[0] & 0x04;
+}
+
+QByteArray IgotuPoint::hex() const
+{
+    return record.toHex();
 }
 
 // IgotuPoints ===================================================================
