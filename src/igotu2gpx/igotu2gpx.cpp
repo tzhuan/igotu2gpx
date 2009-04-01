@@ -171,7 +171,9 @@ int main(int argc, char *argv[])
         ("verbose,v",
          "increase the amount of informative messages")
         ("action", po::value<QString>(&action),
-         "dump the trackpoints (dump) or show general info (info)")
+         "dump: dump the trackpoints\n"
+         "info: show general info\n"
+         "diff: show before/after difference")
     ;
     po::positional_options_description positionalOptions;
     positionalOptions.add("action", 1);
@@ -185,7 +187,7 @@ int main(int argc, char *argv[])
         if (variables.count("help") || action.isEmpty()) {
             std::cout << "Usage:\n  "
                 << qPrintable(QFileInfo(app.applicationFilePath()).fileName())
-                << " dump|info [OPTIONS...]\n\n";
+                << " dump|info|diff [OPTIONS...]\n\n";
             std::cout << options << "\n";
             return 1;
         }
@@ -219,14 +221,14 @@ int main(int argc, char *argv[])
             }
 
             IgotuPoints igotuPoints(contents);
-            printf("Log interval: %us\n", igotuPoints.logInterval());
-            printf("Interval change: %s\n", igotuPoints
-                    .isIntervalChangeEnabled() ? "disabled" : "enabled");
-            // TODO
-            // 0x0109: 0xa0 -> above 15km/h
-            // 0x0109: 0x15 -> above 10km/h
-            printf("Above %u? (TODO), use %us\n",
-                    unsigned(contents[0x109]), contents[0x10a] + 1);
+            printf("Log interval: %u s\n", igotuPoints.logInterval());
+            if (igotuPoints.isIntervalChangeEnabled()) {
+                printf("Interval change: above %.0f km/h, use %u s\n",
+                        igotuPoints.intervalChangeSpeed(),
+                        igotuPoints.changedLogInterval());
+            } else {
+                printf("Interval change: disabled\n");
+            }
         } else if (action == QLatin1String("diff")) {
             if (!connection)
                 throw IgotuError(QCoreApplication::tr("Unable to determine"

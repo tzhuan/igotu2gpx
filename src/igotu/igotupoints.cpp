@@ -147,13 +147,13 @@ QByteArray IgotuPoint::hex() const
 // IgotuPoints ===================================================================
 
 IgotuPoints::IgotuPoints(const QByteArray &dump, int count) :
-    dump(dump),
-    count(count)
+    dump(dump)
 {
-    if (this->count == -1)
-        this->count = (dump.size() - 0x1000) / 0x20;
-    if (this->count < 0)
-        this->count = 0;
+    int dumpCount = qMax(0, (dump.size() - 0x1000) / 0x20);
+    if (count == -1)
+        this->count = dumpCount;
+    else
+        this->count = qMin(dumpCount, count);
 }
 
 IgotuPoints::~IgotuPoints()
@@ -170,12 +170,23 @@ QList<IgotuPoint> IgotuPoints::points() const
 
 unsigned IgotuPoints::logInterval() const
 {
-    return dump[0x107] + 1;
+    return uchar(dump[0x107]) + 1;
 }
 
 bool IgotuPoints::isIntervalChangeEnabled() const
 {
-    return dump[0x108] != '\x00';
+    return intervalChangeSpeed() != 0.0;
+}
+
+double IgotuPoints::intervalChangeSpeed() const
+{
+    return 1e-2 * 3.6 * qFromBigEndian<quint16>
+        (reinterpret_cast<const uchar*>(dump.data()) + 0x108);
+}
+
+unsigned IgotuPoints::changedLogInterval() const
+{
+    return uchar(dump[0x10a]) + 1;
 }
 
 QString IgotuPoints::gpx() const

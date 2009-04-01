@@ -107,8 +107,14 @@ The first data block of 0x1000 bytes contains configuration data, all other
 data blocks contain the gps trackpoints.
 
 Configuration data:
-  0x0107: logging interval (number of seconds - 1)
-  0x0108: zero if automatic logging interval change disabled
+  0x0107: uint8 logging interval (number of seconds - 1)
+  0x0108: uint16b logging interval change speed * 1e2 (in m/s)
+  0x010a: uint8 changed logging interval (number of seconds - 1)
+
+  0x0800: uint8 security version; 0x00
+  0x0801: uint8 password enabled: 0x80
+  0x0802: uint8 password length in bytes (maximum 0x80)
+  0x0803..0x0882: utf16le password
 
 Trackpoints are stored in records of 0x20 bytes:
   0x00: uint8 flags

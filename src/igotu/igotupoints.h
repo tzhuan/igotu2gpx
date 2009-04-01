@@ -86,6 +86,10 @@ public:
     // in s
     unsigned logInterval() const;
     bool isIntervalChangeEnabled() const;
+    // in km/h
+    double intervalChangeSpeed() const;
+    // in s
+    unsigned changedLogInterval() const;
 
 private:
     QByteArray dump;
