@@ -61,7 +61,9 @@ QByteArray IdentificationCommand::sendAndReceive()
             *reinterpret_cast<const uchar*>(result.data() + 5));
     switch (*reinterpret_cast<const uchar*>(result.data() + 4)) {
     case 2:
-        name = QLatin1String("GT-100");
+        // GT-100 is model 1, GT-200 is model two
+        // TODO: @trip PC can figure it out
+        name = QLatin1String("GT-100/GT-200");
         break;
     case 3:
         name = QLatin1String("GT-120");

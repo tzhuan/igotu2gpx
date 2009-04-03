@@ -1,0 +1,29 @@
+Thu Apr 02 23:08:54 2009 [ACT] : <0> Try OnOpen() 
+Thu Apr 02 23:08:59 2009 [ACT] : <0> Is \\.\COM6 busy ?
+Thu Apr 02 23:08:59 2009 [ACT] : <0> Device is free (call from OnGetDevInfo())
+Thu Apr 02 23:08:59 2009 [ACT] : <0> Set \\.\COM6 busy
+Thu Apr 02 23:08:59 2009 [ACT] : <0> OnGetDevInfo() Version:2.11 Model: 2, SN:209503, Total Point: 19
+Thu Apr 02 23:08:59 2009 [ACT] : <0> Set \\.\COM6 free
+Thu Apr 02 23:08:59 2009 [ACT] : <0> Is \\.\COM6 busy ?
+Thu Apr 02 23:08:59 2009 [ACT] : <0> Device is free (call from OnGetConfig())
+Thu Apr 02 23:08:59 2009 [ACT] : <0> Set \\.\COM6 busy
+Thu Apr 02 23:08:59 2009 [ACT] : <0> OnGetConfig() Serurity : cVersion = 0, OnOff = 0, cPassword = []
+Thu Apr 02 23:08:59 2009 [ACT] : <0> OnGetConfig() Enable LED = 1, Enable Repeat = 0, Button Control = 1
+Thu Apr 02 23:08:59 2009 [ACT] : <0> OnGetConfig() Interval = 5
+Thu Apr 02 23:08:59 2009 [ACT] : <0> OnGetConfig() wVelocityScale = 0
+Thu Apr 02 23:08:59 2009 [ACT] : <0> OnGetConfig() nVSleep = 1
+Thu Apr 02 23:08:59 2009 [ACT] : <0> Set \\.\COM6 free
+Thu Apr 02 23:09:05 2009 [ACT] : <0> Is \\.\COM6 busy ?
+Thu Apr 02 23:09:05 2009 [ACT] : <0> Device is free (call from OnRead())
+Thu Apr 02 23:09:05 2009 [ACT] : <0> Set \\.\COM6 busy
+Thu Apr 02 23:09:05 2009 [ACT] : <0> ReadGTDevice()
+Thu Apr 02 23:09:05 2009 [ACT] : <0> Set \\.\COM6 free
+Thu Apr 02 23:09:05 2009 [ACT] : <0> Set \\.\COM6 busy
+Thu Apr 02 23:09:05 2009 [ACT] : <0> _ReadThread() GetSectorData 1 OK
+Thu Apr 02 23:09:05 2009 [ACT] : <0> _ReadThread() Invalid Point (Lat = Lng = 0.0) = 1
+Thu Apr 02 23:09:05 2009 [ACT] : <0> _ReadThread() GetSector Over at sector 1, Total Point = 19, Invalidate Point = 1
+Thu Apr 02 23:09:05 2009 [ACT] : <0> Set \\.\COM6 free
+Thu Apr 02 23:09:33 2009 [ACT] : <0> Is \\.\COM6 busy ?
+Thu Apr 02 23:09:33 2009 [ACT] : <0> Device is free (call from OnClose())
+Thu Apr 02 23:09:33 2009 [ACT] : <0> Set \\.\COM6 busy
+Thu Apr 02 23:09:33 2009 [ACT] : <0> OnClose()

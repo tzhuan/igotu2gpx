@@ -1,0 +1,23 @@
+These dumps were provided by Jim Thomann <jbthomann@gmail.com>.
+
+Model: GT-200, Ver 2.11, SN: 00209503
+
+Original Version -
+  i-gotU Desktop
+  1.0 Build 804.976 (Apr 9 2008)
+
+#1 clear.log
+#2 reset.log
+#3 loadnoclear.log
+#4 loadandclear.log
+
+New Version -
+  @trip PC
+  2.0 Build 811.2582
+
+#1 atclear.log
+#2 atreset.log
+#3 atloadempty.log
+#4 atload.log, data_0_atload.csv, gt_atload.log
+
+
