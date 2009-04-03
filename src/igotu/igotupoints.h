@@ -76,6 +76,7 @@ class IgotuPointsPrivate;
 
 class IGOTU_EXPORT IgotuPoints
 {
+    Q_DECLARE_TR_FUNCTIONS(IgotuPoints)
 public:
     IgotuPoints(const QByteArray &dump, int count = -1);
     ~IgotuPoints();
@@ -83,13 +84,19 @@ public:
     QList<IgotuPoint> points() const;
     QString gpx() const;
 
+    bool isValid() const;
+
     // in s
     unsigned logInterval() const;
-    bool isIntervalChangeEnabled() const;
-    // in km/h
-    double intervalChangeSpeed() const;
     // in s
     unsigned changedLogInterval() const;
+    // in km/h
+    double intervalChangeSpeed() const;
+    bool isIntervalChangeEnabled() const;
+
+    unsigned securityVersion() const;
+    bool passwordEnabled() const;
+    QString password() const;
 
 private:
     QByteArray dump;

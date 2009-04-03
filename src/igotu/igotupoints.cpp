@@ -149,6 +149,9 @@ QByteArray IgotuPoint::hex() const
 IgotuPoints::IgotuPoints(const QByteArray &dump, int count) :
     dump(dump)
 {
+    if (dump.size() < 0x1000)
+        throw IgotuError(tr("Dump too small"));
+
     int dumpCount = qMax(0, (dump.size() - 0x1000) / 0x20);
     if (count == -1)
         this->count = dumpCount;
@@ -166,6 +169,11 @@ QList<IgotuPoint> IgotuPoints::points() const
     for (unsigned j = 0; j < unsigned(count); ++j)
         result.append(IgotuPoint(dump.mid(0x1000 + j * 0x20, 32)));
     return result;
+}
+
+bool IgotuPoints::isValid() const
+{
+    return dump.mid(0, 0x1000) != QByteArray(0x1000, 0xff);
 }
 
 unsigned IgotuPoints::logInterval() const
@@ -187,6 +195,29 @@ double IgotuPoints::intervalChangeSpeed() const
 unsigned IgotuPoints::changedLogInterval() const
 {
     return uchar(dump[0x10a]) + 1;
+}
+
+unsigned IgotuPoints::securityVersion() const
+{
+    return uchar(dump[0x800]);
+}
+
+bool IgotuPoints::passwordEnabled() const
+{
+    return securityVersion() == 0 && dump[0x801];
+}
+
+QString IgotuPoints::password() const
+{
+    if (!passwordEnabled())
+        return QString();
+
+    const unsigned length = qMin(uchar('\x80'), uchar(dump[0x802]));
+    QVector<ushort> result(length / 2);
+    for (unsigned i = 0; i < unsigned(result.size()); ++i)
+        result[i] = qFromLittleEndian<ushort>
+            (reinterpret_cast<const uchar*>(dump.data() + 0x803 + i * 2));
+    return QString::fromUtf16(result.data(), result.size());
 }
 
 QString IgotuPoints::gpx() const

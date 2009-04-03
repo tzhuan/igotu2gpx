@@ -221,6 +221,8 @@ int main(int argc, char *argv[])
             }
 
             IgotuPoints igotuPoints(contents);
+            if (!igotuPoints.isValid())
+                throw IgotuError(QCoreApplication::tr("Uninitialized device"));
             printf("Log interval: %u s\n", igotuPoints.logInterval());
             if (igotuPoints.isIntervalChangeEnabled()) {
                 printf("Interval change: above %.0f km/h, use %u s\n",
@@ -228,6 +230,12 @@ int main(int argc, char *argv[])
                         igotuPoints.changedLogInterval());
             } else {
                 printf("Interval change: disabled\n");
+            }
+            printf("Security version: %u\n", igotuPoints.securityVersion());
+            if (igotuPoints.passwordEnabled()) {
+                printf("Password: [%s]\n", qPrintable(igotuPoints.password()));
+            } else {
+                printf("Password: disabled\n");
             }
         } else if (action == QLatin1String("diff")) {
             if (!connection)
