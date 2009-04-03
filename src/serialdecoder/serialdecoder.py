@@ -68,11 +68,36 @@ def format_hex(data):
 readdata = '';
 writedata = '';
 parts = [];
+remotemode = False;
 with open(sys.argv[1], 'r') as f:
+    firstline = True;
+    responseline = False;
     for line in f.xreadlines():
-        tokens = line.split('\t')
-        command = tokens[3]
-        data = tokens[6]
+        if firstline:
+            firstline = False;
+            if line.startswith('['):
+                remotemode = True;
+                continue
+        if remotemode:
+            if responseline:
+                newtokens = line.rstrip().split('  ')
+                if len(newtokens) < 4:
+                    if len(tokens) > 5:
+                        data = tokens[5]
+                    else:
+                        data = ''
+                else:
+                    data = newtokens[3]
+                responseline = False
+            else:
+                tokens = line.rstrip().split('  ')
+                command = tokens[3]
+                responseline = True
+                continue
+        else:
+            tokens = line.rstrip().split('\t')
+            command = tokens[3]
+            data = tokens[6]
         if command == 'IRP_MJ_WRITE':
             if len(writedata) > 0:
                 parts += [{'query': writedata, 'response': readdata}]
