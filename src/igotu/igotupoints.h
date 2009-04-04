@@ -31,8 +31,6 @@
 namespace igotu
 {
 
-class IgotuPointPrivate;
-
 class IGOTU_EXPORT IgotuPoint
 {
     Q_DECLARE_TR_FUNCTIONS(IgotuPoint)
@@ -72,7 +70,29 @@ private:
     QByteArray record;
 };
 
-class IgotuPointsPrivate;
+class IGOTU_EXPORT ScheduleTableEntry
+{
+    Q_DECLARE_TR_FUNCTIONS(ScheduleTableEntry)
+public:
+    ScheduleTableEntry(const QByteArray &entry);
+    ~ScheduleTableEntry();
+
+    bool isValid() const;
+
+    // in s
+    unsigned logInterval() const;
+    // in s
+    unsigned changedLogInterval() const;
+    // in km/h
+    double intervalChangeSpeed() const;
+    bool isIntervalChangeEnabled() const;
+
+    QTime startTime() const;
+    QTime endTime() const;
+
+private:
+    QByteArray entry;
+};
 
 class IGOTU_EXPORT IgotuPoints
 {
@@ -86,17 +106,14 @@ public:
 
     bool isValid() const;
 
-    // in s
-    unsigned logInterval() const;
-    // in s
-    unsigned changedLogInterval() const;
-    // in km/h
-    double intervalChangeSpeed() const;
-    bool isIntervalChangeEnabled() const;
-
     unsigned securityVersion() const;
-    bool passwordEnabled() const;
+    bool isPasswordEnabled() const;
     QString password() const;
+
+    bool isScheduleTableEnabled() const;
+    // zero-based
+    QList<unsigned> scheduleTablePlans() const;
+    QList<ScheduleTableEntry> scheduleTableEntries(unsigned plan) const;
 
 private:
     QByteArray dump;

@@ -144,6 +144,59 @@ QByteArray IgotuPoint::hex() const
     return record.toHex();
 }
 
+// ScheduleTableEntry ==========================================================
+
+ScheduleTableEntry::ScheduleTableEntry(const QByteArray &entry) :
+    entry(entry)
+{
+    if (entry.size() != 64)
+        throw IgotuError(tr("Invalid entry size"));
+}
+
+ScheduleTableEntry::~ScheduleTableEntry()
+{
+}
+
+bool ScheduleTableEntry::isValid() const
+{
+    return entry.mid(0, 4) != QByteArray(4, '\xff');
+}
+
+unsigned ScheduleTableEntry::logInterval() const
+{
+    return uchar(entry[0x07]) + 1;
+}
+
+unsigned ScheduleTableEntry::changedLogInterval() const
+{
+    return uchar(entry[0x0a]) + 1;
+}
+
+double ScheduleTableEntry::intervalChangeSpeed() const
+{
+    return 1e-2 * 3.6 * qFromBigEndian<quint16>
+        (reinterpret_cast<const uchar*>(entry.data()) + 0x08);
+}
+
+bool ScheduleTableEntry::isIntervalChangeEnabled() const
+{
+    return intervalChangeSpeed() != 0.0;
+}
+
+QTime ScheduleTableEntry::startTime() const
+{
+    if (entry.mid(0x00, 2) == QByteArray(2, '\xff'))
+        return QTime(-1, -1);
+    return QTime(entry[0], entry[1]);
+}
+
+QTime ScheduleTableEntry::endTime() const
+{
+    if (entry.mid(0x02, 2) == QByteArray(2, '\xff'))
+        return QTime(-1, -1);
+    return QTime(entry[2], entry[3]);
+}
+
 // IgotuPoints ===================================================================
 
 IgotuPoints::IgotuPoints(const QByteArray &dump, int count) :
@@ -176,47 +229,57 @@ bool IgotuPoints::isValid() const
     return dump.mid(0, 0x1000) != QByteArray(0x1000, 0xff);
 }
 
-unsigned IgotuPoints::logInterval() const
+bool IgotuPoints::isScheduleTableEnabled() const
 {
-    return uchar(dump[0x107]) + 1;
+    return dump[0x0008];
 }
 
-bool IgotuPoints::isIntervalChangeEnabled() const
+QList<unsigned> IgotuPoints::scheduleTablePlans() const
 {
-    return intervalChangeSpeed() != 0.0;
+    QList<unsigned> result;
+    // in dumps, only addresses up to 0x83 have been used
+    for (unsigned i = 0x0009; i < 0x0100; ++i) {
+        unsigned lowPlan = uchar(dump[i]) & 0x0f;
+        unsigned highPlan = uchar(dump[i]) >> 4;
+        if (lowPlan == 0x0f)
+            break;
+        result += lowPlan - 1;
+        if (highPlan == 0x0f)
+            break;
+        result += highPlan - 1;
+    }
+    return result;
 }
 
-double IgotuPoints::intervalChangeSpeed() const
+QList<ScheduleTableEntry> IgotuPoints::scheduleTableEntries(unsigned plan) const
 {
-    return 1e-2 * 3.6 * qFromBigEndian<quint16>
-        (reinterpret_cast<const uchar*>(dump.data()) + 0x108);
-}
-
-unsigned IgotuPoints::changedLogInterval() const
-{
-    return uchar(dump[0x10a]) + 1;
+    QList<ScheduleTableEntry> result;
+    for (unsigned i = 0; i < 4; ++i)
+        result += ScheduleTableEntry(dump.mid((plan + 1) * 0x0100 + i * 0x0040,
+                    0x40));
+    return result;
 }
 
 unsigned IgotuPoints::securityVersion() const
 {
-    return uchar(dump[0x800]);
+    return uchar(dump[0x0800]);
 }
 
-bool IgotuPoints::passwordEnabled() const
+bool IgotuPoints::isPasswordEnabled() const
 {
-    return securityVersion() == 0 && dump[0x801];
+    return securityVersion() == 0 && dump[0x0801];
 }
 
 QString IgotuPoints::password() const
 {
-    if (!passwordEnabled())
+    if (securityVersion() != 0)
         return QString();
 
-    const unsigned length = qMin(uchar('\x80'), uchar(dump[0x802]));
+    const unsigned length = qMin(uchar('\x80'), uchar(dump[0x0802]));
     QVector<ushort> result(length / 2);
     for (unsigned i = 0; i < unsigned(result.size()); ++i)
         result[i] = qFromLittleEndian<ushort>
-            (reinterpret_cast<const uchar*>(dump.data() + 0x803 + i * 2));
+            (reinterpret_cast<const uchar*>(dump.data() + 0x0803 + i * 2));
     return QString::fromUtf16(result.data(), result.size());
 }
 

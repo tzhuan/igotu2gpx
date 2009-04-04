@@ -27,6 +27,7 @@
 
 #include <QFile>
 #include <QFileInfo>
+#include <QSet>
 
 #include <iostream>
 
@@ -223,19 +224,68 @@ int main(int argc, char *argv[])
             IgotuPoints igotuPoints(contents);
             if (!igotuPoints.isValid())
                 throw IgotuError(QCoreApplication::tr("Uninitialized device"));
-            printf("Log interval: %u s\n", igotuPoints.logInterval());
-            if (igotuPoints.isIntervalChangeEnabled()) {
-                printf("Interval change: above %.0f km/h, use %u s\n",
-                        igotuPoints.intervalChangeSpeed(),
-                        igotuPoints.changedLogInterval());
-            } else {
-                printf("Interval change: disabled\n");
+
+            QList<unsigned> tablePlans = igotuPoints.scheduleTablePlans();
+            QSet<unsigned> tablePlanSet = QSet<unsigned>::fromList(tablePlans);
+            printf("Schedule table plans used:");
+            Q_FOREACH (unsigned plan, tablePlanSet)
+                printf(" %u", plan);
+            printf("\n");
+            printf("Schedule table plan order: ");
+            if (tablePlans.size() > 1)
+                printf("\n  ");
+            for (unsigned i = 0; i < unsigned(tablePlans.size()); ++i) {
+                if (i && i % 7 == 0)
+                    printf(" ");
+                if (i && i % (7 * 7) == 0)
+                    printf("\n  ");
+                printf("%u", tablePlans[i]);
             }
-            printf("Security version: %u\n", igotuPoints.securityVersion());
-            if (igotuPoints.passwordEnabled()) {
-                printf("Password: [%s]\n", qPrintable(igotuPoints.password()));
+            printf("\n");
+            if (igotuPoints.isScheduleTableEnabled()) {
+                printf("Schedule table: enabled\n");
+                Q_FOREACH (unsigned plan, tablePlanSet) {
+                    bool printed = false;
+                    Q_FOREACH (const ScheduleTableEntry &entry,
+                            igotuPoints.scheduleTableEntries(plan)) {
+                        if (!entry.isValid())
+                            continue;
+                        if (!printed) {
+                            printf("Schedule %u:\n", plan);
+                            printed = true;
+                        }
+                        printf("  Start time: %s\n",
+                                qPrintable(entry.startTime().toString()));
+                        printf("  End time: %s\n",
+                                qPrintable(entry.endTime().toString()));
+                        printf("  Log interval: %u s\n", entry.logInterval());
+                        if (entry.isIntervalChangeEnabled()) {
+                            printf("  Interval change: above %.0f km/h, use %u s\n",
+                                    entry.intervalChangeSpeed(),
+                                    entry.changedLogInterval());
+                        } else {
+                            printf("  Interval change: disabled\n");
+                        }
+                    }
+                }
             } else {
-                printf("Password: disabled\n");
+                printf("Schedule table: disabled\n");
+                ScheduleTableEntry entry = igotuPoints.scheduleTableEntries(0)[0];
+                printf("Log interval: %u s\n", entry.logInterval());
+                if (entry.isIntervalChangeEnabled()) {
+                    printf("Interval change: above %.0f km/h, use %u s\n",
+                            entry.intervalChangeSpeed(),
+                            entry.changedLogInterval());
+                } else {
+                    printf("Interval change: disabled\n");
+                }
+            }
+
+            printf("Security version: %u\n", igotuPoints.securityVersion());
+            if (igotuPoints.securityVersion() == 0) {
+                printf("Password: %s, [%s]\n",
+                    igotuPoints.isPasswordEnabled() ? "enabled" : "disabled",
+                    qPrintable(igotuPoints.password()));
             }
         } else if (action == QLatin1String("diff")) {
             if (!connection)
