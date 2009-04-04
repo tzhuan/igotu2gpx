@@ -107,14 +107,39 @@ The first data block of 0x1000 bytes contains configuration data, all other
 data blocks contain the gps trackpoints.
 
 Configuration data:
-  0x0107: uint8 logging interval (number of seconds - 1)
-  0x0108: uint16b logging interval change speed * 1e2 (in m/s)
-  0x010a: uint8 changed logging interval (number of seconds - 1)
+  0x0000: uint8 number of schedule table plans (1 if no schedule used)
+  0x0001: uint16 first schedule day (days since 01.01.2000 + 1)
+  0x0003: uint8 flags
+          0x04: schedule enabled
+          0x40: button disabled
+          0x80: LEDs disabled
+  ...
+  0x0008: uint8 schedule date offset?
+  0x0009..0x00ff: uint4 schedule table plans (1 if no schedule used, one-based)
+
+  0x0100: schedule table entries for plan 1 (normally Sunday, no schedule)
+  0x0200: schedule table entries for plan 2 (normally Monday)
+  0x0300: schedule table entries for plan 3 (normally Tuesday)
+  0x0400: schedule table entries for plan 4 (normally Wednesday)
+  0x0500: schedule table entries for plan 5 (normally Thursday)
+  0x0600: schedule table entries for plan 6 (normally Friday)
+  0x0700: schedule table entries for plan 7 (normally Saturday)
 
   0x0800: uint8 security version; 0x00
   0x0801: uint8 password enabled: 0x80
   0x0802: uint8 password length in bytes (maximum 0x80)
   0x0803..0x0882: utf16le password
+
+Schedule table entries are stored in records of 0x40 bytes:
+  0x00: uint8 start hour (0xff if invalid, 0x00 if no schedule)
+  0x01: uint8 start minute (0xff if invalid, 0x00 if no schedule)
+  0x02: uint8 end hour (0xff if invalid, 0x00 if no schedule)
+  0x03: uint8 end minute (0xff if invalid, 0x00 if no schedule)
+  ...
+  0x07: uint8 logging interval (number of seconds - 1)
+  0x08: uint16b logging interval change speed * 1e2 (in m/s)
+  0x0a: uint8 changed logging interval (number of seconds - 1)
+  ...
 
 Trackpoints are stored in records of 0x20 bytes:
   0x00: uint8 flags

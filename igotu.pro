@@ -10,8 +10,8 @@ TEMPLATE = subdirs
 clebsDirs(src/igotu)
 clebsDirs(src/igotu2gpx, src/igotu)
 
-license.files = LICENSE
-license.path = $$DOCDIR
-INSTALLS *= license
+docs.files = LICENSE HACKING
+docs.path = $$DOCDIR
+INSTALLS *= docs
 
 todo.commands = @grep -Rn '\'TODO\|FIXME\|XXX\|\\todo\'' src/*/*.cpp src/*/*.h

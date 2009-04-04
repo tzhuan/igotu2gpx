@@ -246,7 +246,7 @@ bool IgotuPoints::isButtonEnabled() const
 
 QList<unsigned> IgotuPoints::scheduleTablePlans() const
 {
-    unsigned count = uchar(dump[0x000]);
+    unsigned count = uchar(dump[0x0000]);
     QList<unsigned> result;
     // in dumps, only addresses up to 0x83 have been used
     for (unsigned i = 0x0009, j = 0; i < 0x0100; ++i) {
@@ -254,10 +254,10 @@ QList<unsigned> IgotuPoints::scheduleTablePlans() const
         unsigned highPlan = uchar(dump[i]) >> 4;
         if (j++ >= count)
             break;
-        result += lowPlan - 1;
+        result += lowPlan;
         if (j++ >= count)
             break;
-        result += highPlan - 1;
+        result += highPlan;
     }
     return result;
 }
@@ -266,7 +266,7 @@ QList<ScheduleTableEntry> IgotuPoints::scheduleTableEntries(unsigned plan) const
 {
     QList<ScheduleTableEntry> result;
     for (unsigned i = 0; i < 4; ++i)
-        result += ScheduleTableEntry(dump.mid((plan + 1) * 0x0100 + i * 0x0040,
+        result += ScheduleTableEntry(dump.mid(plan * 0x0100 + i * 0x0040,
                     0x40));
     return result;
 }

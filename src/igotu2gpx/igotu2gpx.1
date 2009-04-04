@@ -14,25 +14,27 @@
 .\" .br        insert line break
 .\" .sp <n>    insert n+1 empty lines
 .\" for manpage-specific macros, see man(7)
+
 .SH NAME
+.PP
 igotu2gpx \- command line interface ot the i-gotU gps trackers
+
 .SH SYNOPSIS
-.B igotu2gpx dump|info [\fIOPTIONS\fR]
+.PP
+.B igotu2gpx info|dump|diff [\fIOPTIONS\fR]
+
 .SH DESCRIPTION
 .\" TeX users may be more comfortable with the \fB<whatever>\fP and
 .\" \fI<whatever>\fP escape sequences to invoke bold face and italics,
 .\" respectively.
 .PP
-\fBigotu2gpx\fP gives access to the i-gotU gps trackers via serial port
-(Windows) or libusb (Linux). It is possible to dump the internal flash memory
-and to export tracks and waypoints in gpx format.
+\fBigotu2gpx\fP gives access to the i-gotU USB GPS trackers via serial port
+(Windows) or libusb (Linux). It is possible to show the configuration of a GPS
+tracker, dump the internal flash memory and to export tracks and waypoints in
+gpx format.
 .TP
-\fB\-\-help\fR
-help message
-.TP
-\fB\-i\fR, \fB\-\-image\fR \fIfile\fR
-instead of connecting to the gps tracker, use the specified image file (saved
-by "dump \-\-raw")
+\fB\-\-action\fR \fIaction\fR
+show general info (info), dump the trackpoints (dump) or show the config changes (diff)
 .TP
 \fB\-u\fR, \fB\-\-usb\-device\fR \fIvendor:product\fR
 connect via usb to the device specified by vendor:product (this is the default
@@ -42,24 +44,65 @@ on Linux)
 .\"connect via RS232 to the serial port with the specfied number (this is the
 .\"default on Windows)
 .TP
+\fB\-i\fR, \fB\-\-image\fR \fIfile\fR
+instead of connecting to the gps tracker, use the specified image file (saved
+by "dump \-\-raw")
+.TP
 \fB\-\-gpx\fR
-output in gpx format (this is the default)
+dump in gpx format (this is the default)
 .TP
 \fB\-\-details\fR
-output a detailed representation of the track
+dump a detailed representation of the track
 .TP
 \fB\-\-raw\fR \fIfile\fR
-output the raw flash contents of the gps tracker
+dump the raw flash contents of the gps tracker
 .TP
-\fB\-\-action\fR \fIaction\fR
-dump the trackpoints (dump) or show general info (info)
+\fB\-\-help\fR
+help message
+.TP
+\fB\-\-verbose\fR
+show USB and data transfer debug messages
+
+.SH EXAMPLES
+.PP
+Show general info and the configuration of a GPS tracker, including schedule
+table, recording interval settings and the password used:
+.nf
+    igotu2gpx info
+.fi
+.PP
+Dump all tracks and waypoints on a GPS tracker in gpx format:
+.nf
+    igotu2gpx dump > track.gpx
+.fi
+.PP
+Dump the complete flash memory of a GPS tracker to a file, and use it later
+to display a detailed listing of all trackpoints:
+.nf
+    igotu2gpx dump --raw flashimage.raw
+    igotu2gpx info --details --image flashimage.raw
+.fi
+.PP
+Dump the configuration of a GPS tracker to a file, and use it later
+to display the changes made by @trip PC:
+.nf
+    igotu2gpx dump --raw flashimage.raw --count 1
+    # configuration changes in @trip PC ...
+    igotu2gpx diff --image flashimage.raw
+.fi
+
 .SH AUTHOR
+.PP
 igotu2gpx was written by Michael Hofmann <mh21@piware.de>.
+
 .SH "REPORTING BUGS"
+.PP
 Report bugs at https://bugs.launchpad.net/igotu2gpx/.
+
 .SH COPYRIGHT
+.PP
 Copyright \(co 2009 Michael Hofmann <mh21@piware.de>.
-.br
+.PP
 This is free software. You may redistribute copies of it under the terms of the
 GNU General Public License <http://www.gnu.org/licenses/gpl.html>.
 There is NO WARRANTY, to the extent permitted by law.

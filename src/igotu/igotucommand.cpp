@@ -75,7 +75,7 @@ unsigned IgotuCommandPrivate::sendCommand(const QByteArray &data)
     command += QByteArray(pieces * 8 - command.size(), 0);
     command[command.size() - 1] = -std::accumulate(command.data() + 0,
             command.data() + command.size() - 2, 0);
-    int responseSize;
+    int responseSize = 0;
     for (unsigned i = 0; i < pieces; ++i) {
         connection->send(command.mid(i * 8, 8));
         responseSize = receiveResponseSize();

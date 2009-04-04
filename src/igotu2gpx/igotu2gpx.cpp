@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
                 }
             } else {
                 printf("Schedule table: disabled\n");
-                ScheduleTableEntry entry = igotuPoints.scheduleTableEntries(0)[0];
+                ScheduleTableEntry entry = igotuPoints.scheduleTableEntries(1)[0];
                 printf("Log interval: %u s\n", entry.logInterval());
                 if (entry.isIntervalChangeEnabled()) {
                     printf("Interval change: above %.0f km/h, use %u s\n",

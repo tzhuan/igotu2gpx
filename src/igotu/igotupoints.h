@@ -111,7 +111,7 @@ public:
     QString password() const;
 
     bool isScheduleTableEnabled() const;
-    // zero-based
+    // one-based
     QList<unsigned> scheduleTablePlans() const;
     QList<ScheduleTableEntry> scheduleTableEntries(unsigned plan) const;
     QDate firstScheduleDate() const;
