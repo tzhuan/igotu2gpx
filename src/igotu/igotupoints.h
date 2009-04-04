@@ -114,6 +114,11 @@ public:
     // zero-based
     QList<unsigned> scheduleTablePlans() const;
     QList<ScheduleTableEntry> scheduleTableEntries(unsigned plan) const;
+    QDate firstScheduleDate() const;
+    unsigned dateOffset() const;
+
+    bool isButtonEnabled() const;
+    bool ledsEnabled() const;
 
 private:
     QByteArray dump;

@@ -48,22 +48,26 @@ boost::scoped_ptr<DataConnection> connection;
 QString imagePath, usb, serial;
 unsigned sectorCount = 0;
 
-void makeConnection()
+void makeConnection(bool forceImage = false, bool forceDevice = false)
 {
     try {
         if (false) {
             // Dummy
 #ifdef Q_OS_WIN32
-        } else if (variables.count("serial-device") ||
-            (variables.count("usb-device") == 0 &&
-             variables.count("image") == 0)) {
+        } else if (!forceImage &&
+                (variables.count("serial-device") ||
+                 (variables.count("usb-device") == 0 && forceDevice) ||
+                 (variables.count("usb-device") == 0 &&
+                  variables.count("image") == 0))) {
             connection.reset(new Win32SerialConnection(serial.isEmpty() ?
                         3 : serial.toUInt()));
 #endif
 #ifdef Q_OS_LINUX
-        } else if (variables.count("usb-device") ||
-            (variables.count("serial-device") == 0 &&
-             variables.count("image") == 0)) {
+        } else if (!forceImage &&
+                (variables.count("usb-device") ||
+                 (variables.count("serial-device") == 0 && forceDevice) ||
+                 (variables.count("serial-device") == 0 &&
+                  variables.count("image") == 0))) {
             QStringList parts = usb.split(QLatin1Char(':'));
             unsigned vendor = 0, product = 0;
             if (parts.size() > 0)
@@ -72,6 +76,8 @@ void makeConnection()
                 product = parts[1].toUInt(NULL, 16);
             connection.reset(new LibusbConnection(vendor, product));
 #endif
+        } else if (forceImage && !variables.count("image")) {
+            throw IgotuError(QCoreApplication::tr("Please specify --image"));
         } else if (variables.count("image")) {
             QFile file(imagePath);
             if (!file.open(QIODevice::ReadOnly))
@@ -174,7 +180,7 @@ int main(int argc, char *argv[])
         ("action", po::value<QString>(&action),
          "dump: dump the trackpoints\n"
          "info: show general info\n"
-         "diff: show before/after difference")
+         "diff: show change relative to image file")
     ;
     po::positional_options_description positionalOptions;
     positionalOptions.add("action", 1);
@@ -199,7 +205,7 @@ int main(int argc, char *argv[])
 
     Verbose::setVerbose(variables.count("verbose"));
 
-    makeConnection();
+    makeConnection(action == QLatin1String("diff"));
 
     // Process action
 
@@ -225,25 +231,28 @@ int main(int argc, char *argv[])
             if (!igotuPoints.isValid())
                 throw IgotuError(QCoreApplication::tr("Uninitialized device"));
 
+            printf("Schedule date: %s\n",
+                    qPrintable(igotuPoints.firstScheduleDate().toString()));
+            printf("Schedule date offset: %u days\n", igotuPoints.dateOffset());
             QList<unsigned> tablePlans = igotuPoints.scheduleTablePlans();
             QSet<unsigned> tablePlanSet = QSet<unsigned>::fromList(tablePlans);
-            printf("Schedule table plans used:");
-            Q_FOREACH (unsigned plan, tablePlanSet)
-                printf(" %u", plan);
-            printf("\n");
-            printf("Schedule table plan order: ");
-            if (tablePlans.size() > 1)
-                printf("\n  ");
-            for (unsigned i = 0; i < unsigned(tablePlans.size()); ++i) {
-                if (i && i % 7 == 0)
-                    printf(" ");
-                if (i && i % (7 * 7) == 0)
-                    printf("\n  ");
-                printf("%u", tablePlans[i]);
-            }
-            printf("\n");
             if (igotuPoints.isScheduleTableEnabled()) {
                 printf("Schedule table: enabled\n");
+                printf("Schedule table plans used:");
+                Q_FOREACH (unsigned plan, tablePlanSet)
+                    printf(" %u", plan);
+                printf("\n");
+                printf("Schedule table plan order: ");
+                if (tablePlans.size() > 1)
+                    printf("\n  ");
+                for (unsigned i = 0; i < unsigned(tablePlans.size()); ++i) {
+                    if (i && i % 7 == 0)
+                        printf(" ");
+                    if (i && i % (7 * 7) == 0)
+                        printf("\n  ");
+                    printf("%u", tablePlans[i]);
+                }
+                printf("\n");
                 Q_FOREACH (unsigned plan, tablePlanSet) {
                     bool printed = false;
                     Q_FOREACH (const ScheduleTableEntry &entry,
@@ -281,6 +290,9 @@ int main(int argc, char *argv[])
                 }
             }
 
+            printf("LEDs: %s\n", igotuPoints.ledsEnabled() ? "enabled" : "disabled");
+            printf("Button: %s\n", igotuPoints.isButtonEnabled() ? "enabled" : "disabled");
+
             printf("Security version: %u\n", igotuPoints.securityVersion());
             if (igotuPoints.securityVersion() == 0) {
                 printf("Password: %s, [%s]\n",
@@ -288,28 +300,12 @@ int main(int argc, char *argv[])
                     qPrintable(igotuPoints.password()));
             }
         } else if (action == QLatin1String("diff")) {
+            QByteArray oldData = contents.left(0x1000);
+            makeConnection(false, true);
             if (!connection)
-                throw IgotuError(QCoreApplication::tr("Unable to determine"
-                            " difference when using an image file"));
+                throw IgotuError(QCoreApplication::tr("Unable to connect to device"));
 
-            fprintf(stderr, "Saving current tracker configuration...\n");
-            NmeaSwitchCommand(connection.get(), false).sendAndReceive();
-            QByteArray oldData = ReadCommand(connection.get(), 0, 0x1000)
-                .sendAndReceive();
-            NmeaSwitchCommand(connection.get(), true).sendAndReceive();
-
-            connection.reset();
-            fprintf(stderr, "Please change the setting your are interested in"
-                    " in @trip PC and press RETURN when ready...");
-            Q_FOREVER {
-                int result = getchar();
-                if (result == EOF || result == 10)
-                    break;
-                printf("%i", result);
-            }
-            makeConnection();
-
-            fprintf(stderr, "Saving new tracker configuration...\n");
+            fprintf(stderr, "Dumping datablock %u...\n", 1);
             NmeaSwitchCommand(connection.get(), false).sendAndReceive();
             QByteArray newData = ReadCommand(connection.get(), 0, 0x1000)
                 .sendAndReceive();

@@ -226,25 +226,36 @@ QList<IgotuPoint> IgotuPoints::points() const
 
 bool IgotuPoints::isValid() const
 {
-    return dump.mid(0, 0x1000) != QByteArray(0x1000, 0xff);
+    return dump.mid(0, 0x1000) != QByteArray(0x1000, '\xff');
 }
 
 bool IgotuPoints::isScheduleTableEnabled() const
 {
-    return dump[0x0008];
+    return (uchar(dump[0x0003]) & 0x04) != 0;
+}
+
+bool IgotuPoints::ledsEnabled() const
+{
+    return (uchar(dump[0x0003]) & 0x80) == 0;
+}
+
+bool IgotuPoints::isButtonEnabled() const
+{
+    return (uchar(dump[0x0003]) & 0x40) == 0;
 }
 
 QList<unsigned> IgotuPoints::scheduleTablePlans() const
 {
+    unsigned count = uchar(dump[0x000]);
     QList<unsigned> result;
     // in dumps, only addresses up to 0x83 have been used
-    for (unsigned i = 0x0009; i < 0x0100; ++i) {
+    for (unsigned i = 0x0009, j = 0; i < 0x0100; ++i) {
         unsigned lowPlan = uchar(dump[i]) & 0x0f;
         unsigned highPlan = uchar(dump[i]) >> 4;
-        if (lowPlan == 0x0f)
+        if (j++ >= count)
             break;
         result += lowPlan - 1;
-        if (highPlan == 0x0f)
+        if (j++ >= count)
             break;
         result += highPlan - 1;
     }
@@ -258,6 +269,18 @@ QList<ScheduleTableEntry> IgotuPoints::scheduleTableEntries(unsigned plan) const
         result += ScheduleTableEntry(dump.mid((plan + 1) * 0x0100 + i * 0x0040,
                     0x40));
     return result;
+}
+
+QDate IgotuPoints::firstScheduleDate() const
+{
+    unsigned days = qFromBigEndian<quint16>
+            (reinterpret_cast<const uchar*>(dump.data() + 1));
+    return QDate::fromJulianDay(QDate(2000, 1, 1).toJulianDay() + days - 1);
+}
+
+unsigned IgotuPoints::dateOffset() const
+{
+    return uchar(dump[0x0008]);
 }
 
 unsigned IgotuPoints::securityVersion() const
