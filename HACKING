@@ -1,8 +1,38 @@
 Debugging
 ---------
 
-Use portmon (http://technet.microsoft.com/en-us/sysinternals/bb896644.aspx) to
-capture a serial trace of @trip PC and feed it to "serialdecoder.py logfilename".
+First, install the necessary software to get the GPS tracker working on Windows
+(drivers and @trip PC from
+http://global.mobileaction.com/download/i-gotU_download.jsp). Restart your PC,
+then play around with the GPS tracker, try to record some points, and make sure
+you can actually read them into @trip PC. Close @trip PC and disconnect the
+tracker.
+
+To make @trip PC output debug information, create the two directories
+C:\GT_DEBUG_LOG and C:\GT_DATA_LOG. Because we want to know what is sent to the
+serial port created by the device driver for the GPS tracker, download portmon
+(http://technet.microsoft.com/en-us/sysinternals/bb896644.aspx) and start it.
+Set "Edit->Max Output Bytes" to 4096, select "Options->Show Hex", and choose
+the correct com port for the tracker in "Capture->Ports".
+
+Attach the GPS tracker to the PC, start @trip PC and download the complete data
+on the tracker.
+
+C:\GT_DATA_LOG\Data_*.csv now contain decoded data logs of all downloaded
+trackpoints, C:\GT_DEBUG_LOG\GT.log contains debug messages of the driver dll
+and the portmon log contains all communication with the device. Use
+"src/serialdecoder/serialdecoder.py portmon.log" to get an idea what the
+commands mean.
+
+GPSD support
+------------
+
+For gpsd support, try the navman kernel driver to get an USB serial device at
+something like /dev/ttyUSB0. Do this before you plug the device in:
+    sudo modprobe navman
+    echo -n "0x0df7 0x0900" | sudo tee /sys/bus/usb-serial/drivers/navman/new_id
+and then plug your device in. You now have read-only access to the device and
+you can use it as an nmea data source for gpsd.
 
 USB transport
 -------------
