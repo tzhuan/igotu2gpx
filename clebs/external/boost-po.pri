@@ -16,6 +16,12 @@ clebsCheck(boost-po) {
 
 	exists($${BOOSTINCLUDEDIR}/boost/program_options):CLEBS_DEPENDENCIES *= boost-po
     }
+
+    macx {
+	isEmpty(BOOSTINCLUDEDIR):BOOSTINCLUDEDIR = /usr/local/include
+
+	exists($${BOOSTINCLUDEDIR}/boost/program_options):CLEBS_DEPENDENCIES *= boost-po
+    }
 }
 
 clebsDependency(boost-po) {
@@ -29,7 +35,7 @@ clebsDependency(boost-po) {
 	}
     }
 
-    unix {
+    unix|macx {
 	INCLUDEPATH *= $${BOOSTINCLUDEDIR}
 	LIBS *= -lboost_program_options-mt
     }

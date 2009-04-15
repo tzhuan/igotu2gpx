@@ -137,7 +137,7 @@ defineTest(clebsVerbose) {
 
 # General settings =============================================================
 
-unix|win32-x-g++* {
+macx|unix|win32-x-g++* {
     BASEDIR = $$system(pwd)
 } else {
     BASEDIR = $$system(cd)
@@ -181,6 +181,18 @@ unix {
     isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIXDIR/lib/igotu2gpx
 }
 win32 {
+    isEmpty(PREFIXDIR):PREFIXDIR = $${DESTDIR}-installed
+    isEmpty(CONFDIR):CONFDIR = $$PREFIXDIR/etc
+    isEmpty(DATADIR):DATADIR = $$PREFIXDIR/share
+    isEmpty(DOCDIR):DOCDIR = $$PREFIXDIR/doc
+    isEmpty(ICONDIR):ICONDIR = $$PREFIXDIR/icons
+    isEmpty(MANDIR):MANDIR = $$PREFIXDIR/man
+    isEmpty(BINDIR):BINDIR = $$PREFIXDIR/bin
+    isEmpty(LIBDIR):LIBDIR = $$PREFIXDIR/bin
+    isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIXDIR/lib
+}
+unix {
+    # TODO: no idea about the default locations on mac os x
     isEmpty(PREFIXDIR):PREFIXDIR = $${DESTDIR}-installed
     isEmpty(CONFDIR):CONFDIR = $$PREFIXDIR/etc
     isEmpty(DATADIR):DATADIR = $$PREFIXDIR/share

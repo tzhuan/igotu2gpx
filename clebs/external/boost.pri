@@ -11,6 +11,12 @@ clebsCheck(boost) {
 
 	exists($${BOOSTINCLUDEDIR}/boost):CLEBS_DEPENDENCIES *= boost
     }
+
+    macx {
+	isEmpty(BOOSTINCLUDEDIR):BOOSTINCLUDEDIR = /usr/local/include
+
+	exists($${BOOSTINCLUDEDIR}/boost):CLEBS_DEPENDENCIES *= boost
+    }
 }
 
 clebsDependency(boost) {
@@ -18,7 +24,7 @@ clebsDependency(boost) {
 	INCLUDEPATH *= $${BOOSTINCLUDEDIR}
     }
 
-    unix {
+    unix|macx {
 	INCLUDEPATH *= $${BOOSTINCLUDEDIR}
     }
 }

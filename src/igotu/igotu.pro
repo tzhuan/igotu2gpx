@@ -1,6 +1,6 @@
 BASEDIR = ../..
 CLEBS *= boost pch builddll
-unix:CLEBS *= libusb
+unix|macx:CLEBS *= libusb
 CLEBS_INSTALL *= boost-po
 TARGET = igotu
 include($$BASEDIR/clebs.pri)
@@ -16,7 +16,7 @@ SOURCES *= \
     verbose.cpp \
     xmlutils.cpp \
 
-unix:SOURCES *= libusbconnection.cpp
+unix|macx:SOURCES *= libusbconnection.cpp
 win32:SOURCES *= win32serialconnection.cpp
 
 HEADERS *= \
@@ -31,7 +31,7 @@ HEADERS *= \
     verbose.h \
     xmlutils.h \
 
-unix:HEADERS *= libusbconnection.h
+unix|macx:HEADERS *= libusbconnection.h
 win32:HEADERS *= win32serialconnection.h
 
 unix:ctags.commands  = echo !_TAG_FILE_FORMAT 2 dummy > $$BASEDIR/tags;

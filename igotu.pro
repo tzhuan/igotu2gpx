@@ -1,5 +1,5 @@
 CLEBS_REQUIRED *= boost-po 
-unix:CLEBS_REQUIRED *= libusb
+macx|unix:CLEBS_REQUIRED *= libusb
 unix:CLEBS_SUGGESTED *= chrpath
 
 include(clebs.pri)

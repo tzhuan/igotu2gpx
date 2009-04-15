@@ -31,7 +31,7 @@
 
 #include <iostream>
 
-#ifdef Q_OS_LINUX
+#if defined(Q_OS_LINUX) || defined(Q_OS_MACX)
 #include "igotu/libusbconnection.h"
 #endif
 #ifdef Q_OS_WIN32
@@ -62,7 +62,7 @@ void makeConnection(bool forceImage = false, bool forceDevice = false)
             connection.reset(new Win32SerialConnection(serial.isEmpty() ?
                         3 : serial.toUInt()));
 #endif
-#ifdef Q_OS_LINUX
+#if defined(Q_OS_LINUX) || defined(Q_OS_MACX)
         } else if (!forceImage &&
                 (variables.count("usb-device") ||
                  (variables.count("serial-device") == 0 && forceDevice) ||
