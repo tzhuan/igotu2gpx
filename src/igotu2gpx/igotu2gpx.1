@@ -91,6 +91,18 @@ to display the changes made by @trip PC:
     igotu2gpx diff --image flashimage.raw
 .fi
 
+.SH Notes
+.PP
+For gpsd support, try the navman kernel driver to get an USB serial device at
+something like /dev/ttyUSB0. Do this before you plug the device in:
+.nf
+    sudo modprobe navman
+    echo -n "0x0df7 0x0900" | \\
+        sudo tee /sys/bus/usb-serial/drivers/navman/new_id
+.fi
+and then plug your device in. You now have read-only access to the device and
+you can use it as an nmea data source for gpsd.
+
 .SH AUTHOR
 .PP
 igotu2gpx was written by Michael Hofmann <mh21@piware.de>.
