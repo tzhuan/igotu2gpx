@@ -16,6 +16,11 @@
 # Uncomment to disable certain modules although all dependencies are available
 #CLEBS_DISABLED *= examples unittests
 
+#unix:BOOSTINCLUDEDIR = /usr/include
+
+#macx:BOOSTINCLUDEDIR = /usr/local/include
+#macx:LIBUSBINCLUDEDIR = /usr/local/include
+
 #win32:BOOSTROOT = $$BASEDIR/../api/boost
 #win32:BOOSTINCLUDEDIR = $${BOOSTROOT}/include/boost-1_33_1
 #win32:BOOSTLIBDIR = $${BOOSTROOT}/lib
