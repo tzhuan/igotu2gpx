@@ -348,7 +348,7 @@ int main(int argc, char *argv[])
                     printf("  Latitude %.6f\n", igotuPoint.latitude());
                     printf("  Longitude %.6f\n", igotuPoint.longitude());
                     printf("  Elevation %.1f m\n", igotuPoint.elevation());
-                    printf("  Speed %.1f km/s\n", igotuPoint.speed());
+                    printf("  Speed %.1f km/h\n", igotuPoint.speed());
                     printf("  Course %.2f degrees\n", igotuPoint.course());
                     printf("  EHPE %.2f m\n", igotuPoint.ehpe());
                     printf("  Satellites:");
