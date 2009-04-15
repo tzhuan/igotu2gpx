@@ -1,4 +1,4 @@
-To compile igotu2gpx, you need:
+To compile igotu2gpx on a Linux system, you need:
 - qt4
 - boost
 - boost-program-options
@@ -12,6 +12,9 @@ Afterwards you can compile with:
   qmake
   make
   sudo make install
+
+If you get error messages about "Unknown test functions" from qmake, try
+qmake-qt4 instead.
 
 To get started, try:
   man igotu2gpx
