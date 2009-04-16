@@ -93,6 +93,7 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId) :
         throw IgotuError(tr("Unable to open device %1")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
 
+#ifdef Q_OS_LINUX
     char buf[256];
     if (usb_get_driver_np(d->handle.get(), 0, buf, sizeof(buf)) == 0) {
         if (Verbose::verbose() > 0)
@@ -105,6 +106,7 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId) :
                     .arg(QString::fromAscii(buf),
                         QString::fromLocal8Bit(strerror(-result))));
     }
+#endif
 
     if (usb_claim_interface(d->handle.get(), 0) != 0)
         throw IgotuError(tr("Unable to claim interface 0 on device %1")
