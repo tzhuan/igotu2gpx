@@ -215,6 +215,10 @@ unix {
     #QMAKE_CXXFLAGS_DEBUG *= -O2
 }
 
+macx {
+    CONFIG -= app_bundle
+}
+
 win32 {
     CONFIG += embed_manifest_exe
 
