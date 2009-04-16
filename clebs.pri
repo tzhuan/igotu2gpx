@@ -137,7 +137,7 @@ defineTest(clebsVerbose) {
 
 # General settings =============================================================
 
-macx|unix|win32-x-g++* {
+unix|win32-x-g++* {
     BASEDIR = $$system(pwd)
 } else {
     BASEDIR = $$system(cd)
@@ -191,23 +191,11 @@ win32 {
     isEmpty(LIBDIR):LIBDIR = $$PREFIXDIR/bin
     isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIXDIR/lib
 }
-unix {
-    # TODO: no idea about the default locations on mac os x
-    isEmpty(PREFIXDIR):PREFIXDIR = $${DESTDIR}-installed
-    isEmpty(CONFDIR):CONFDIR = $$PREFIXDIR/etc
-    isEmpty(DATADIR):DATADIR = $$PREFIXDIR/share
-    isEmpty(DOCDIR):DOCDIR = $$PREFIXDIR/doc
-    isEmpty(ICONDIR):ICONDIR = $$PREFIXDIR/icons
-    isEmpty(MANDIR):MANDIR = $$PREFIXDIR/man
-    isEmpty(BINDIR):BINDIR = $$PREFIXDIR/bin
-    isEmpty(LIBDIR):LIBDIR = $$PREFIXDIR/bin
-    isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIXDIR/lib
-}
 
 # Programs may need internal libraries...
 LIBS *= -L$$DESTDIR
 # ...and these libraries may need more internal libraries
-unix:QMAKE_LFLAGS *=-Wl,-rpath-link=$$DESTDIR
+unix:!macx:QMAKE_LFLAGS *=-Wl,-rpath-link=$$DESTDIR
 # For includes from .ui files on MinGW
 INCLUDEPATH *= .
 DEPENDPATH *= .

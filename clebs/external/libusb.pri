@@ -1,5 +1,5 @@
 clebsCheck(libusb) {
-    unix {
+    unix:!macx {
 	system(pkg-config libusb):CLEBS_DEPENDENCIES *= libusb
     }
 
@@ -11,7 +11,7 @@ clebsCheck(libusb) {
 }
 
 clebsDependency(libusb) {
-    unix {
+    unix:!macx {
 	PKGCONFIG *= libusb
     }
 
