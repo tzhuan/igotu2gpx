@@ -11,7 +11,16 @@ clebsCheck(boost-po) {
 	exists($${BOOSTINCLUDEDIR}/boost/program_options):CLEBS_DEPENDENCIES *= boost-po
     }
 
-    unix {
+    macx {
+	isEmpty(BOOSTROOT):BOOSTROOT = /usr/local
+	isEmpty(BOOSTINCLUDEDIR):BOOSTINCLUDEDIR = $${BOOSTROOT}/include/boost-1_38
+	isEmpty(BOOSTLIBDIR):BOOSTLIBDIR = $${BOOSTROOT}/lib
+	isEmpty(BOOSTPOLIB):BOOSTPOLIB = boost_program_options-xgcc40-mt-1_38
+
+	exists($${BOOSTINCLUDEDIR}/boost/program_options):CLEBS_DEPENDENCIES *= boost-po
+    }
+
+    unix:!macx {
 	isEmpty(BOOSTINCLUDEDIR):BOOSTINCLUDEDIR = /usr/include
 
 	exists($${BOOSTINCLUDEDIR}/boost/program_options):CLEBS_DEPENDENCIES *= boost-po
@@ -29,7 +38,12 @@ clebsDependency(boost-po) {
 	}
     }
 
-    unix {
+    macx {
+	INCLUDEPATH *= $${BOOSTINCLUDEDIR}
+	LIBS *= -L$${BOOSTLIBDIR} -l$${BOOSTPOLIB}
+    }
+
+    unix:!macx {
 	INCLUDEPATH *= $${BOOSTINCLUDEDIR}
 	LIBS *= -lboost_program_options-mt
     }

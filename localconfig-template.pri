@@ -18,7 +18,10 @@
 
 #unix:BOOSTINCLUDEDIR = /usr/include
 
-#macx:BOOSTINCLUDEDIR = /usr/local/include
+#macx:BOOSTROOT = /usr/local
+#macx:BOOSTINCLUDEDIR = $${BOOSTROOT}/include/boost-1_38
+#macx:BOOSTLIBDIR = $${BOOSTROOT}/lib
+#macx:BOOSTPOLIB = boost_program_options-xgcc40-mt-1_38
 #macx:LIBUSBINCLUDEDIR = /usr/local/include
 
 #win32:BOOSTROOT = $$BASEDIR/../api/boost
