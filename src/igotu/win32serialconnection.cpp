@@ -79,7 +79,7 @@ void Win32SerialConnection::send(const QByteArray &query)
 
     if (!WriteFile(d->handle, query.data(), query.size(), &result, NULL))
         throw IgotuError(tr("Unable to send data to the device"));
-    if (result != query.size())
+    if (result != unsigned(query.size()))
         throw IgotuError(tr("Unable to send data to the device: Tried "
                     "to send %1 bytes, but only succeeded sending %2 bytes")
                 .arg(query.size(), result));

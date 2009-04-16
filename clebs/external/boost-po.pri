@@ -36,6 +36,14 @@ clebsDependency(boost-po) {
 	} else {
 	    LIBS *= -L$${BOOSTLIBDIR_RELEASE}
 	}
+
+	win32-g++ {
+ 	    CONFIG(debug, debug|release) {
+		LIBS *= -l$${BOOSTPOLIB_DEBUG}
+	    } else {
+		LIBS *= -l$${BOOSTPOLIB_RELEASE}
+	    }
+	}
     }
 
     macx {
