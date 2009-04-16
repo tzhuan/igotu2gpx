@@ -15,7 +15,7 @@ clebsCheck(boost-po) {
 	isEmpty(BOOSTROOT):BOOSTROOT = /usr/local
 	isEmpty(BOOSTINCLUDEDIR):BOOSTINCLUDEDIR = $${BOOSTROOT}/include/boost-1_38
 	isEmpty(BOOSTLIBDIR):BOOSTLIBDIR = $${BOOSTROOT}/lib
-	isEmpty(BOOSTPOLIB):BOOSTPOLIB = boost_program_options-xgcc40-mt-1_38
+	isEmpty(BOOSTPOLIB):BOOSTPOLIB = boost_program_options-xgcc40-mt
 
 	exists($${BOOSTINCLUDEDIR}/boost/program_options):CLEBS_DEPENDENCIES *= boost-po
     }
