@@ -5,7 +5,8 @@ To compile igotu2gpx, you need:
 - qt4 (http://www.qtsoftware.com/)
 - boost (http://www.boost.org/)
 - boost-program-options (http://www.boost.org/, included with boost)
-- libusb 0.1 (on Linux and Mac OS X systems, http://libusb.sourceforge.net/)
+- libusb 0.1 (on Linux, http://libusb.sourceforge.net/)
+- libusb 0.1.13 (on Mac OS X systems, http://www.ellert.se/twain-sane/)
 - chrpath (on Linux, optional, makes it possible to run the program without
   installation)
 
