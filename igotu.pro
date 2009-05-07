@@ -9,6 +9,7 @@ TEMPLATE = subdirs
 
 clebsDirs(src/igotu)
 clebsDirs(src/igotu2gpx, src/igotu)
+clebsDirs(src/igotugui, src/igotu)
 
 docs.files = LICENSE HACKING
 docs.path = $$DOCDIR

@@ -222,7 +222,7 @@ int main(int argc, char *argv[])
                 count.sendAndReceive();
                 printf("Number of trackpoints: %u\n", count.trackPointCount());
 
-                contents += ReadCommand(connection.get(), 0, 0x1000)
+                contents = ReadCommand(connection.get(), 0, 0x1000)
                     .sendAndReceive();
                 NmeaSwitchCommand(connection.get(), true).sendAndReceive();
             }
