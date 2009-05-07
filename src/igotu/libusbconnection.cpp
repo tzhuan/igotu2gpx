@@ -120,14 +120,19 @@ LibusbConnection::~LibusbConnection()
     usb_release_interface(d->handle.get(), 0);
 }
 
-void LibusbConnection::send(const QByteArray &query)
+void LibusbConnection::send(const QByteArray &query, bool purgeBuffers)
 {
     D(LibusbConnection);
 
-    // Purge igotu transmit buffer?
     d->receiveBuffer.clear();
-    usb_interrupt_read(d->handle.get(), 0x81,
-            QByteArray(1024, '\0').data(), 16, 1);
+
+    // Purge igotu transmit buffer
+    if (purgeBuffers)
+        usb_interrupt_read(d->handle.get(), 0x81,
+                QByteArray(0x10, '\0').data(), 0x10, 20);
+
+    if (query.isEmpty())
+        return;
 
     int result = usb_control_msg(d->handle.get(), 0x21, 0x09, 0x0200, 0x0000,
                 const_cast<char*>(query.data()), query.size(), 1000);

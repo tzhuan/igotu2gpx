@@ -39,6 +39,7 @@ public:
     QByteArray command;
     bool receiveRemainder;
     bool ignoreProtocolErrors;
+    bool purgeBuffersBeforeSend;
 };
 
 // IgotuCommandPrivate =========================================================
@@ -73,11 +74,15 @@ unsigned IgotuCommandPrivate::sendCommand(const QByteArray &data)
     QByteArray command(data);
     unsigned pieces = (command.size() + 7) / 8;
     command += QByteArray(pieces * 8 - command.size(), 0);
+
+    if (command.isEmpty())
+        return 0;
+
     command[command.size() - 1] = -std::accumulate(command.data() + 0,
             command.data() + command.size() - 2, 0);
     int responseSize = 0;
     for (unsigned i = 0; i < pieces; ++i) {
-        connection->send(command.mid(i * 8, 8));
+        connection->send(command.mid(i * 8, 8), i == 0 && purgeBuffersBeforeSend);
         responseSize = receiveResponseSize();
         if (responseSize < 0)
             throw IgotuDeviceError
@@ -102,6 +107,7 @@ IgotuCommand::IgotuCommand(DataConnection *connection, const QByteArray
     d->command = command;
     d->receiveRemainder = receiveRemainder;
     d->ignoreProtocolErrors = false;
+    d->purgeBuffersBeforeSend = false;
 }
 
 IgotuCommand::~IgotuCommand()
@@ -162,6 +168,20 @@ void IgotuCommand::setIgnoreProtocolErrors(bool value)
     D(IgotuCommand);
 
     d->ignoreProtocolErrors = value;
+}
+
+bool IgotuCommand::purgeBuffersBeforeSend() const
+{
+    D(const IgotuCommand);
+
+    return d->purgeBuffersBeforeSend;
+}
+
+void IgotuCommand::setPurgeBuffersBeforeSend(bool value)
+{
+    D(IgotuCommand);
+
+    d->purgeBuffersBeforeSend = value;
 }
 
 QByteArray IgotuCommand::sendAndReceive()

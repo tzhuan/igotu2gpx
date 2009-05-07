@@ -37,7 +37,7 @@ public:
     LibusbConnection(unsigned vendorId = 0x0df7, unsigned productId = 0x0900);
     ~LibusbConnection();
 
-    virtual void send(const QByteArray &query);
+    virtual void send(const QByteArray &query, bool purgeBuffers = false);
     virtual QByteArray receive(unsigned expected);
 
 private:

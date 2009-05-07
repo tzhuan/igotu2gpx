@@ -52,6 +52,9 @@ public:
     bool ignoreProtocolErrors() const;
     void setIgnoreProtocolErrors(bool value);
 
+    bool purgeBuffersBeforeSend() const;
+    void setPurgeBuffersBeforeSend(bool value);
+
     virtual QByteArray sendAndReceive();
 
 private:

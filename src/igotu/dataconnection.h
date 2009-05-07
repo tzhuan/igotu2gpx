@@ -29,7 +29,7 @@ class IGOTU_EXPORT DataConnection
 public:
     virtual ~DataConnection();
 
-    virtual void send(const QByteArray &query) = 0;
+    virtual void send(const QByteArray &query, bool purgeBuffers) = 0;
     virtual QByteArray receive(unsigned expected) = 0;
 };
 

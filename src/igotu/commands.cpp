@@ -17,6 +17,7 @@
  ******************************************************************************/
 
 #include "commands.h"
+#include "dataconnection.h"
 #include "exception.h"
 
 #include <QtEndian>
@@ -36,6 +37,8 @@ NmeaSwitchCommand::NmeaSwitchCommand(DataConnection *connection, bool enable) :
 
     if (enable)
         setIgnoreProtocolErrors(true);
+    else
+        setPurgeBuffersBeforeSend(true);
 }
 
 // IdentificationCommand =======================================================
@@ -109,6 +112,11 @@ QByteArray CountCommand::sendAndReceive()
         throw IgotuError(tr("Response too short"));
     count = qFromBigEndian<quint16>(reinterpret_cast<const uchar*>
             (result.data() + 1));
+
+    // TODO: for some weird reason, the device returns the last response code
+    // again (and only for this command), TODO verify on Windows
+    connection()->send(QByteArray(), true);
+
     return result;
 }
 
@@ -121,7 +129,8 @@ unsigned CountCommand::trackPointCount() const
 
 ReadCommand::ReadCommand(DataConnection *connection, unsigned pos,
         unsigned size) :
-    IgotuCommand(connection)
+    IgotuCommand(connection),
+    size(size)
 {
     QByteArray command(15, 0);
     command.replace(0, 3, "\x93\x05\x07");
@@ -136,7 +145,10 @@ ReadCommand::ReadCommand(DataConnection *connection, unsigned pos,
 
 QByteArray ReadCommand::sendAndReceive()
 {
-    return (result = IgotuCommand::sendAndReceive());
+    result = IgotuCommand::sendAndReceive();
+    if (unsigned(result.size()) < size)
+        throw IgotuError(tr("Response too short"));
+    return result;
 }
 
 QByteArray ReadCommand::data() const

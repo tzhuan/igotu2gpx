@@ -70,6 +70,7 @@ public:
     QByteArray data() const;
 
 private:
+    unsigned size;
     QByteArray result;
 };
 
