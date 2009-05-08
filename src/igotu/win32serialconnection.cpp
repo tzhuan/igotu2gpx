@@ -67,15 +67,18 @@ Win32SerialConnection::~Win32SerialConnection()
     CloseHandle(d->handle);
 }
 
-void Win32SerialConnection::send(const QByteArray &query)
+void Win32SerialConnection::send(const QByteArray &query, bool purgeBuffers)
 {
     D(Win32SerialConnection);
 
     DWORD result;
 
     d->receiveBuffer.clear();
-    char dummy[0x10];
-    ReadFile(d->handle, dummy, sizeof(dummy), &result, NULL);
+
+    if (purgeBuffers) {
+        char dummy[0x10];
+        ReadFile(d->handle, dummy, sizeof(dummy), &result, NULL);
+    }
 
     if (!WriteFile(d->handle, query.data(), query.size(), &result, NULL))
         throw IgotuError(tr("Unable to send data to the device"));

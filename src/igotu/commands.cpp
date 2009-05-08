@@ -114,7 +114,7 @@ QByteArray CountCommand::sendAndReceive()
             (result.data() + 1));
 
     // TODO: for some weird reason, the device returns the last response code
-    // again (and only for this command), TODO verify on Windows
+    // again (and only for this command)
     connection()->send(QByteArray(), true);
 
     return result;
