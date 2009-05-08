@@ -29,8 +29,8 @@
     #define EXPORT_DECL __declspec(dllexport)
     #define IMPORT_DECL __declspec(dllimport)
 #else
-    // Test for GCC >= 4.0.0
-    #if GCC_VERSION >= 400
+    // Test for GCC >= 3.4.6
+    #if GCC_VERSION >= 346
         #define EXPORT_DECL __attribute__ ((visibility("default")))
         #define IMPORT_DECL
     #else
