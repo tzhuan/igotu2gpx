@@ -1,17 +1,11 @@
 clebsCheck(chrpath) {
-    win32 {
-    }
-
-    unix {
+    unix:!macx {
 	system(which chrpath 2>&1 > /dev/null):CLEBS_DEPENDENCIES *= chrpath
     }
 }
 
 clebsDependency(chrpath) {
-    win32 {
-    }
-
-    unix {
+    unix:!macx {
 	QMAKE_RPATHDIR *= $$DESTDIR
 
 	removerpath.path = $$target.path
