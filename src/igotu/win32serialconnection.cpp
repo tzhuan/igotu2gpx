@@ -31,9 +31,9 @@ public:
     HANDLE handle;
 };
 
-// Win32SerialConnectionPrivate =====================================================
+// Win32SerialConnectionPrivate ================================================
 
-// Win32SerialConnection ============================================================
+// Win32SerialConnection =======================================================
 
 Win32SerialConnection::Win32SerialConnection(unsigned port) :
     dataPtr(new Win32SerialConnectionPrivate)

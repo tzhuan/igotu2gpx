@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _SRC_LIB_GUI_MAINWINDOW_H_
-#define _SRC_LIB_GUI_MAINWINDOW_H_
+#ifndef _IGOTU2GPX_SRC_IGOTUGUI_MAINWINDOW_H_
+#define _IGOTU2GPX_SRC_IGOTUGUI_MAINWINDOW_H_
 
 #include <boost/scoped_ptr.hpp>
 

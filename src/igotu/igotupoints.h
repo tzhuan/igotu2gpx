@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU_SRC_IGOTU_WAYPOINTS_H_
-#define _IGOTU_SRC_IGOTU_WAYPOINTS_H_
+#ifndef _IGOTU2GPX_SRC_IGOTU_IGOTUPOINTS_H_
+#define _IGOTU2GPX_SRC_IGOTU_IGOTUPOINTS_H_
 
 #include "global.h"
 

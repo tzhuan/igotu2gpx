@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2009  Michael Hofmann <mh21@piware.de>                       *
+ * Copyright (C) 2007  Michael Hofmann <mh21@piware.de>                       *
  *                                                                            *
  * This program is free software; you can redistribute it and/or modify       *
  * it under the terms of the GNU General Public License as published by       *
@@ -16,23 +16,36 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU2GPX_SRC_IGOTU_DATACONNECTION_H_
-#define _IGOTU2GPX_SRC_IGOTU_DATACONNECTION_H_
+#include "ui_waitdialog.h"
+#include "waitdialog.h"
 
-#include "global.h"
+#include <QCloseEvent>
 
-namespace igotu
-{
-
-class IGOTU_EXPORT DataConnection
+class WaitDialogPrivate
 {
 public:
-    virtual ~DataConnection();
-
-    virtual void send(const QByteArray &query, bool purgeBuffers) = 0;
-    virtual QByteArray receive(unsigned expected) = 0;
+    Ui::WaitDialog ui;
 };
 
-} // namespace igotu
+// WaitDialog ==================================================================
 
-#endif
+WaitDialog::WaitDialog(const QString &message, const QString &title,
+        QWidget *parent) :
+    QDialog(parent),
+    d(new WaitDialogPrivate)
+{
+    d->ui.setupUi(this);
+
+    d->ui.message->setText(message);
+    setWindowTitle(title);
+}
+
+WaitDialog::~WaitDialog()
+{
+}
+
+void WaitDialog::closeEvent(QCloseEvent *event)
+{
+    // Do nothing
+    event->ignore();
+}

@@ -8,9 +8,12 @@ QT *= gui
 SOURCES *= \
     igotugui.cpp \
     mainwindow.cpp \
+    waitdialog.cpp \
 
 HEADERS *= \
     mainwindow.h \
+    waitdialog.h \
 
 FORMS *= \
-    igotugui.ui
+    igotugui.ui \
+    waitdialog.ui \

@@ -11,6 +11,7 @@ SOURCES *= \
     commands.cpp \
     dataconnection.cpp \
     igotucommand.cpp \
+    igotucontrol.cpp \
     igotupoints.cpp \
     optionutils.cpp \
     verbose.cpp \
@@ -25,9 +26,11 @@ HEADERS *= \
     exception.h \
     global.h \
     igotucommand.h \
+    igotucontrol.h \
     igotupoints.h \
     optionutils.h \
     pch.h \
+    threadutils.h \
     verbose.h \
     xmlutils.h \
 

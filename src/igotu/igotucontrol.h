@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2009  Michael Hofmann <mh21@piware.de>                       *
+ * Copyright (C) 2007  Michael Hofmann <mh21@piware.de>                       *
  *                                                                            *
  * This program is free software; you can redistribute it and/or modify       *
  * it under the terms of the GNU General Public License as published by       *
@@ -16,21 +16,42 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU2GPX_SRC_IGOTU_DATACONNECTION_H_
-#define _IGOTU2GPX_SRC_IGOTU_DATACONNECTION_H_
+#ifndef _IGOTU2GPX_SRC_IGOTU_IGOTUCONTROL_H_
+#define _IGOTU2GPX_SRC_IGOTU_IGOTUCONTROL_H_
 
 #include "global.h"
+
+#include <boost/scoped_ptr.hpp>
 
 namespace igotu
 {
 
-class IGOTU_EXPORT DataConnection
-{
-public:
-    virtual ~DataConnection();
+class IgotuControlPrivate;
 
-    virtual void send(const QByteArray &query, bool purgeBuffers) = 0;
-    virtual QByteArray receive(unsigned expected) = 0;
+class IGOTU_EXPORT IgotuControl : public QObject
+{
+    Q_OBJECT
+public:
+    IgotuControl(QObject *parent = NULL);
+    ~IgotuControl();
+
+    // may throw
+    void info();
+
+    // schedules a slot of an object that will be called when all tasks have
+    // been processed
+    void notify(QObject *object, const char *method);
+
+    // Returns true if no tasks are pending anymore
+    bool queuesEmpty();
+
+Q_SIGNALS:
+    void infoStarted();
+    void infoFinished(const QString &info);
+    void infoFailed(const QString &message);
+
+protected:
+    boost::scoped_ptr<IgotuControlPrivate> d;
 };
 
 } // namespace igotu

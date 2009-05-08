@@ -197,7 +197,7 @@ QTime ScheduleTableEntry::endTime() const
     return QTime(entry[2], entry[3]);
 }
 
-// IgotuPoints ===================================================================
+// IgotuPoints =================================================================
 
 IgotuPoints::IgotuPoints(const QByteArray &dump, int count) :
     dump(dump)

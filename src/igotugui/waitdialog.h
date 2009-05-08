@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2009  Michael Hofmann <mh21@piware.de>                       *
+ * Copyright (C) 2007  Michael Hofmann <mh21@piware.de>                       *
  *                                                                            *
  * This program is free software; you can redistribute it and/or modify       *
  * it under the terms of the GNU General Public License as published by       *
@@ -16,23 +16,29 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU2GPX_SRC_IGOTU_DATACONNECTION_H_
-#define _IGOTU2GPX_SRC_IGOTU_DATACONNECTION_H_
+#ifndef _IGOTU2GPX_SRC_IGOTUGUI_WAITDIALOG_H_
+#define _IGOTU2GPX_SRC_IGOTUGUI_WAITDIALOG_H_
 
-#include "global.h"
+#include <boost/scoped_ptr.hpp>
 
-namespace igotu
+#include <QDialog>
+
+class WaitDialogPrivate;
+
+class WaitDialog : public QDialog
 {
-
-class IGOTU_EXPORT DataConnection
-{
+    Q_OBJECT
 public:
-    virtual ~DataConnection();
+    WaitDialog(const QString &message, const QString &title,
+            QWidget *parent = NULL);
+    ~WaitDialog();
 
-    virtual void send(const QByteArray &query, bool purgeBuffers) = 0;
-    virtual QByteArray receive(unsigned expected) = 0;
+protected:
+    // Does not close the window
+    virtual void closeEvent(QCloseEvent *event);
+
+protected:
+    boost::scoped_ptr<WaitDialogPrivate> d;
 };
-
-} // namespace igotu
 
 #endif
