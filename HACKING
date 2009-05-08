@@ -45,12 +45,22 @@ Data can be read from interrupt endpoint 0x81 with sth. like
 Writes are done with control messages:
   usb_control_msg(handle, 0x21, 0x09, 0x0200, 0x0000, data, size, timeout);
 
+This must be done asynchronously, i.e., writes should be independent from
+reads. If one read completes, the next one must be started immediately.
+
+There seems to be a firmware bug that may send responses twice for some
+commands. If the transmission is done synchronously, it will not be possible to
+detect and discard superfluous bytes.
+
 Binary protocol
 ---------------
 
 Commands are sent in 8 byte chunks. Each chunk is acknowledged by the gps
 tracker. Most commands consist of 2 chunks. The last byte of all commands
 contains a checksum (SS) so that the sum of all command bytes is zero.
+
+Before each command, the connection is cleared, i.e., all superfluous bytes
+that are still in the input buffer are discarded.
 
 Response:
   Data: 93 XX XX

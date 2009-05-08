@@ -16,3 +16,4 @@ docs.path = $$DOCDIR
 INSTALLS *= docs
 
 todo.commands = @grep -Rn '\'TODO\|FIXME\|XXX\|\\todo\'' src/*/*.cpp src/*/*.h
+QMAKE_EXTRA_TARGETS *= todo

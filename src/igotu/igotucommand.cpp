@@ -82,6 +82,8 @@ unsigned IgotuCommandPrivate::sendCommand(const QByteArray &data)
             command.data() + command.size() - 2, 0);
     int responseSize = 0;
     for (unsigned i = 0; i < pieces; ++i) {
+        // TODO: check whether it is ok to purge the buffers before *all*
+        // commands on Mac OS X
         connection->send(command.mid(i * 8, 8), i == 0 && purgeBuffersBeforeSend);
         responseSize = receiveResponseSize();
         if (responseSize < 0)

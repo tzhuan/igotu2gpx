@@ -76,6 +76,8 @@ void Win32SerialConnection::send(const QByteArray &query, bool purgeBuffers)
     d->receiveBuffer.clear();
 
     if (purgeBuffers) {
+        // TODO: use the purge command to purge the connection, maybe this is
+        // also enough to get rid of NMEA messages
         char dummy[0x10];
         ReadFile(d->handle, dummy, sizeof(dummy), &result, NULL);
     }

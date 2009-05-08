@@ -113,8 +113,10 @@ QByteArray CountCommand::sendAndReceive()
     count = qFromBigEndian<quint16>(reinterpret_cast<const uchar*>
             (result.data() + 1));
 
-    // TODO: for some weird reason, the device returns the last response code
-    // again (and only for this command)
+    // TODO: there seems to be a firmware bug that sends the last response code
+    // again (apparently only for this command); because libusb support is
+    // synchronous, we cannot be sure that the next command purges the transmit
+    // buffer before.
     connection()->send(QByteArray(), true);
 
     return result;
