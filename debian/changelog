@@ -1,3 +1,19 @@
+igotu2gpx (0.2.2~rc1-1) jaunty; urgency=low
+
+  * Point release candidate.
+    - works on Mac OS X
+    - better connection error handling
+    - rudimentary GUI
+
+ -- Michael Hofmann <mh21@piware.de>  Fri, 08 May 2009 10:11:04 +0200
+
+igotu2gpx (0.2.1-1) jaunty; urgency=low
+
+  * Point release.
+    - builds on Mac OS X
+
+ -- Michael Hofmann <mh21@piware.de>  Thu, 30 Apr 2009 14:04:27 +0200
+
 igotu2gpx (0.2-1) intrepid; urgency=low
 
   * New upstream release.
