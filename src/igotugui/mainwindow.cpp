@@ -16,46 +16,95 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#include "igotu/commands.h"
-#include "igotu/igotupoints.h"
+#include "igotu/igotucontrol.h"
 
 #include "mainwindow.h"
 #include "ui_igotugui.h"
+#include "waitdialog.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QMetaMethod>
+#include <QPointer>
 #include <QPushButton>
-
-#if defined(Q_OS_LINUX) || defined(Q_OS_MACX)
-#include "igotu/libusbconnection.h"
-#endif
-#ifdef Q_OS_WIN32
-#include "igotu/win32serialconnection.h"
-#endif
 
 using namespace igotu;
 
-// MainWindow ==================================================================
-
-MainWindow::MainWindow()
+class MainWindowPrivate : public QObject
 {
-    ui.reset(new Ui::IgotuDialog);
-    ui->setupUi(this);
-    QPushButton * const saveButton = ui->buttonBox->addButton(tr("Save..."),
-            QDialogButtonBox::ActionRole);
-    QPushButton * const reloadButton = ui->buttonBox->addButton(tr("Reload"),
-            QDialogButtonBox::ActionRole);
+    Q_OBJECT
+public Q_SLOTS:
+    void on_reload_clicked();
+    void on_save_clicked();
 
-    connect(saveButton, SIGNAL(clicked()), this, SLOT(save()));
-    connect(reloadButton, SIGNAL(clicked()), this, SLOT(reload()));
+    void on_control_infoStarted();
+    void on_control_infoFinished(const QString &info);
+    void on_control_infoFailed(const QString &message);
+
+public:
+    MainWindow *p;
+
+    boost::scoped_ptr<Ui::IgotuDialog> ui;
+    IgotuControl *control;
+    WaitDialog *waiter;
+};
+
+// copied and modified from qobject.cpp
+void connectSlotsByNameToPrivate(QObject *publicObject, QObject *privateObject)
+{
+    if (!publicObject)
+        return;
+    const QMetaObject *mo = privateObject->metaObject();
+    Q_ASSERT(mo);
+    const QObjectList list = qFindChildren<QObject*>(publicObject, QString());
+    for (int i = 0; i < mo->methodCount(); ++i) {
+        const char *slot = mo->method(i).signature();
+        Q_ASSERT(slot);
+        if (slot[0] != 'o' || slot[1] != 'n' || slot[2] != '_')
+            continue;
+        bool foundIt = false;
+        for(int j = 0; j < list.count(); ++j) {
+            const QObject *co = list.at(j);
+            QByteArray objName = co->objectName().toAscii();
+            int len = objName.length();
+            if (!len || qstrncmp(slot + 3, objName.data(), len) ||
+                    slot[len+3] != '_')
+                continue;
+            const QMetaObject *smo = co->metaObject();
+            int sigIndex = smo->indexOfMethod(slot + len + 4);
+            if (sigIndex < 0) { // search for compatible signals
+                int slotlen = qstrlen(slot + len + 4) - 1;
+                for (int k = 0; k < co->metaObject()->methodCount(); ++k) {
+                    if (smo->method(k).methodType() != QMetaMethod::Signal)
+                        continue;
+
+                    if (!qstrncmp(smo->method(k).signature(), slot + len + 4,
+                                slotlen)) {
+                        sigIndex = k;
+                        break;
+                    }
+                }
+            }
+            if (sigIndex < 0)
+                continue;
+            if (QMetaObject::connect(co, sigIndex, privateObject, i)) {
+                foundIt = true;
+                break;
+            }
+        }
+        if (foundIt) {
+            // we found our slot, now skip all overloads
+            while (mo->method(i + 1).attributes() & QMetaMethod::Cloned)
+                  ++i;
+        } else if (!(mo->method(i).attributes() & QMetaMethod::Cloned)) {
+            qWarning("connectSlotsByName: No matching signal for %s", slot);
+        }
+    }
 }
 
-MainWindow::~MainWindow()
+void MainWindowPrivate::on_save_clicked()
 {
-}
-
-void MainWindow::save()
-{
+    /*
     if (contents.isEmpty())
         return;
 
@@ -79,52 +128,78 @@ void MainWindow::save()
         QMessageBox::critical(this, QString(),
                 tr("Unable to save to file: %1")
                 .arg(file.errorString()));
+                */
 }
 
-void MainWindow::reload()
+void MainWindowPrivate::on_reload_clicked()
 {
-    connection.reset();
+    control->info();
+}
+
+void MainWindowPrivate::on_control_infoStarted()
+{
+    waiter = new WaitDialog(tr("Retrieving info..."),
+            tr("Please wait..."), p);
+    waiter->exec();
+}
+
+void MainWindowPrivate::on_control_infoFinished(const QString &info)
+{
+    delete waiter;
+
+    ui->textBrowser->setText(info);
+}
+
+void MainWindowPrivate::on_control_infoFailed(const QString &message)
+{
+    delete waiter;
+
     ui->textBrowser->clear();
-    contents.clear();
-    count = 0;
+    QMessageBox::critical(p, QString(),
+            tr("Unable to connect to gps tracker: %1")
+            .arg(message));
+}
 
-    try {
-#ifdef Q_OS_WIN32
-        connection.reset(new Win32SerialConnection);
-#elif defined(Q_OS_LINUX) || defined(Q_OS_MACX)
-        connection.reset(new LibusbConnection);
-#endif
+// MainWindow ==================================================================
 
-        NmeaSwitchCommand(connection.get(), false).sendAndReceive();
+MainWindow::MainWindow() :
+    d(new MainWindowPrivate)
+{
+    d->p = this;
 
-        QString status;
-        IdentificationCommand id(connection.get());
-        id.sendAndReceive();
-        status += tr("S/N: %1\n").arg(id.serialNumber());
-        status += tr("Firmware version: %1\n").arg(id.firmwareVersion());
-        status += tr("Model: %1\n").arg(id.deviceName());
-        CountCommand countCommand(connection.get());
-        countCommand.sendAndReceive();
-        count = countCommand.trackPointCount();
-        status += tr("Number of trackpoints: %1\n").arg(count);
-        ui->textBrowser->setText(status);
+    d->ui.reset(new Ui::IgotuDialog);
+    d->ui->setupUi(this);
 
-        for (unsigned i = 0;
-                i < 1 + (count + 0x7f) / 0x80; ++i) {
-            fprintf(stderr, "Dumping datablock %u...\n", i + 1);
-            QByteArray data = ReadCommand(connection.get(), i * 0x1000,
-                    0x1000).sendAndReceive();
-            contents += data;
-        }
+    QPushButton * const saveButton = d->ui->buttonBox->addButton(tr("Save..."),
+            QDialogButtonBox::ActionRole);
+    saveButton->setObjectName(QLatin1String("save"));
+    QPushButton * const reloadButton = d->ui->buttonBox->addButton(tr("Reload"),
+            QDialogButtonBox::ActionRole);
+    reloadButton->setObjectName(QLatin1String("reload"));
 
-        NmeaSwitchCommand(connection.get(), true).sendAndReceive();
-    } catch (const std::exception &e) {
-        QMessageBox::critical(this, QString(),
-                tr("Unable to create gps tracker connection: %1")
-                .arg(QString::fromLocal8Bit(e.what())));
-        connection.reset();
-        ui->textBrowser->clear();
-        contents.clear();
-        count = 0;
+    d->control = new IgotuControl(this);
+    d->control->setObjectName(QLatin1String("control"));
+
+    connectSlotsByNameToPrivate(this, d.get());
+}
+
+MainWindow::~MainWindow()
+{
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    Q_UNUSED(event);
+
+    while (!d->control->queuesEmpty()) {
+        // We should never come here, as all commands are showing their own
+        // dialogs, but anyway
+        QPointer<QDialog> waiter(new WaitDialog(tr("Please wait until all tasks are finished..."),
+                tr("Please wait..."), this));
+        d->control->notify(waiter, "reject");
+        waiter->exec();
+        delete waiter;
     }
 }
+
+#include "mainwindow.moc"

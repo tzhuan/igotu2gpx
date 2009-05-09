@@ -16,26 +16,39 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#include "igotucontrol.h"
+#include "commands.h"
+#include "dataconnection.h"
 #include "exception.h"
+#include "igotucontrol.h"
+#include "igotupoints.h"
 #include "threadutils.h"
 
 #include <QDir>
 #include <QSemaphore>
 #include <QStringList>
 
+#if defined(Q_OS_LINUX) || defined(Q_OS_MACX)
+#include "libusbconnection.h"
+#endif
+#ifdef Q_OS_WIN32
+#include "win32serialconnection.h"
+#endif
+
 namespace igotu
 {
 
-class IgotuControlPrivateProxy : public QObject
+class IgotuControlPrivateWorker : public QObject
 {
     Q_OBJECT
 public:
-    IgotuControlPrivateProxy(IgotuControlPrivate *pub);
+    IgotuControlPrivateWorker(IgotuControlPrivate *pub);
 
 public Q_SLOTS:
     void info();
     void notify(QObject *object, const QByteArray &method);
+
+private:
+    void connect();
 
 Q_SIGNALS:
     void infoStarted();
@@ -44,6 +57,8 @@ Q_SIGNALS:
 
 private:
     IgotuControlPrivate * const p;
+
+    boost::scoped_ptr<DataConnection> connection;
 };
 
 class IgotuControlPrivate : public QObject
@@ -56,7 +71,7 @@ public:
     unsigned count;
     QSemaphore semaphore;
     EventThread thread;
-    IgotuControlPrivateProxy proxy;
+    IgotuControlPrivateWorker worker;
 
 Q_SIGNALS:
     void info();
@@ -68,31 +83,137 @@ Q_SIGNALS:
 IgotuControlPrivate::IgotuControlPrivate() :
     count(1),
     semaphore(count),
-    proxy(this)
+    worker(this)
 {
 }
 
-// IgotuControlPrivateProxy ====================================================
+// IgotuControlPrivateWorker ====================================================
 
-IgotuControlPrivateProxy::IgotuControlPrivateProxy(IgotuControlPrivate *pub) :
+IgotuControlPrivateWorker::IgotuControlPrivateWorker(IgotuControlPrivate *pub) :
     p(pub)
 {
 }
 
-void IgotuControlPrivateProxy::info()
+void IgotuControlPrivateWorker::connect()
+{
+    connection.reset();
+#ifdef Q_OS_WIN32
+    connection.reset(new Win32SerialConnection);
+#elif defined(Q_OS_LINUX) || defined(Q_OS_MACX)
+    connection.reset(new LibusbConnection);
+#endif
+}
+
+void IgotuControlPrivateWorker::info()
 {
     emit infoStarted();
     try {
-        // Calculate result
-        QString result;
-        emit infoFinished(result);
+        connect();
+
+        NmeaSwitchCommand(connection.get(), false).sendAndReceive();
+        QString status;
+        IdentificationCommand id(connection.get());
+        id.sendAndReceive();
+        status += tr("S/N: %1\n").arg(id.serialNumber());
+        status += tr("Firmware version: %1\n").arg(id.firmwareVersion());
+        status += tr("Model: %1\n").arg(id.deviceName());
+        CountCommand countCommand(connection.get());
+        countCommand.sendAndReceive();
+        unsigned count = countCommand.trackPointCount();
+        status += tr("Number of trackpoints: %1\n").arg(count);
+        const QByteArray contents = ReadCommand(connection.get(), 0, 0x1000)
+            .sendAndReceive();
+        NmeaSwitchCommand(connection.get(), true).sendAndReceive();
+
+        IgotuPoints igotuPoints(contents);
+        if (!igotuPoints.isValid())
+            throw IgotuError(tr("Uninitialized device"));
+
+        status += tr("Schedule date: %1").arg(igotuPoints.firstScheduleDate()
+                .toString()) + QLatin1Char('\n');
+        status += tr("Schedule date offset: %1 days").arg(igotuPoints
+                .dateOffset()) + QLatin1Char('\n');
+        QList<unsigned> tablePlans = igotuPoints.scheduleTablePlans();
+        QSet<unsigned> tablePlanSet = QSet<unsigned>::fromList(tablePlans);
+        if (igotuPoints.isScheduleTableEnabled()) {
+            status += tr("Schedule table: enabled") + QLatin1Char('\n');
+            status += tr("Schedule table plans used:");
+            Q_FOREACH (unsigned plan, tablePlanSet)
+                status += QLatin1Char(' ') + QString::number(plan);
+            status += QLatin1Char('\n');
+            status += tr("Schedule table plan order:") + QLatin1Char(' ');
+            if (tablePlans.size() > 1)
+                status += QLatin1String("\n  ");
+            for (unsigned i = 0; i < unsigned(tablePlans.size()); ++i) {
+                if (i && i % 7 == 0)
+                    status += QLatin1Char(' ');
+                if (i && i % (7 * 7) == 0)
+                    status += QLatin1String("\n  ");
+                status += QString::number(tablePlans[i]);
+            }
+            status += QLatin1Char('\n');
+            Q_FOREACH (unsigned plan, tablePlanSet) {
+                bool printed = false;
+                Q_FOREACH (const ScheduleTableEntry &entry,
+                        igotuPoints.scheduleTableEntries(plan)) {
+                    if (!entry.isValid())
+                        continue;
+                    if (!printed) {
+                        status += tr("Schedule %1:").arg(plan) + QLatin1Char('\n');
+                        printed = true;
+                    }
+                    // TODO: use locale for date formatting
+                    status += tr("  Start time: %1").arg(entry.startTime()
+                            .toString()) + QLatin1Char('\n');
+                    status += tr("  End time: %1").arg(entry.endTime()
+                            .toString()) + QLatin1Char('\n');
+                    status += tr("  Log interval: %1 s").arg(entry
+                            .logInterval()) + QLatin1Char('\n');
+                    if (entry.isIntervalChangeEnabled()) {
+                        status += tr("  Interval change: above %1 km/h, use %2 s")
+                            .arg(qRound(entry.intervalChangeSpeed()))
+                            .arg(entry.changedLogInterval()) + QLatin1Char('\n');
+                    } else {
+                        status += tr("  Interval change: disabled") + QLatin1Char('\n');
+                    }
+                }
+            }
+        } else {
+            status += tr("Schedule table: disabled") + QLatin1Char('\n');
+            ScheduleTableEntry entry = igotuPoints.scheduleTableEntries(1)[0];
+            status += tr("Log interval: %1 s").arg(entry.logInterval()) + QLatin1Char('\n');
+            if (entry.isIntervalChangeEnabled()) {
+                status += tr("Interval change: above %1 km/h, use %2 s")
+                        .arg(qRound(entry.intervalChangeSpeed()))
+                        .arg(entry.changedLogInterval()) + QLatin1Char('\n');
+            } else {
+                status += tr("Interval change: disabled") + QLatin1Char('\n');
+            }
+        }
+
+        status += tr("LEDs: %1").arg(igotuPoints.ledsEnabled() ? tr("enabled") :
+                tr("disabled")) + QLatin1Char('\n');
+        status += tr("Button: %1").arg(igotuPoints.isButtonEnabled() ? tr("enabled")
+                : tr("disabled")) + QLatin1Char('\n');
+
+        status += tr("Security version: %1").arg(igotuPoints.securityVersion()) +
+            QLatin1Char('\n');
+        if (igotuPoints.securityVersion() == 0) {
+            status += tr("Password: %1, [%2]")
+                .arg(igotuPoints.isPasswordEnabled() ? tr("enabled") : tr("disabled"),
+                igotuPoints.password()) + QLatin1Char('\n');
+        }
+
+        emit infoFinished(status);
     } catch (const std::exception &e) {
         emit infoFailed(QString::fromLocal8Bit(e.what()));
     }
+    connection.reset();
+
     p->semaphore.release();
 }
 
-void IgotuControlPrivateProxy::notify(QObject *object, const QByteArray &method)
+void IgotuControlPrivateWorker::notify(QObject *object, const QByteArray &method)
 {
     QMetaObject::invokeMethod(object, method);
 }
@@ -105,19 +226,19 @@ IgotuControl::IgotuControl(QObject *parent) :
 {
 //    qRegisterMetaType<DataCollection>();
 
-    connect(&d->proxy, SIGNAL(infoStarted()),
+    connect(&d->worker, SIGNAL(infoStarted()),
              this, SIGNAL(infoStarted()));
-    connect(&d->proxy, SIGNAL(infoFinished(QString)),
+    connect(&d->worker, SIGNAL(infoFinished(QString)),
              this, SIGNAL(infoFinished(QString)));
-    connect(&d->proxy, SIGNAL(infoFailed(QString)),
+    connect(&d->worker, SIGNAL(infoFailed(QString)),
              this, SIGNAL(infoFailed(QString)));
 
     connect(d.get(), SIGNAL(info()),
-             &d->proxy, SLOT(info()));
+             &d->worker, SLOT(info()));
     connect(d.get(), SIGNAL(notify(QObject*,QByteArray)),
-             &d->proxy, SLOT(notify(QObject*,QByteArray)));
+             &d->worker, SLOT(notify(QObject*,QByteArray)));
 
-    d->proxy.moveToThread(&d->thread);
+    d->worker.moveToThread(&d->thread);
     d->thread.start();
 }
 

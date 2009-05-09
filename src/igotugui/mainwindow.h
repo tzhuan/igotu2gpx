@@ -23,15 +23,7 @@
 
 #include <QDialog>
 
-namespace Ui
-{
-class IgotuDialog;
-}
-
-namespace igotu
-{
-class DataConnection;
-}
+class MainWindowPrivate;
 
 class MainWindow : public QDialog
 {
@@ -40,15 +32,10 @@ public:
     MainWindow();
     ~MainWindow();
 
-private Q_SLOTS:
-    void reload();
-    void save();
+    virtual void closeEvent(QCloseEvent *event);
 
-private:
-    boost::scoped_ptr<Ui::IgotuDialog> ui;
-    boost::scoped_ptr<igotu::DataConnection> connection;
-    QByteArray contents;
-    unsigned count;
+protected:
+    boost::scoped_ptr<MainWindowPrivate> d;
 };
 
 #endif
