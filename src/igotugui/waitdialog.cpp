@@ -44,6 +44,16 @@ WaitDialog::~WaitDialog()
 {
 }
 
+QLabel *WaitDialog::messageLabel()
+{
+    return d->ui.message;
+}
+
+QProgressBar *WaitDialog::progressBar()
+{
+    return d->ui.progressBar;
+}
+
 void WaitDialog::closeEvent(QCloseEvent *event)
 {
     // Do nothing

@@ -3,7 +3,7 @@ clebsCheck(builddll) {
 }
 
 clebsDependency(builddll) {
-    unix:CONFIG += hide_symbols
+    unix:!novisibility:CONFIG += hide_symbols
     CONFIG += dll
     TEMPLATE = lib
     target.path = $$LIBDIR

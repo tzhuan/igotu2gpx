@@ -45,6 +45,7 @@ public:
 
 public Q_SLOTS:
     void info();
+    void contents();
     void notify(QObject *object, const QByteArray &method);
 
 private:
@@ -54,6 +55,11 @@ Q_SIGNALS:
     void infoStarted();
     void infoFinished(const QString &info);
     void infoFailed(const QString &message);
+
+    void contentsStarted();
+    void contentsBlocksFinished(unsigned num, unsigned total);
+    void contentsFinished(const QByteArray &contents, unsigned count);
+    void contentsFailed(const QString &message);
 
 private:
     IgotuControlPrivate * const p;
@@ -75,6 +81,7 @@ public:
 
 Q_SIGNALS:
     void info();
+    void contents();
     void notify(QObject *object, const QByteArray &method);
 };
 
@@ -130,7 +137,7 @@ void IgotuControlPrivateWorker::info()
             throw IgotuError(tr("Uninitialized device"));
 
         status += tr("Schedule date: %1").arg(igotuPoints.firstScheduleDate()
-                .toString()) + QLatin1Char('\n');
+                .toString(Qt::DefaultLocaleLongDate)) + QLatin1Char('\n');
         status += tr("Schedule date offset: %1 days").arg(igotuPoints
                 .dateOffset()) + QLatin1Char('\n');
         QList<unsigned> tablePlans = igotuPoints.scheduleTablePlans();
@@ -162,19 +169,23 @@ void IgotuControlPrivateWorker::info()
                         status += tr("Schedule %1:").arg(plan) + QLatin1Char('\n');
                         printed = true;
                     }
-                    // TODO: use locale for date formatting
-                    status += tr("  Start time: %1").arg(entry.startTime()
-                            .toString()) + QLatin1Char('\n');
-                    status += tr("  End time: %1").arg(entry.endTime()
-                            .toString()) + QLatin1Char('\n');
-                    status += tr("  Log interval: %1 s").arg(entry
-                            .logInterval()) + QLatin1Char('\n');
+                    status += QLatin1String("  ") +
+                        tr("Start time: %1").arg(entry.startTime().toString(Qt::DefaultLocaleLongDate)) +
+                        QLatin1Char('\n');
+                    status += QLatin1String("  ") +
+                        tr("End time: %1").arg(entry.endTime().toString(Qt::DefaultLocaleLongDate)) +
+                        QLatin1Char('\n');
+                    status += QLatin1String("  ") +
+                        tr("Log interval: %1 s").arg(entry.logInterval()) +
+                        QLatin1Char('\n');
                     if (entry.isIntervalChangeEnabled()) {
-                        status += tr("  Interval change: above %1 km/h, use %2 s")
+                        status += QLatin1String("  ") +
+                            tr("Interval change: above %1 km/h, use %2 s")
                             .arg(qRound(entry.intervalChangeSpeed()))
                             .arg(entry.changedLogInterval()) + QLatin1Char('\n');
                     } else {
-                        status += tr("  Interval change: disabled") + QLatin1Char('\n');
+                        status += QLatin1String("  ") +
+                            tr("Interval change: disabled") + QLatin1Char('\n');
                     }
                 }
             }
@@ -213,6 +224,35 @@ void IgotuControlPrivateWorker::info()
     p->semaphore.release();
 }
 
+void IgotuControlPrivateWorker::contents()
+{
+    emit contentsStarted();
+    try {
+        connect();
+
+        NmeaSwitchCommand(connection.get(), false).sendAndReceive();
+        CountCommand countCommand(connection.get());
+        countCommand.sendAndReceive();
+        const unsigned count = countCommand.trackPointCount();
+        const unsigned blocks = 1 + (count + 0x7f) / 0x80;
+        QByteArray data;
+        for (unsigned i = 0; i < blocks; ++i) {
+            emit contentsBlocksFinished(i, blocks);
+            data += ReadCommand(connection.get(), i * 0x1000,
+                    0x1000).sendAndReceive();
+        }
+        NmeaSwitchCommand(connection.get(), true).sendAndReceive();
+
+        emit contentsBlocksFinished(blocks, blocks);
+        emit contentsFinished(data, count);
+    } catch (const std::exception &e) {
+        emit contentsFailed(QString::fromLocal8Bit(e.what()));
+    }
+    connection.reset();
+
+    p->semaphore.release();
+}
+
 void IgotuControlPrivateWorker::notify(QObject *object, const QByteArray &method)
 {
     QMetaObject::invokeMethod(object, method);
@@ -224,8 +264,6 @@ IgotuControl::IgotuControl(QObject *parent) :
     QObject(parent),
     d(new IgotuControlPrivate)
 {
-//    qRegisterMetaType<DataCollection>();
-
     connect(&d->worker, SIGNAL(infoStarted()),
              this, SIGNAL(infoStarted()));
     connect(&d->worker, SIGNAL(infoFinished(QString)),
@@ -233,8 +271,19 @@ IgotuControl::IgotuControl(QObject *parent) :
     connect(&d->worker, SIGNAL(infoFailed(QString)),
              this, SIGNAL(infoFailed(QString)));
 
+    connect(&d->worker, SIGNAL(contentsStarted()),
+             this, SIGNAL(contentsStarted()));
+    connect(&d->worker, SIGNAL(contentsBlocksFinished(uint,uint)),
+             this, SIGNAL(contentsBlocksFinished(uint,uint)));
+    connect(&d->worker, SIGNAL(contentsFinished(QByteArray,uint)),
+             this, SIGNAL(contentsFinished(QByteArray,uint)));
+    connect(&d->worker, SIGNAL(contentsFailed(QString)),
+             this, SIGNAL(contentsFailed(QString)));
+
     connect(d.get(), SIGNAL(info()),
              &d->worker, SLOT(info()));
+    connect(d.get(), SIGNAL(contents()),
+             &d->worker, SLOT(contents()));
     connect(d.get(), SIGNAL(notify(QObject*,QByteArray)),
              &d->worker, SLOT(notify(QObject*,QByteArray)));
 
@@ -264,6 +313,13 @@ void IgotuControl::info()
     if (!d->semaphore.tryAcquire())
         throw IgotuError(tr("Too many concurrent tasks"));
     emit d->info();
+}
+
+void IgotuControl::contents()
+{
+    if (!d->semaphore.tryAcquire())
+        throw IgotuError(tr("Too many concurrent tasks"));
+    emit d->contents();
 }
 
 void IgotuControl::notify(QObject *object, const char *method)

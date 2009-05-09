@@ -23,6 +23,9 @@
 
 #include <QDialog>
 
+class QLabel;
+class QProgressBar;
+
 class WaitDialogPrivate;
 
 class WaitDialog : public QDialog
@@ -32,6 +35,9 @@ public:
     WaitDialog(const QString &message, const QString &title,
             QWidget *parent = NULL);
     ~WaitDialog();
+
+    QLabel *messageLabel();
+    QProgressBar *progressBar();
 
 protected:
     // Does not close the window

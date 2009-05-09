@@ -39,6 +39,8 @@ public:
 
     // may throw
     void info();
+    // may throw
+    void contents();
 
     // schedules a slot of an object that will be called when all tasks have
     // been processed
@@ -51,6 +53,12 @@ Q_SIGNALS:
     void infoStarted();
     void infoFinished(const QString &info);
     void infoFailed(const QString &message);
+
+    void contentsStarted();
+    // number of blocks finished, from 0 to blocks
+    void contentsBlocksFinished(unsigned num, unsigned total);
+    void contentsFinished(const QByteArray &contents, unsigned count);
+    void contentsFailed(const QString &message);
 
 protected:
     boost::scoped_ptr<IgotuControlPrivate> d;

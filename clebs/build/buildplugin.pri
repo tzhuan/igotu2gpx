@@ -3,7 +3,7 @@ clebsCheck(buildplugin) {
 }
 
 clebsDependency(buildplugin) {
-    unix:CONFIG += hide_symbols
+    unix:!novisibility:CONFIG += hide_symbols
     CONFIG += plugin dll
     TEMPLATE = lib
     target.path = $$PLUGINDIR

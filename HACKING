@@ -50,7 +50,8 @@ reads. If one read completes, the next one must be started immediately.
 
 There seems to be a firmware bug that may send responses twice for some
 commands. If the transmission is done synchronously, it will not be possible to
-detect and discard superfluous bytes.
+detect and discard superfluous bytes. This is especially important on Mac OS X,
+as the USB interrupt transfers there ignore the timeout given.
 
 Binary protocol
 ---------------

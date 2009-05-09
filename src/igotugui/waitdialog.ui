@@ -1,34 +1,21 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>WaitDialog</class>
- <widget class="QWidget" name="WaitDialog" >
-  <property name="geometry" >
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>400</width>
-    <height>63</height>
-   </rect>
-  </property>
-  <property name="sizePolicy" >
-   <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
-    <horstretch>0</horstretch>
-    <verstretch>0</verstretch>
-   </sizepolicy>
-  </property>
-  <layout class="QVBoxLayout" >
+ <widget class="QWidget" name="WaitDialog">
+  <layout class="QVBoxLayout">
    <item>
-    <widget class="QLabel" name="message" >
-     <property name="text" >
+    <widget class="QLabel" name="message">
+     <property name="text">
       <string/>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QProgressBar" name="progressBar" >
-     <property name="maximum" >
+    <widget class="QProgressBar" name="progressBar">
+     <property name="maximum">
       <number>0</number>
      </property>
-     <property name="textVisible" >
+     <property name="textVisible">
       <bool>false</bool>
      </property>
     </widget>

@@ -19,9 +19,11 @@ Compiling
 
 On a Linux system, you can compile with:
     qmake && make && sudo make install
+
 If you get error messages about "Unknown test functions" from qmake, try
-    qmake-qt4 && make && sudo make install
-instead.
+qmake-qt4 instead of qmake.
+
+If you use a compiler older than gcc 4.0.0, use "qmake CLEBS=novisibility".
 
 On a Mac OS X system, a bit more work is necessary. Copy the file
 localconfig-template.pri to localconfig.pri, uncomment the lines with macx:...
