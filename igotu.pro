@@ -1,4 +1,4 @@
-CLEBS_REQUIRED *= boost-po
+CLEBS_REQUIRED *= qtversion440 boost-po
 unix:CLEBS_REQUIRED *= libusb
 unix:!macx:CLEBS_SUGGESTED *= chrpath
 
@@ -10,6 +10,7 @@ TEMPLATE = subdirs
 clebsDirs(src/igotu)
 clebsDirs(src/igotu2gpx, src/igotu)
 clebsDirs(src/igotugui, src/igotu)
+clebsDirs(data)
 
 docs.files = LICENSE HACKING
 docs.path = $$DOCDIR

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=i-gotU GPS travel logger Interface
+Comment=Transfers data from i-gotU GPS trackers
+Exec=igotugui
+StartupWMClass=igotugui
+Terminal=false
+Type=Application
+Icon=igotugui
+Categories=Qt;Graphics;Photography;

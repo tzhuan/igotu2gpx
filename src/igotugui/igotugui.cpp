@@ -19,6 +19,7 @@
 #include "igotu/optionutils.h"
 #include "igotu/verbose.h"
 
+#include "iconstorage.h"
 #include "mainwindow.h"
 
 #include <boost/program_options.hpp>
@@ -39,7 +40,7 @@ int main(int argc, char *argv[])
     app.setApplicationName(QLatin1String("IgotuGUI"));
     app.setOrganizationName(QLatin1String("mh21.de"));
     app.setOrganizationDomain(QLatin1String("mh21.de"));
-    //app.setWindowIcon(icon); TODO
+    app.setWindowIcon(IconStorage::get(IconStorage::IgotuIcon));
 
     // Command line parsing (uses C++ output)
 
