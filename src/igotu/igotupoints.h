@@ -98,7 +98,7 @@ class IGOTU_EXPORT IgotuPoints
 {
     Q_DECLARE_TR_FUNCTIONS(IgotuPoints)
 public:
-    IgotuPoints(const QByteArray &dump, int count = -1);
+    IgotuPoints(const QByteArray &dump, unsigned count);
     ~IgotuPoints();
 
     QList<IgotuPoint> points() const;

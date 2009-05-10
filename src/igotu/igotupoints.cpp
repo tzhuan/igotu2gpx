@@ -199,17 +199,12 @@ QTime ScheduleTableEntry::endTime() const
 
 // IgotuPoints =================================================================
 
-IgotuPoints::IgotuPoints(const QByteArray &dump, int count) :
-    dump(dump)
+IgotuPoints::IgotuPoints(const QByteArray &dump, unsigned count) :
+    dump(dump),
+    count(count)
 {
     if (dump.size() < 0x1000)
         throw IgotuError(tr("Dump too small"));
-
-    int dumpCount = qMax(0, (dump.size() - 0x1000) / 0x20);
-    if (count == -1)
-        this->count = dumpCount;
-    else
-        this->count = qMin(dumpCount, count);
 }
 
 IgotuPoints::~IgotuPoints()

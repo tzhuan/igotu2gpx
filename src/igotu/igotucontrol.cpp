@@ -53,7 +53,7 @@ private:
 
 Q_SIGNALS:
     void infoStarted();
-    void infoFinished(const QString &info);
+    void infoFinished(const QString &info, const QByteArray &contents);
     void infoFailed(const QString &message);
 
     void contentsStarted();
@@ -65,6 +65,7 @@ private:
     IgotuControlPrivate * const p;
 
     boost::scoped_ptr<DataConnection> connection;
+    QByteArray image;
 };
 
 class IgotuControlPrivate : public QObject
@@ -74,22 +75,24 @@ class IgotuControlPrivate : public QObject
 public:
     IgotuControlPrivate();
 
-    unsigned count;
-    QSemaphore semaphore;
-    EventThread thread;
-    IgotuControlPrivateWorker worker;
-
 Q_SIGNALS:
     void info();
     void contents();
     void notify(QObject *object, const QByteArray &method);
+
+public:
+    unsigned taskCount;
+    QSemaphore semaphore;
+    EventThread thread;
+    IgotuControlPrivateWorker worker;
+    QString device;
 };
 
 // IgotuControlPrivate =========================================================
 
 IgotuControlPrivate::IgotuControlPrivate() :
-    count(1),
-    semaphore(count),
+    taskCount(1),
+    semaphore(taskCount),
     worker(this)
 {
 }
@@ -104,11 +107,25 @@ IgotuControlPrivateWorker::IgotuControlPrivateWorker(IgotuControlPrivate *pub) :
 void IgotuControlPrivateWorker::connect()
 {
     connection.reset();
+    image.clear();
+
+    const QString protocol = p->device.section(QLatin1Char(':'), 0, 0).toLower();
+    const QString name = p->device.section(QLatin1Char(':'), 1);
+    if (protocol == QLatin1String ("image")) {
+        image = QByteArray::fromBase64(name.toAscii());
 #ifdef Q_OS_WIN32
-    connection.reset(new Win32SerialConnection);
+    } else if (protocol == QLatin1String("serial")) {
+        connection.reset(new Win32SerialConnection(name.toUint()));
 #elif defined(Q_OS_LINUX) || defined(Q_OS_MACX)
-    connection.reset(new LibusbConnection);
+    } else if (protocol == QLatin1String("usb")) {
+        connection.reset(new LibusbConnection(name.section(QLatin1Char(':'), 0,
+                        0).toUInt(NULL, 16), name.section(QLatin1Char(':'), 1,
+                            1).toUInt(NULL, 16)));
 #endif
+    } else {
+        throw IgotuError(tr("Unable to connect via %1 connection")
+                .arg(protocol.toLower()));
+    }
 }
 
 void IgotuControlPrivateWorker::info()
@@ -117,22 +134,27 @@ void IgotuControlPrivateWorker::info()
     try {
         connect();
 
-        NmeaSwitchCommand(connection.get(), false).sendAndReceive();
+        QByteArray contents;
         QString status;
-        IdentificationCommand id(connection.get());
-        id.sendAndReceive();
-        status += tr("S/N: %1\n").arg(id.serialNumber());
-        status += tr("Firmware version: %1\n").arg(id.firmwareVersion());
-        status += tr("Model: %1\n").arg(id.deviceName());
-        CountCommand countCommand(connection.get());
-        countCommand.sendAndReceive();
-        unsigned count = countCommand.trackPointCount();
-        status += tr("Number of trackpoints: %1\n").arg(count);
-        const QByteArray contents = ReadCommand(connection.get(), 0, 0x1000)
-            .sendAndReceive();
-        NmeaSwitchCommand(connection.get(), true).sendAndReceive();
+        if (connection) {
+            NmeaSwitchCommand(connection.get(), false).sendAndReceive();
+            IdentificationCommand id(connection.get());
+            id.sendAndReceive();
+            status += tr("S/N: %1\n").arg(id.serialNumber());
+            status += tr("Firmware version: %1\n").arg(id.firmwareVersion());
+            status += tr("Model: %1\n").arg(id.deviceName());
+            CountCommand countCommand(connection.get());
+            countCommand.sendAndReceive();
+            unsigned count = countCommand.trackPointCount();
+            status += tr("Number of trackpoints: %1\n").arg(count);
+            contents = ReadCommand(connection.get(), 0, 0x1000)
+                .sendAndReceive();
+            NmeaSwitchCommand(connection.get(), true).sendAndReceive();
+        } else {
+            contents = image.left(0x1000);
+        }
 
-        IgotuPoints igotuPoints(contents);
+        IgotuPoints igotuPoints(contents, 0);
         if (!igotuPoints.isValid())
             throw IgotuError(tr("Uninitialized device"));
 
@@ -215,11 +237,12 @@ void IgotuControlPrivateWorker::info()
                 igotuPoints.password()) + QLatin1Char('\n');
         }
 
-        emit infoFinished(status);
+        emit infoFinished(status, contents);
     } catch (const std::exception &e) {
         emit infoFailed(QString::fromLocal8Bit(e.what()));
     }
     connection.reset();
+    image.clear();
 
     p->semaphore.release();
 }
@@ -230,25 +253,34 @@ void IgotuControlPrivateWorker::contents()
     try {
         connect();
 
-        NmeaSwitchCommand(connection.get(), false).sendAndReceive();
-        CountCommand countCommand(connection.get());
-        countCommand.sendAndReceive();
-        const unsigned count = countCommand.trackPointCount();
-        const unsigned blocks = 1 + (count + 0x7f) / 0x80;
         QByteArray data;
-        for (unsigned i = 0; i < blocks; ++i) {
-            emit contentsBlocksFinished(i, blocks);
-            data += ReadCommand(connection.get(), i * 0x1000,
-                    0x1000).sendAndReceive();
+        unsigned count;
+        if (connection) {
+            NmeaSwitchCommand(connection.get(), false).sendAndReceive();
+            CountCommand countCommand(connection.get());
+            countCommand.sendAndReceive();
+            count = countCommand.trackPointCount();
+            const unsigned blocks = 1 + (count + 0x7f) / 0x80;
+            for (unsigned i = 0; i < blocks; ++i) {
+                emit contentsBlocksFinished(i, blocks);
+                data += ReadCommand(connection.get(), i * 0x1000,
+                        0x1000).sendAndReceive();
+            }
+            emit contentsBlocksFinished(blocks, blocks);
+            NmeaSwitchCommand(connection.get(), true).sendAndReceive();
+        } else {
+            data = image;
+            if (data.size() < 0x1000)
+                throw IgotuError(tr("Invalid data"));
+            count = (image.size() - 0x1000) / 0x20;
         }
-        NmeaSwitchCommand(connection.get(), true).sendAndReceive();
 
-        emit contentsBlocksFinished(blocks, blocks);
         emit contentsFinished(data, count);
     } catch (const std::exception &e) {
         emit contentsFailed(QString::fromLocal8Bit(e.what()));
     }
     connection.reset();
+    image.clear();
 
     p->semaphore.release();
 }
@@ -264,10 +296,16 @@ IgotuControl::IgotuControl(QObject *parent) :
     QObject(parent),
     d(new IgotuControlPrivate)
 {
+#ifdef Q_OS_WIN32
+    d->device = QLatin1String("serial:3");
+#elif defined(Q_OS_LINUX) || defined(Q_OS_MACX)
+    d->device = QLatin1String("usb:0df7:0900");
+#endif
+
     connect(&d->worker, SIGNAL(infoStarted()),
              this, SIGNAL(infoStarted()));
-    connect(&d->worker, SIGNAL(infoFinished(QString)),
-             this, SIGNAL(infoFinished(QString)));
+    connect(&d->worker, SIGNAL(infoFinished(QString,QByteArray)),
+             this, SIGNAL(infoFinished(QString,QByteArray)));
     connect(&d->worker, SIGNAL(infoFailed(QString)),
              this, SIGNAL(infoFailed(QString)));
 
@@ -293,18 +331,28 @@ IgotuControl::IgotuControl(QObject *parent) :
 
 IgotuControl::~IgotuControl()
 {
-    d->semaphore.acquire(d->count);
+    d->semaphore.acquire(d->taskCount);
 
     // kill the thread
     d->thread.quit();
     d->thread.wait();
 }
 
+void IgotuControl::setDevice(const QString &device)
+{
+    d->device = device;
+}
+
+QString IgotuControl::device() const
+{
+    return d->device;
+}
+
 bool IgotuControl::queuesEmpty()
 {
-    if (!d->semaphore.tryAcquire(d->count))
+    if (!d->semaphore.tryAcquire(d->taskCount))
         return false;
-    d->semaphore.release(d->count);
+    d->semaphore.release(d->taskCount);
     return true;
 }
 

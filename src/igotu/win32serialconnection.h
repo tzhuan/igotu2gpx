@@ -30,7 +30,7 @@ class IGOTU_EXPORT Win32SerialConnection : public DataConnection
 {
     Q_DECLARE_TR_FUNCTIONS(Win32SerialConnection)
 public:
-    Win32SerialConnection(unsigned port = 3);
+    Win32SerialConnection(unsigned port);
     ~Win32SerialConnection();
 
     virtual void send(const QByteArray &query, bool purgeBuffers);

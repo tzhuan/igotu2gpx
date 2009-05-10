@@ -14,6 +14,7 @@ SOURCES *= \
     igotucontrol.cpp \
     igotupoints.cpp \
     optionutils.cpp \
+    utils.cpp \
     verbose.cpp \
     xmlutils.cpp \
 
@@ -31,6 +32,7 @@ HEADERS *= \
     optionutils.h \
     pch.h \
     threadutils.h \
+    utils.h \
     verbose.h \
     xmlutils.h \
 

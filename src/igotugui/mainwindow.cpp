@@ -16,19 +16,23 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
+#include "igotu/exception.h"
 #include "igotu/igotucontrol.h"
 #include "igotu/igotupoints.h"
+#include "igotu/utils.h"
 
 #include "mainwindow.h"
 #include "ui_igotugui.h"
 #include "waitdialog.h"
 
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QMessageBox>
 #include <QMetaMethod>
 #include <QPointer>
 #include <QProgressBar>
 #include <QPushButton>
+#include <QSettings>
 
 using namespace igotu;
 
@@ -38,6 +42,7 @@ class MainWindowPrivate : public QObject
 public Q_SLOTS:
     void on_info_clicked();
     void on_save_clicked();
+    void on_preferences_clicked();
 
     void on_control_infoStarted();
     void on_control_infoFinished(const QString &info);
@@ -56,59 +61,6 @@ public:
     QPointer<WaitDialog> waiter;
 };
 
-// copied and modified from qobject.cpp
-void connectSlotsByNameToPrivate(QObject *publicObject, QObject *privateObject)
-{
-    if (!publicObject)
-        return;
-    const QMetaObject *mo = privateObject->metaObject();
-    Q_ASSERT(mo);
-    const QObjectList list = qFindChildren<QObject*>(publicObject, QString());
-    for (int i = 0; i < mo->methodCount(); ++i) {
-        const char *slot = mo->method(i).signature();
-        Q_ASSERT(slot);
-        if (slot[0] != 'o' || slot[1] != 'n' || slot[2] != '_')
-            continue;
-        bool foundIt = false;
-        for(int j = 0; j < list.count(); ++j) {
-            const QObject *co = list.at(j);
-            QByteArray objName = co->objectName().toAscii();
-            int len = objName.length();
-            if (!len || qstrncmp(slot + 3, objName.data(), len) ||
-                    slot[len+3] != '_')
-                continue;
-            const QMetaObject *smo = co->metaObject();
-            int sigIndex = smo->indexOfMethod(slot + len + 4);
-            if (sigIndex < 0) { // search for compatible signals
-                int slotlen = qstrlen(slot + len + 4) - 1;
-                for (int k = 0; k < co->metaObject()->methodCount(); ++k) {
-                    if (smo->method(k).methodType() != QMetaMethod::Signal)
-                        continue;
-
-                    if (!qstrncmp(smo->method(k).signature(), slot + len + 4,
-                                slotlen)) {
-                        sigIndex = k;
-                        break;
-                    }
-                }
-            }
-            if (sigIndex < 0)
-                continue;
-            if (QMetaObject::connect(co, sigIndex, privateObject, i)) {
-                foundIt = true;
-                break;
-            }
-        }
-        if (foundIt) {
-            // we found our slot, now skip all overloads
-            while (mo->method(i + 1).attributes() & QMetaMethod::Cloned)
-                  ++i;
-        } else if (!(mo->method(i).attributes() & QMetaMethod::Cloned)) {
-            qWarning("connectSlotsByName: No matching signal for %s", slot);
-        }
-    }
-}
-
 void MainWindowPrivate::on_save_clicked()
 {
     control->contents();
@@ -117,6 +69,21 @@ void MainWindowPrivate::on_save_clicked()
 void MainWindowPrivate::on_info_clicked()
 {
     control->info();
+}
+
+void MainWindowPrivate::on_preferences_clicked()
+{
+    QString device = control->device();
+
+    bool ok;
+    device = QInputDialog::getText(p, tr("Preferences"),
+            tr("Device (usb:<vendor>:<product> or serial:<n>"),
+            QLineEdit::Normal, device, &ok);
+    if (!ok)
+        return;
+
+    QSettings().setValue(QLatin1String("device"), device);
+    control->setDevice(device);
 }
 
 void MainWindowPrivate::on_control_infoStarted()
@@ -161,28 +128,31 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents, 
 {
     delete waiter;
 
-    IgotuPoints igotuPoints(contents, count);
-    QByteArray gpxData = igotuPoints.gpx().toUtf8();
+    try {
+        IgotuPoints igotuPoints(contents, count);
+        QByteArray gpxData = igotuPoints.gpx().toUtf8();
 
-    QString filePath = QFileDialog::getSaveFileName(p, tr("Save GPS data"),
-            QDateTime::currentDateTime().toString(QLatin1String
-                ("yyyy-MM-dd-hh-mm-ss")) + QLatin1String(".gpx"),
-            tr("GPX files (*.gpx)"));
+        QString filePath = QFileDialog::getSaveFileName(p, tr("Save GPS data"),
+                QDateTime::currentDateTime().toString(QLatin1String
+                    ("yyyy-MM-dd-hh-mm-ss")) + QLatin1String(".gpx"),
+                tr("GPX files (*.gpx)"));
 
-    if (filePath.isEmpty())
-        return;
+        if (filePath.isEmpty())
+            return;
 
-    QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly)) {
+        QFile file(filePath);
+        if (!file.open(QIODevice::WriteOnly))
+            throw IgotuError(tr("Unable to create file: %1")
+                    .arg(file.errorString()));
+
+        if (file.write(gpxData) != gpxData.length())
+            throw IgotuError(tr("Unable to save to file: %1")
+                    .arg(file.errorString()));
+    } catch (const std::exception &e) {
         QMessageBox::critical(p, QString(),
-                tr("Unable to create file: %1")
-                .arg(file.errorString()));
-        return;
+                tr("Unable to save data: %1")
+                .arg(QString::fromLocal8Bit(e.what())));
     }
-    if (file.write(gpxData) != gpxData.length())
-        QMessageBox::critical(p, QString(),
-                tr("Unable to save to file: %1")
-                .arg(file.errorString()));
 }
 
 void MainWindowPrivate::on_control_contentsFailed(const QString &message)
@@ -204,17 +174,27 @@ MainWindow::MainWindow() :
     d->ui.reset(new Ui::IgotuDialog);
     d->ui->setupUi(this);
 
+    QPushButton * const preferencesButton = d->ui->buttonBox->addButton(tr
+            ("Preferences..."), QDialogButtonBox::ActionRole);
+    preferencesButton->setObjectName(QLatin1String("preferences"));
+
     QPushButton * const infoButton = d->ui->buttonBox->addButton(tr("Info"),
             QDialogButtonBox::ActionRole);
     infoButton->setObjectName(QLatin1String("info"));
-    QPushButton * const saveButton = d->ui->buttonBox->addButton(tr("Save GPS data..."),
-            QDialogButtonBox::ActionRole);
+
+    QPushButton * const saveButton = d->ui->buttonBox->addButton(tr
+            ("Save GPS data..."), QDialogButtonBox::ActionRole);
     saveButton->setObjectName(QLatin1String("save"));
 
     d->control = new IgotuControl(this);
     d->control->setObjectName(QLatin1String("control"));
 
     connectSlotsByNameToPrivate(this, d.get());
+
+    if (!QSettings().contains(QLatin1String("device")))
+        QSettings().setValue(QLatin1String("device"), d->control->device());
+    else
+        d->control->setDevice(QSettings().value(QLatin1String("device")).toString());
 }
 
 MainWindow::~MainWindow()

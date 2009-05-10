@@ -16,58 +16,20 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU2GPX_SRC_IGOTU_IGOTUCONTROL_H_
-#define _IGOTU2GPX_SRC_IGOTU_IGOTUCONTROL_H_
+#ifndef _RBA_SRC_LIB_PLUMBING_UTILS_H_
+#define _RBA_SRC_LIB_PLUMBING_UTILS_H_
 
 #include "global.h"
 
-#include <boost/scoped_ptr.hpp>
-
-#include <QObject>
+class QObject;
 
 namespace igotu
 {
 
-class IgotuControlPrivate;
-
-class IGOTU_EXPORT IgotuControl : public QObject
-{
-    Q_OBJECT
-public:
-    IgotuControl(QObject *parent = NULL);
-    ~IgotuControl();
-
-    // usb:vendor:product, serial:n or image:base64
-    QString device() const;
-    void setDevice(const QString &device);
-
-    // may throw
-    void info();
-    // may throw
-    void contents();
-
-    // schedules a slot of an object that will be called when all tasks have
-    // been processed
-    void notify(QObject *object, const char *method);
-
-    // Returns true if no tasks are pending anymore
-    bool queuesEmpty();
-
-Q_SIGNALS:
-    void infoStarted();
-    void infoFinished(const QString &info, const QByteArray &contents);
-    void infoFailed(const QString &message);
-
-    void contentsStarted();
-    // number of blocks finished, from 0 to blocks
-    void contentsBlocksFinished(unsigned num, unsigned total);
-    void contentsFinished(const QByteArray &contents, unsigned count);
-    void contentsFailed(const QString &message);
-
-protected:
-    boost::scoped_ptr<IgotuControlPrivate> d;
-};
+IGOTU_EXPORT void connectSlotsByNameToPrivate(QObject *publicObject, QObject
+        *privateObject);
 
 } // namespace igotu
 
 #endif
+

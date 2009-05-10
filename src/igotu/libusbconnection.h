@@ -34,7 +34,7 @@ class IGOTU_EXPORT LibusbConnection : public DataConnection
 {
     Q_DECLARE_TR_FUNCTIONS(LibusbConnection)
 public:
-    LibusbConnection(unsigned vendorId = 0x0df7, unsigned productId = 0x0900);
+    LibusbConnection(unsigned vendorId, unsigned productId);
     ~LibusbConnection();
 
     virtual void send(const QByteArray &query, bool purgeBuffers = false);

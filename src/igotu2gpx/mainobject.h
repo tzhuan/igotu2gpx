@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2007  Michael Hofmann <mh21@piware.de>                       *
+ * Copyright (C) 2009  Michael Hofmann <mh21@piware.de>                       *
  *                                                                            *
  * This program is free software; you can redistribute it and/or modify       *
  * it under the terms of the GNU General Public License as published by       *
@@ -16,58 +16,28 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU2GPX_SRC_IGOTU_IGOTUCONTROL_H_
-#define _IGOTU2GPX_SRC_IGOTU_IGOTUCONTROL_H_
-
-#include "global.h"
+#ifndef _IGOTU2GPX_SRC_IGOTU2GPX_MAINOBJECT_H_
+#define _IGOTU2GPX_SRC_IGOTU2GPX_MAINOBJECT_H_
 
 #include <boost/scoped_ptr.hpp>
 
 #include <QObject>
 
-namespace igotu
-{
+class MainObjectPrivate;
 
-class IgotuControlPrivate;
-
-class IGOTU_EXPORT IgotuControl : public QObject
+class MainObject : public QObject
 {
     Q_OBJECT
 public:
-    IgotuControl(QObject *parent = NULL);
-    ~IgotuControl();
+    MainObject(const QString &device);
+    ~MainObject();
 
-    // usb:vendor:product, serial:n or image:base64
-    QString device() const;
-    void setDevice(const QString &device);
-
-    // may throw
-    void info();
-    // may throw
-    void contents();
-
-    // schedules a slot of an object that will be called when all tasks have
-    // been processed
-    void notify(QObject *object, const char *method);
-
-    // Returns true if no tasks are pending anymore
-    bool queuesEmpty();
-
-Q_SIGNALS:
-    void infoStarted();
-    void infoFinished(const QString &info, const QByteArray &contents);
-    void infoFailed(const QString &message);
-
-    void contentsStarted();
-    // number of blocks finished, from 0 to blocks
-    void contentsBlocksFinished(unsigned num, unsigned total);
-    void contentsFinished(const QByteArray &contents, unsigned count);
-    void contentsFailed(const QString &message);
+    void info(const QByteArray &contents = QByteArray());
+    void save(bool details, const QString &raw);
 
 protected:
-    boost::scoped_ptr<IgotuControlPrivate> d;
+    boost::scoped_ptr<MainObjectPrivate> d;
 };
 
-} // namespace igotu
-
 #endif
+
