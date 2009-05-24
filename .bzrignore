@@ -25,3 +25,6 @@ localconfig.pri
 localconfig.*.pri
 
 .output-background-make
+
+/igotu2gpx.app/
+/igotu2gpx.dmg
