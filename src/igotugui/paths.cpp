@@ -96,6 +96,8 @@ static QStringList relativeToBaseDirectory(const QStringList &installedSubDirs,
     QStringList result;
     QDir applicationDir(QCoreApplication::applicationDirPath());
     if (applicationDir.dirName().compare(QLatin1String("bin"),
+                Qt::CaseInsensitive) == 0 ||
+        applicationDir.dirName().compare(QLatin1String("MacOS"),
                 Qt::CaseInsensitive) == 0) {
         if (applicationDir.cdUp())
             Q_FOREACH (const QString &installedSubDir, installedSubDirs)
@@ -126,14 +128,25 @@ static QStringList uniqueDirectoryList(const QStringList &list)
 QStringList Paths::iconDirectories()
 {
     QStringList result;
-#if defined(Q_OS_UNIX)
+#if defined(Q_OS_LINUX)
     result << directoriesFromEnvironment("XDG_DATA_HOME",
             QDir::homePath() + QLatin1String("/.local/share"),
             QLatin1String("/icons/hicolor"));
     result << relativeToBaseDirectory
            (QStringList() << QLatin1String("/share/icons/hicolor"),
-            QStringList() << QLatin1String("/data/icons")
-                          << QLatin1String("/contrib/tango/icons"));
+            QStringList() << QLatin1String("/data/icons"));
+    result << directoriesFromEnvironment("XDG_DATA_DIRS",
+            QLatin1String("/usr/local/share:/usr/share"),
+            QLatin1String("/icons/hicolor"));
+#elif defined(Q_OS_MACX)
+    // TODO: for the MacOS X native case, user config is missing
+    result << directoriesFromEnvironment("XDG_DATA_HOME",
+            QDir::homePath() + QLatin1String("/.local/share"),
+            QLatin1String("/icons/hicolor"));
+    result << relativeToBaseDirectory
+           (QStringList() << QLatin1String("/share/icons/hicolor")
+                          << QLatin1String("/Resources/icons"),
+            QStringList() << QLatin1String("/data/icons"));
     result << directoriesFromEnvironment("XDG_DATA_DIRS",
             QLatin1String("/usr/local/share:/usr/share"),
             QLatin1String("/icons/hicolor"));
@@ -144,8 +157,7 @@ QStringList Paths::iconDirectories()
             QLatin1String("/icons");
     result << relativeToBaseDirectory
            (QStringList() << QLatin1String("/icons"),
-            QStringList() << QLatin1String("/data/icons")
-                          << QLatin1String("/contrib/tango/icons"));
+            QStringList() << QLatin1String("/data/icons"));
 #else
 #error FIXME No idea where to find icon directories on this platform
 #endif

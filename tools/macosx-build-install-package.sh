@@ -45,15 +45,22 @@ EOF
 
 echo "AAPL????" > "$CONTENTS"/PkgInfo
 
+cat > "$RESOURCES"/qt.conf << EOF
+[Paths]
+Plugins = PlugIns
+EOF
+
 cp -R /Library/FrameWorks/QtCore.framework "$FRAMEWORKS"
 cp -R /Library/FrameWorks/QtGui.framework "$FRAMEWORKS"
 
 cp /usr/local/lib/libboost_program_options-xgcc40-mt-1_39.dylib "$FRAMEWORKS"
+cp /usr/local/lib/libusb-0.1.4.dylib "$FRAMEWORKS"
 
-#strip -x "$FRAMEWORKS"/QtCore.framework/Versions/Current/QtCore
-#strip -x "$FRAMEWORKS"/QtGui.framework/Versions/Current/QtGui
-#strip -x "$FRAMEWORKS"/libigotu.1.dylib
-#strip -x "$FRAMEWORKS"/libboost_program_options-xgcc40-mt-1_39.dylib
+strip -x "$FRAMEWORKS"/QtCore.framework/Versions/Current/QtCore
+strip -x "$FRAMEWORKS"/QtGui.framework/Versions/Current/QtGui
+strip -x "$FRAMEWORKS"/libigotu.1.dylib
+strip -x "$FRAMEWORKS"/libboost_program_options-xgcc40-mt-1_39.dylib
+strip -x "$FRAMEWORKS"/libusb-0.1.4.dylib
 strip -x "$MACOS"/"$CMDLINE"
 strip -x "$MACOS"/"$GUI"
 
@@ -66,5 +73,6 @@ install_name_tool -change libigotu.1.dylib @executable_path/../FrameWorks/libigo
 install_name_tool -change libigotu.1.dylib @executable_path/../FrameWorks/libigotu.1.dylib "$MACOS"/"$GUI"
 install_name_tool -change libboost_program_options-xgcc40-mt-1_39.dylib @executable_path/../FrameWorks/libboost_program_options-xgcc40-mt-1_39.dylib "$MACOS"/"$CMDLINE"
 install_name_tool -change libboost_program_options-xgcc40-mt-1_39.dylib @executable_path/../FrameWorks/libboost_program_options-xgcc40-mt-1_39.dylib "$MACOS"/"$GUI"
+install_name_tool -change libusb-0.1.4.dylib @executable_path/../FrameWorks/libusb-0.1.4.dylib "$FRAMEWORKS"/libigotu.1.dylib
 
 hdiutil create "$DMG" -srcfolder "$APP" -format UDZO -volname "$ROOT"
