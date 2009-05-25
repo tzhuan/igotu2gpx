@@ -16,3 +16,6 @@ INSTALLS *= app48icons
 app64icons.files = icons/64x64/apps/*
 app64icons.path = $$ICONDIR/64x64/apps
 INSTALLS *= app64icons
+app128icons.files = icons/128x128/apps/*
+app128icons.path = $$ICONDIR/128x128/apps
+INSTALLS *= app128icons
