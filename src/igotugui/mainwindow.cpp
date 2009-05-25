@@ -28,11 +28,10 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QMessageBox>
-#include <QMetaMethod>
 #include <QPointer>
 #include <QProgressBar>
-#include <QPushButton>
 #include <QSettings>
+#include <QTimer>
 
 using namespace igotu;
 
@@ -40,9 +39,11 @@ class MainWindowPrivate : public QObject
 {
     Q_OBJECT
 public Q_SLOTS:
-    void on_info_clicked();
-    void on_save_clicked();
-    void on_preferences_clicked();
+    void on_actionAbout_activated();
+    void on_actionConnect_activated();
+    void on_actionSaveAs_activated();
+    void on_actionPreferences_activated();
+    void on_actionQuit_activated();
 
     void on_control_infoStarted();
     void on_control_infoFinished(const QString &info);
@@ -54,31 +55,59 @@ public Q_SLOTS:
     void on_control_contentsFailed(const QString &message);
 
 public:
+    void critical(const QString &text);
+
     MainWindow *p;
 
-    boost::scoped_ptr<Ui::IgotuDialog> ui;
+    boost::scoped_ptr<Ui::MainWindow> ui;
     IgotuControl *control;
     QPointer<WaitDialog> waiter;
+    bool initialConnect;
 };
 
-void MainWindowPrivate::on_save_clicked()
+void MainWindowPrivate::on_actionSaveAs_activated()
 {
     control->contents();
 }
 
-void MainWindowPrivate::on_info_clicked()
+void MainWindowPrivate::on_actionAbout_activated()
+{
+    QMessageBox::about(p, tr("About Igotu2gpx"), tr(
+        "<h3>Igotu2gpx</h3><br/><br/>"
+        "Shows the configuration and decodes the stored tracks and waypoints "
+        "of a MobileAction i-gotU USB GPS travel logger."
+        "<br/><br/>"
+        "This program is licensed to you under the terms of the GNU General "
+        "Public License. See the file LICENSE that came with this software "
+        "for further details."
+        "<br/><br/>"
+        "Copyright (C) 2009 Michael Hofmann."
+        "<br/><br/>"
+        "The program is provided AS IS with NO WARRANTY OF ANY KIND, "
+        "INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR "
+        "A PARTICULAR PURPOSE."
+        "<br/>"));
+}
+
+void MainWindowPrivate::on_actionConnect_activated()
 {
     control->info();
 }
 
-void MainWindowPrivate::on_preferences_clicked()
+void MainWindowPrivate::on_actionQuit_activated()
+{
+    QCoreApplication::quit();
+}
+
+void MainWindowPrivate::on_actionPreferences_activated()
 {
     QString device = control->device();
 
     bool ok;
     device = QInputDialog::getText(p, tr("Preferences"),
-            tr("Device (usb:<vendor>:<product> or serial:<n>"),
+            tr("Device (usb:<vendor>:<product> or serial:<n>)"),
             QLineEdit::Normal, device, &ok);
+    // TODO: should be non-modal
     if (!ok)
         return;
 
@@ -88,8 +117,12 @@ void MainWindowPrivate::on_preferences_clicked()
 
 void MainWindowPrivate::on_control_infoStarted()
 {
+    if (initialConnect)
+        return;
+
     waiter = new WaitDialog(tr("Retrieving info..."),
             tr("Please wait..."), p);
+    waiter->setWindowFlags(waiter->windowFlags() | Qt::Sheet);
     waiter->exec();
 }
 
@@ -98,6 +131,8 @@ void MainWindowPrivate::on_control_infoFinished(const QString &info)
     delete waiter;
 
     ui->textBrowser->setText(info);
+
+    initialConnect = false;
 }
 
 void MainWindowPrivate::on_control_infoFailed(const QString &message)
@@ -105,26 +140,32 @@ void MainWindowPrivate::on_control_infoFailed(const QString &message)
     delete waiter;
 
     ui->textBrowser->clear();
-    QMessageBox::critical(p, QString(),
-            tr("Unable to connect to gps tracker: %1")
-            .arg(message));
+
+    if (!initialConnect)
+        critical(tr("Unable to connect to gps tracker: %1").arg(message));
+
+    initialConnect = false;
+
 }
 
 void MainWindowPrivate::on_control_contentsStarted()
 {
     waiter = new WaitDialog(tr("Retrieving data..."),
             tr("Please wait..."), p);
+    waiter->setWindowFlags(waiter->windowFlags() | Qt::Sheet);
     waiter->progressBar()->setMaximum(1);
     waiter->exec();
 }
 
-void MainWindowPrivate::on_control_contentsBlocksFinished(unsigned num, unsigned total)
+void MainWindowPrivate::on_control_contentsBlocksFinished(unsigned num,
+        unsigned total)
 {
     waiter->progressBar()->setMaximum(total);
     waiter->progressBar()->setValue(num);
 }
 
-void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents, unsigned count)
+void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
+        unsigned count)
 {
     delete waiter;
 
@@ -149,8 +190,7 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents, 
             throw IgotuError(tr("Unable to save to file: %1")
                     .arg(file.errorString()));
     } catch (const std::exception &e) {
-        QMessageBox::critical(p, QString(),
-                tr("Unable to save data: %1")
+        critical(tr("Unable to save data: %1")
                 .arg(QString::fromLocal8Bit(e.what())));
     }
 }
@@ -159,9 +199,16 @@ void MainWindowPrivate::on_control_contentsFailed(const QString &message)
 {
     delete waiter;
 
-    QMessageBox::critical(p, QString(),
-            tr("Unable to connect to gps tracker: %1")
-            .arg(message));
+    critical(tr("Unable to connect to gps tracker: %1").arg(message));
+}
+
+void MainWindowPrivate::critical(const QString &text)
+{
+    QPointer<QMessageBox> messageBox(new QMessageBox(QMessageBox::Critical,
+                QString(), text, QMessageBox::Ok, p));
+    messageBox->setWindowFlags(messageBox->windowFlags() | Qt::Sheet);
+    messageBox->exec();
+    delete messageBox;
 }
 
 // MainWindow ==================================================================
@@ -171,20 +218,8 @@ MainWindow::MainWindow() :
 {
     d->p = this;
 
-    d->ui.reset(new Ui::IgotuDialog);
+    d->ui.reset(new Ui::MainWindow);
     d->ui->setupUi(this);
-
-    QPushButton * const preferencesButton = d->ui->buttonBox->addButton(tr
-            ("Preferences..."), QDialogButtonBox::ActionRole);
-    preferencesButton->setObjectName(QLatin1String("preferences"));
-
-    QPushButton * const infoButton = d->ui->buttonBox->addButton(tr("Info"),
-            QDialogButtonBox::ActionRole);
-    infoButton->setObjectName(QLatin1String("info"));
-
-    QPushButton * const saveButton = d->ui->buttonBox->addButton(tr
-            ("Save GPS data..."), QDialogButtonBox::ActionRole);
-    saveButton->setObjectName(QLatin1String("save"));
 
     d->control = new IgotuControl(this);
     d->control->setObjectName(QLatin1String("control"));
@@ -194,7 +229,11 @@ MainWindow::MainWindow() :
     if (!QSettings().contains(QLatin1String("device")))
         QSettings().setValue(QLatin1String("device"), d->control->device());
     else
-        d->control->setDevice(QSettings().value(QLatin1String("device")).toString());
+        d->control->setDevice(QSettings().value
+                (QLatin1String("device")).toString());
+
+    d->initialConnect = true;
+    QTimer::singleShot(0, d->ui->actionConnect, SLOT(trigger()));
 }
 
 MainWindow::~MainWindow()
@@ -206,10 +245,12 @@ void MainWindow::closeEvent(QCloseEvent *event)
     Q_UNUSED(event);
 
     while (!d->control->queuesEmpty()) {
-        // We should never come here, as all commands are showing their own
-        // dialogs, but anyway
-        QPointer<QDialog> waiter(new WaitDialog(tr("Please wait until all tasks are finished..."),
-                tr("Please wait..."), this));
+        // will only be reached at initial connect
+        QPointer<QDialog> waiter(new WaitDialog
+                (tr("Please wait until all tasks are finished..."),
+                 tr("Please wait..."),
+                 this));
+        waiter->setWindowFlags(waiter->windowFlags() | Qt::Sheet);
         d->control->notify(waiter, "reject");
         waiter->exec();
         delete waiter;

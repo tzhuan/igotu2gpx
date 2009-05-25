@@ -21,11 +21,11 @@
 
 #include <boost/scoped_ptr.hpp>
 
-#include <QDialog>
+#include <QMainWindow>
 
 class MainWindowPrivate;
 
-class MainWindow : public QDialog
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
