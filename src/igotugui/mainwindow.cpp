@@ -122,7 +122,6 @@ void MainWindowPrivate::on_control_infoStarted()
 
     waiter = new WaitDialog(tr("Retrieving info..."),
             tr("Please wait..."), p);
-    waiter->setWindowFlags(waiter->windowFlags() | Qt::Sheet);
     waiter->exec();
 }
 
@@ -152,7 +151,6 @@ void MainWindowPrivate::on_control_contentsStarted()
 {
     waiter = new WaitDialog(tr("Retrieving data..."),
             tr("Please wait..."), p);
-    waiter->setWindowFlags(waiter->windowFlags() | Qt::Sheet);
     waiter->progressBar()->setMaximum(1);
     waiter->exec();
 }
@@ -232,8 +230,9 @@ MainWindow::MainWindow() :
         d->control->setDevice(QSettings().value
                 (QLatin1String("device")).toString());
 
-    d->initialConnect = true;
-    QTimer::singleShot(0, d->ui->actionConnect, SLOT(trigger()));
+    d->initialConnect = false;
+//    d->initialConnect = true;
+//    QTimer::singleShot(0, d->ui->actionConnect, SLOT(trigger()));
 }
 
 MainWindow::~MainWindow()
@@ -250,7 +249,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
                 (tr("Please wait until all tasks are finished..."),
                  tr("Please wait..."),
                  this));
-        waiter->setWindowFlags(waiter->windowFlags() | Qt::Sheet);
         d->control->notify(waiter, "reject");
         waiter->exec();
         delete waiter;

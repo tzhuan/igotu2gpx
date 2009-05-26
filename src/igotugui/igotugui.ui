@@ -69,10 +69,16 @@
    <property name="text">
     <string>Connect</string>
    </property>
+   <property name="menuRole">
+    <enum>QAction::ApplicationSpecificRole</enum>
+   </property>
   </action>
   <action name="actionSaveAs">
    <property name="text">
     <string>Save As...</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::ApplicationSpecificRole</enum>
    </property>
   </action>
  </widget>

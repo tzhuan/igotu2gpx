@@ -22,6 +22,8 @@ cp "$SOURCE"/"$GUI" "$MACOS"
 cp "$SOURCE"/"$CMDLINE" "$MACOS"
 cp "$SOURCE"/libigotu.1.dylib "$FRAMEWORKS"
 cp data/igotugui.icns "$RESOURCES"/igotu2gpx.icns
+cp -r data/icons "$RESOURCES"
+
 cat > "$CONTENTS"/Info.plist << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist SYSTEM "file://localhost/System/Library/DTDs/PropertyList.dtd">
