@@ -56,6 +56,7 @@ public Q_SLOTS:
 
 public:
     void critical(const QString &text);
+    void wait(const QString &text, bool busyIndicator);
 
     MainWindow *p;
 
@@ -104,10 +105,10 @@ void MainWindowPrivate::on_actionPreferences_activated()
     QString device = control->device();
 
     bool ok;
+    // TODO: should be non-modal
     device = QInputDialog::getText(p, tr("Preferences"),
             tr("Device (usb:<vendor>:<product> or serial:<n>)"),
             QLineEdit::Normal, device, &ok);
-    // TODO: should be non-modal
     if (!ok)
         return;
 
@@ -120,9 +121,7 @@ void MainWindowPrivate::on_control_infoStarted()
     if (initialConnect)
         return;
 
-    waiter = new WaitDialog(tr("Retrieving info..."),
-            tr("Please wait..."), p);
-    waiter->exec();
+    wait(tr("Retrieving info..."), false);
 }
 
 void MainWindowPrivate::on_control_infoFinished(const QString &info)
@@ -149,10 +148,7 @@ void MainWindowPrivate::on_control_infoFailed(const QString &message)
 
 void MainWindowPrivate::on_control_contentsStarted()
 {
-    waiter = new WaitDialog(tr("Retrieving data..."),
-            tr("Please wait..."), p);
-    waiter->progressBar()->setMaximum(1);
-    waiter->exec();
+    wait(tr("Retrieving data..."), false);
 }
 
 void MainWindowPrivate::on_control_contentsBlocksFinished(unsigned num,
@@ -204,9 +200,21 @@ void MainWindowPrivate::critical(const QString &text)
 {
     QPointer<QMessageBox> messageBox(new QMessageBox(QMessageBox::Critical,
                 QString(), text, QMessageBox::Ok, p));
-    messageBox->setWindowFlags(messageBox->windowFlags() | Qt::Sheet);
+    // necessary so MacOS X gives us a sheet
+    messageBox->setWindowModality(Qt::WindowModal);
     messageBox->exec();
     delete messageBox;
+}
+
+void MainWindowPrivate::wait(const QString &text, bool busyIndicator)
+{
+    waiter = new WaitDialog(text, tr("Please wait..."), p);
+    if (!busyIndicator)
+        waiter->progressBar()->setMaximum(1);
+    // necessary so MacOS X gives us a sheet
+    waiter->setWindowModality(Qt::WindowModal);
+    waiter->setParent(p, Qt::Sheet);
+    waiter->exec();
 }
 
 // MainWindow ==================================================================

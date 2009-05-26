@@ -76,5 +76,3 @@ install_name_tool -change libigotu.1.dylib @executable_path/../FrameWorks/libigo
 install_name_tool -change libboost_program_options-xgcc40-mt-1_39.dylib @executable_path/../FrameWorks/libboost_program_options-xgcc40-mt-1_39.dylib "$MACOS"/"$CMDLINE"
 install_name_tool -change libboost_program_options-xgcc40-mt-1_39.dylib @executable_path/../FrameWorks/libboost_program_options-xgcc40-mt-1_39.dylib "$MACOS"/"$GUI"
 install_name_tool -change libusb-0.1.4.dylib @executable_path/../FrameWorks/libusb-0.1.4.dylib "$FRAMEWORKS"/libigotu.1.dylib
-
-hdiutil create "$DMG" -srcfolder "$APP" -format UDZO -volname "$ROOT"
