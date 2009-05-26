@@ -23,6 +23,7 @@ cp "$SOURCE"/"$CMDLINE" "$MACOS"
 cp "$SOURCE"/libigotu.1.dylib "$FRAMEWORKS"
 cp data/igotugui.icns "$RESOURCES"/igotu2gpx.icns
 cp -r data/icons "$RESOURCES"
+cp -r contrib/tango/icons "$RESOURCES"
 
 cat > "$CONTENTS"/Info.plist << EOF
 <?xml version="1.0" encoding="UTF-8"?>
