@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _RBA_SRC_LIB_PLUMBING_PATHS_H_
-#define _RBA_SRC_LIB_PLUMBING_PATHS_H_
+#ifndef _IGOTU2GPX_SRC_IGOTUGUI_PATHS_H_
+#define _IGOTU2GPX_SRC_IGOTUGUI_PATHS_H_
 
 #include <QStringList>
 

@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     app.setApplicationName(QLatin1String("IgotuGUI"));
     app.setOrganizationName(QLatin1String("mh21.de"));
     app.setOrganizationDomain(QLatin1String("mh21.de"));
-    app.setWindowIcon(IconStorage::get(IconStorage::IgotuIcon));
+    app.setWindowIcon(IconStorage::get(IconStorage::GuiIcon));
 
     // Command line parsing (uses C++ output)
 

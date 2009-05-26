@@ -10,12 +10,14 @@ SOURCES *= \
     igotugui.cpp \
     mainwindow.cpp \
     paths.cpp \
+    qticonloader.cpp \
     waitdialog.cpp \
 
 HEADERS *= \
     iconstorage.h \
     mainwindow.h \
     paths.h \
+    qticonloader.h \
     waitdialog.h \
 
 FORMS *= \

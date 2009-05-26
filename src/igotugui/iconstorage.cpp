@@ -18,6 +18,7 @@
 
 #include "iconstorage.h"
 #include "paths.h"
+#include "qticonloader.h"
 
 #include <QDir>
 #include <QFile>
@@ -49,16 +50,26 @@ QIcon IconStoragePrivate::get(IconStorage::IconName name)
     if (cache.contains(name))
         return cache.value(name);
 
+    const QString freeDesktopBaseName = fileName(name).replace
+        (QRegExp(QLatin1String(".*//")), QString());
+    if (!(cache[name] = QtIconLoader::icon(freeDesktopBaseName)).isNull())
+        return cache.value(name);
+
+    const QString rbaBaseName = fileName(name).replace
+        (QLatin1String("//"), QLatin1String("/igotu2gpx-"));
+    if (rbaBaseName.isEmpty())
+        return cache.value(name);
+
     Q_FOREACH (const QString &dir, Paths::iconDirectories()) {
         const QStringList sizes = QDir(dir).entryList(QDir::Dirs);
         Q_FOREACH (const QString &size, sizes) {
             if (!regExp.exactMatch(size))
                 continue;
-            const QString filePath = dir + QLatin1Char('/') + size +
-                QLatin1Char('/') + fileName(name) + QLatin1String(".png");
+            const QString fileName = dir + QLatin1Char('/') + size +
+                QLatin1Char('/') + rbaBaseName + QLatin1String(".png");
             const unsigned numSize = regExp.cap(1).toUInt();
-            if (QFile::exists(filePath))
-                cache[name].addFile(filePath, QSize(numSize, numSize));
+            if (QFile::exists(fileName))
+                cache[name].addFile(fileName, QSize(numSize, numSize));
         }
     }
 
@@ -68,8 +79,14 @@ QIcon IconStoragePrivate::get(IconStorage::IconName name)
 QString IconStoragePrivate::fileName(IconStorage::IconName name)
 {
     switch(name) {
-    case IconStorage::IgotuIcon:
-        return QLatin1String("apps/igotugui");
+    case IconStorage::SaveIcon:
+        return QLatin1String("actions//document-save");
+    case IconStorage::InfoIcon:
+        return QLatin1String("status//dialog-information");
+    case IconStorage::QuitIcon:
+        return QLatin1String("actions//application-exit");
+    case IconStorage::GuiIcon:
+        return QLatin1String("apps/igotu2gpx-gui");
     default:
         return QString();
     }

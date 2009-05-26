@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _igotu_SRC_LIB_GUI_ICONSTORAGE_H_
-#define _igotu_SRC_LIB_GUI_ICONSTORAGE_H_
+#ifndef _IGOTU2GPX_SRC_IGOTUGUI_ICONSTORAGE_H_
+#define _IGOTU2GPX_SRC_IGOTUGUI_ICONSTORAGE_H_
 
 #include <QIcon>
 
@@ -25,7 +25,10 @@ class IconStorage
 {
 public:
     enum IconName {
-        IgotuIcon,
+        InfoIcon,
+        SaveIcon,
+        QuitIcon,
+        GuiIcon,
     };
 
     static QIcon get(IconName name);

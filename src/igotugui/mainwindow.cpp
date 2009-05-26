@@ -21,6 +21,7 @@
 #include "igotu/igotupoints.h"
 #include "igotu/utils.h"
 
+#include "iconstorage.h"
 #include "mainwindow.h"
 #include "ui_igotugui.h"
 #include "waitdialog.h"
@@ -40,8 +41,8 @@ class MainWindowPrivate : public QObject
     Q_OBJECT
 public Q_SLOTS:
     void on_actionAbout_activated();
-    void on_actionConnect_activated();
-    void on_actionSaveAs_activated();
+    void on_actionInfo_activated();
+    void on_actionSave_activated();
     void on_actionPreferences_activated();
     void on_actionQuit_activated();
 
@@ -66,7 +67,7 @@ public:
     bool initialConnect;
 };
 
-void MainWindowPrivate::on_actionSaveAs_activated()
+void MainWindowPrivate::on_actionSave_activated()
 {
     control->contents();
 }
@@ -90,7 +91,7 @@ void MainWindowPrivate::on_actionAbout_activated()
         "<br/>"));
 }
 
-void MainWindowPrivate::on_actionConnect_activated()
+void MainWindowPrivate::on_actionInfo_activated()
 {
     control->info();
 }
@@ -118,9 +119,6 @@ void MainWindowPrivate::on_actionPreferences_activated()
 
 void MainWindowPrivate::on_control_infoStarted()
 {
-    if (initialConnect)
-        return;
-
     wait(tr("Retrieving info..."), false);
 }
 
@@ -227,6 +225,15 @@ MainWindow::MainWindow() :
     d->ui.reset(new Ui::MainWindow);
     d->ui->setupUi(this);
 
+    d->ui->actionInfo->setIcon
+        (IconStorage::get(IconStorage::InfoIcon));
+    d->ui->actionSave->setIcon
+        (IconStorage::get(IconStorage::SaveIcon));
+    d->ui->actionQuit->setIcon
+        (IconStorage::get(IconStorage::QuitIcon));
+    d->ui->actionAbout->setIcon
+        (IconStorage::get(IconStorage::GuiIcon));
+
     d->control = new IgotuControl(this);
     d->control->setObjectName(QLatin1String("control"));
 
@@ -238,9 +245,9 @@ MainWindow::MainWindow() :
         d->control->setDevice(QSettings().value
                 (QLatin1String("device")).toString());
 
-    d->initialConnect = false;
-//    d->initialConnect = true;
-//    QTimer::singleShot(0, d->ui->actionConnect, SLOT(trigger()));
+//    d->initialConnect = false;
+    d->initialConnect = true;
+    QTimer::singleShot(0, d->ui->actionInfo, SLOT(trigger()));
 }
 
 MainWindow::~MainWindow()
