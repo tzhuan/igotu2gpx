@@ -12,7 +12,7 @@ clebsDirs(src/igotu2gpx, src/igotu)
 clebsDirs(src/igotugui, src/igotu)
 
 clebsDirs(data)
-clebsDirs(contrib/*)
+clebsDirs(contrib/tango)
 
 docs.files = LICENSE HACKING
 docs.path = $$DOCDIR

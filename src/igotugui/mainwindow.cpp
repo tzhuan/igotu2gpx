@@ -74,8 +74,8 @@ void MainWindowPrivate::on_actionSave_activated()
 
 void MainWindowPrivate::on_actionAbout_activated()
 {
-    QMessageBox::about(p, tr("About Igotu2gpx"), tr(
-        "<h3>Igotu2gpx</h3><br/><br/>"
+    QMessageBox::about(p, tr("About igotu2gpx"), tr(
+        "<h3>igotu2gpx</h3><br/><br/>"
         "Shows the configuration and decodes the stored tracks and waypoints "
         "of a MobileAction i-gotU USB GPS travel logger."
         "<br/><br/>"

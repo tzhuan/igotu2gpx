@@ -37,7 +37,7 @@ namespace po = boost::program_options;
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    app.setApplicationName(QLatin1String("IgotuGUI"));
+    app.setApplicationName(QLatin1String("igotugui"));
     app.setOrganizationName(QLatin1String("mh21.de"));
     app.setOrganizationDomain(QLatin1String("mh21.de"));
     app.setWindowIcon(IconStorage::get(IconStorage::GuiIcon));

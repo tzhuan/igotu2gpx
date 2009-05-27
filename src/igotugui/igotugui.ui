@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Igotu2gpx</string>
+   <string>igotu2gpx</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -69,10 +69,10 @@
   </action>
   <action name="actionAbout">
    <property name="text">
-    <string>About Igotu2gpx</string>
+    <string>About igotu2gpx</string>
    </property>
    <property name="toolTip">
-    <string>About Igotu2gpx</string>
+    <string>About igotu2gpx</string>
    </property>
   </action>
   <action name="actionPreferences">

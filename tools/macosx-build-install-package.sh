@@ -21,9 +21,10 @@ mkdir -p "$FRAMEWORKS" "$RESOURCES" "$MACOS"
 cp "$SOURCE"/"$GUI" "$MACOS"
 cp "$SOURCE"/"$CMDLINE" "$MACOS"
 cp "$SOURCE"/libigotu.1.dylib "$FRAMEWORKS"
-cp data/igotugui.icns "$RESOURCES"/igotu2gpx.icns
-cp -r data/icons "$RESOURCES"
-cp -r contrib/tango/icons "$RESOURCES"
+cp data/mac/igotugui.icns "$RESOURCES"/igotu2gpx.icns
+cp -R data/icons "$RESOURCES"
+cp -R contrib/tango/icons "$RESOURCES"
+cp LICENSE "$RESOURCES"
 
 cat > "$CONTENTS"/Info.plist << EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -32,6 +33,8 @@ cat > "$CONTENTS"/Info.plist << EOF
 <dict>
 	<key>CFBundleIconFile</key>
 	<string>igotu2gpx.icns</string>
+	<key>CFBundleName</key>
+	<string>igotu2gpx</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
         <key>CFBundleGetInfoString</key>
@@ -55,6 +58,9 @@ EOF
 
 cp -R /Library/FrameWorks/QtCore.framework "$FRAMEWORKS"
 cp -R /Library/FrameWorks/QtGui.framework "$FRAMEWORKS"
+rm "$FRAMEWORKS"/*/Headers
+rm "$FRAMEWORKS"/*/*.prl
+rm -r "$FRAMEWORKS"/*/Versions/Current/Headers
 
 cp /usr/local/lib/libboost_program_options-xgcc40-mt-1_39.dylib "$FRAMEWORKS"
 cp /usr/local/lib/libusb-0.1.4.dylib "$FRAMEWORKS"
