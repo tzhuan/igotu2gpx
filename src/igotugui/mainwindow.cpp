@@ -75,7 +75,7 @@ void MainWindowPrivate::on_actionSave_activated()
 void MainWindowPrivate::on_actionAbout_activated()
 {
     QMessageBox::about(p, tr("About igotu2gpx"), tr(
-        "<h3>igotu2gpx</h3><br/><br/>"
+        "<h3>igotu2gpx %1</h3><br/><br/>"
         "Shows the configuration and decodes the stored tracks and waypoints "
         "of a MobileAction i-gotU USB GPS travel logger."
         "<br/><br/>"
@@ -88,7 +88,7 @@ void MainWindowPrivate::on_actionAbout_activated()
         "The program is provided AS IS with NO WARRANTY OF ANY KIND, "
         "INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR "
         "A PARTICULAR PURPOSE."
-        "<br/>"));
+        "<br/>").arg(QLatin1String(IGOTU_VERSION_STR)));
 }
 
 void MainWindowPrivate::on_actionInfo_activated()
