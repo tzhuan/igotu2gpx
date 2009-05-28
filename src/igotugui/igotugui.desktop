@@ -5,5 +5,5 @@ Exec=igotugui
 StartupWMClass=igotugui
 Terminal=false
 Type=Application
-Icon=igotugui
+Icon=igotu2gpx-gui
 Categories=Qt;Graphics;Photography;

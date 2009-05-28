@@ -1,3 +1,9 @@
+igotu2gpx (0.2.2-1ubuntu1) jaunty; urgency=low
+
+  * Linux icon fix.
+
+ -- Michael Hofmann <mh21@piware.de>  Thu, 28 May 2009 10:45:55 +0200
+
 igotu2gpx (0.2.2-1) jaunty; urgency=low
 
   * Point release.
