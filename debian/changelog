@@ -1,3 +1,10 @@
+igotu2gpx (0.2.2-1) jaunty; urgency=low
+
+  * Point release.
+    - complete GUI
+
+ -- Michael Hofmann <mh21@piware.de>  Thu, 28 May 2009 10:13:49 +0200
+
 igotu2gpx (0.2.2~rc1-1) jaunty; urgency=low
 
   * Point release candidate.
