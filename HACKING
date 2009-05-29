@@ -68,14 +68,17 @@ Response:
   XX: big endian size (>= 0) or error code (< 0):
       fffe: seems to be a recoverable error
 
-NmeaSwitch:
+General commands
+~~~~~~~~~~~~~~~~
+
+NmeaSwitchCommand:
   Command chunk 1: 93 01 01 XX 00 00 00 00
   Response:        93 00 00
   Command chunk 2: 00 00 00 00 00 00 00 SS
   Response:        93 00 00
   XX: 00 to enable, 03 to disable NMEA output
 
-Id:
+IdentificationCommand:
   Command chunk 1: 93 0A 00 00 00 00 00 00
   Response:        93 00 00
   Command chunk 2: 00 00 00 00 00 00 00 SS
@@ -84,7 +87,7 @@ Id:
   YY: major version number
   ZZ: minor version number
 
-Number of data points:
+CountCommand (number of data points):
   Command chunk 1: 93 0B 03 00 1D 00 00 00
   Response:        93 00 00
   Command chunk 2: 00 00 00 00 00 00 00 SS
@@ -100,7 +103,26 @@ Internal memory read? (used for number of datapoints):
   YY: big endian read position
   ZZ: read data
 
-Read:
+Model type?:
+  Command chunk 1: 93 05 04 00 03 01 9F 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 00 03 XX XX YY
+  XX: always C220
+  YY: 14 for GT-120, 15 for GT-200
+
+Internal memory read? (used for model type):
+  Command chunk 1: 93 05 04 XX XX 01 9F 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 XX XX YY...
+  XX: read size
+  YY: read data
+
+Flash read commands
+~~~~~~~~~~~~~~~~~~~
+
+ReadCommand:
   Command chunk 1: 93 05 07 XX XX 04 03 YY
   Response:        93 00 00
   Command chunk 2: YY YY 00 00 00 00 00 SS
@@ -109,37 +131,111 @@ Read:
   YY: big endian read position
   ZZ: read data
 
-Write (not tested):
-  Command chunk 1: 93 06 07 XX XX 04 02 YY
+Flash erase commands
+~~~~~~~~~~~~~~~~~~~~
+
+Read:
+  Command chunk 1: 93 05 07 XX XX 04 03 YY
   Response:        93 00 00
   Command chunk 2: YY YY 00 00 00 00 00 SS
-  Response:        93 XX XX
+  Response:        93 XX XX ZZ...
+  XX: big endian read size (always 0010 for purge)
+  YY: big endian read position
+  ZZ: read data
+
+UnknownWriteCommand1:
+  Command chunk 1: 93 06 04 00 XX 01 06 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 00 00
+  XX: 00 for purge, 01? for write
+
+Write:
+  Command chunk 1: 93 06 07 XX XX 04 WW YY
+  Response:        93 00 00
+  Command chunk 2: YY YY 00 00 00 00 00 SS
+  Response:        93 00 00
   Data chunk n:    ZZ ZZ ZZ ZZ ZZ ZZ ZZ SS
   Response:        93 00 00
-  XX: big endian write size (always 0100 for @trip PC)
+  WW: 20 for purge, 02 for write
+  XX: big endian write size (0000 for purge, 0100 for write)
   YY: big endian write position
   ZZ: write data
   needs ceil(size / 7) data chunks
 
-Command used after write (not tested):
+UnknownWriteCommand2:
   Command chunk 1: 93 05 04 XX XX 01 05 00
   Response:        93 00 00
   Command chunk 2: 00 00 00 00 00 00 00 SS
-  Response:        93 XX XX 00
-  XX: big endian size, always 0001
+  Response:        93 XX XX ZZ
+  XX: big endian read size (0001 for purge and write)
+  ZZ: purge first time 03, purge second time and write 00
+
+UnknownPurgeCommand1:
+  Command chunk 1: 93 0C 00 XX 00 00 00 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 00 00
+  XX: first time called 1E, second time called 1F
+
+UnknownPurgeCommand2:
+  Command chunk 1: 93 08 02 00 00 00 00 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 00 00
+
+@trip PC reads the first 0x10 bytes of each block starting from the end of the
+flash (0x0FF000 or 0x1FF000) and stops at the first block where these bytes are
+not 0xFF. Each block but the first one is then purged according to the
+following pseudo code:
+
+Pseudo code for a GT-120 purge:
+  purge = false
+  for i = 0x1ff000; i > 0; i -= 0x1000:
+    if purge:
+      while UnknownWriteCommand2(0x0001) != 0x00:
+        pass
+    else:
+      if Read(i, 0x10) != rep(0xff, 0x10):
+        purge = true
+      else:
+        continue
+    UnknownWriteCommand1(0x00)
+    Write(0x20, '')
+  if purge:
+    UnknownPurgeCommand1(0x1e)
+    UnknownPurgeCommand1(0x1f)
+    while UnknownWriteCommand2(0x0001) != 0x00:
+      pass
+  UnknownPurgeCommand1(0x1e)
+  UnknownPurgeCommand1(0x1f)
+
+Pseudo code for a GT-200 purge:
+  purge = false
+  for i = 0x0ff000; i > 0; i -= 0x1000:
+    if purge:
+      while UnknownWriteCommand2(0x0001) != 0x00:
+        pass
+    else:
+      if Read(i, 0x10) != rep(0xff, 0x10):
+        purge = true
+      else:
+        continue
+    UnknownWriteCommand1(0x00)
+    Write(0x20, '')
+  UnknownPurgeCommand2()
+  if purge:
+      while UnknownWriteCommand2(0x0001) != 0x00:
+        pass
+
+Other commands
+~~~~~~~~~~~~~~
 
 Command used after write (not tested):
   Command chunk 1: 93 06 04 00 01 01 06 00
   Response:        93 00 00
   Command chunk 2: 00 00 00 00 00 00 00 SS
   Response:        93 00 00
-
-Command used after read of first block (not tested):
-  Command chunk 1: 93 05 04 XX XX 01 9F 00
-  Response:        93 00 00
-  Command chunk 2: 00 00 00 00 00 00 00 SS
-  Response:        93 XX XX C2 20 15
-  XX: big endian size, always 0003
 
 Flash layout
 ------------
