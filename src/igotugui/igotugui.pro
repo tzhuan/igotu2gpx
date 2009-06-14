@@ -10,6 +10,7 @@ SOURCES *= \
     igotugui.cpp \
     mainwindow.cpp \
     paths.cpp \
+    preferencesdialog.cpp \
     qticonloader.cpp \
     waitdialog.cpp \
 
@@ -17,11 +18,13 @@ HEADERS *= \
     iconstorage.h \
     mainwindow.h \
     paths.h \
+    preferencesdialog.h \
     qticonloader.h \
     waitdialog.h \
 
 FORMS *= \
     igotugui.ui \
+    preferencesdialog.ui \
     waitdialog.ui \
 
 unix {

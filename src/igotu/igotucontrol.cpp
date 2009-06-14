@@ -296,11 +296,7 @@ IgotuControl::IgotuControl(QObject *parent) :
     QObject(parent),
     d(new IgotuControlPrivate)
 {
-#ifdef Q_OS_WIN32
-    d->device = QLatin1String("serial:3");
-#elif defined(Q_OS_LINUX) || defined(Q_OS_MACX)
-    d->device = QLatin1String("usb:0df7:0900");
-#endif
+    setDevice(defaultDevice());
 
     connect(&d->worker, SIGNAL(infoStarted()),
              this, SIGNAL(infoStarted()));
@@ -346,6 +342,16 @@ void IgotuControl::setDevice(const QString &device)
 QString IgotuControl::device() const
 {
     return d->device;
+}
+
+QString IgotuControl::defaultDevice()
+{
+#ifdef Q_OS_WIN32
+    return QLatin1String("serial:3");
+#elif defined(Q_OS_LINUX) || defined(Q_OS_MACX)
+    return QLatin1String("usb:0df7:0900");
+#endif
+    return QLatin1String("unknown");
 }
 
 bool IgotuControl::queuesEmpty()

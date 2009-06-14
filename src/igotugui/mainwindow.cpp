@@ -23,6 +23,7 @@
 
 #include "iconstorage.h"
 #include "mainwindow.h"
+#include "preferencesdialog.h"
 #include "ui_igotugui.h"
 #include "waitdialog.h"
 
@@ -31,7 +32,6 @@
 #include <QMessageBox>
 #include <QPointer>
 #include <QProgressBar>
-#include <QSettings>
 #include <QTimer>
 
 using namespace igotu;
@@ -64,6 +64,7 @@ public:
     boost::scoped_ptr<Ui::MainWindow> ui;
     IgotuControl *control;
     QPointer<WaitDialog> waiter;
+    QPointer<PreferencesDialog> preferences;
     bool initialConnect;
 };
 
@@ -103,18 +104,18 @@ void MainWindowPrivate::on_actionQuit_activated()
 
 void MainWindowPrivate::on_actionPreferences_activated()
 {
-    QString device = control->device();
+    if (!preferences) {
+        preferences = new PreferencesDialog(p);
+        preferences->setAttribute(Qt::WA_DeleteOnClose);
 
-    bool ok;
-    // TODO: should be non-modal
-    device = QInputDialog::getText(p, tr("Preferences"),
-            tr("Device (usb:<vendor>:<product> or serial:<n>)"),
-            QLineEdit::Normal, device, &ok);
-    if (!ok)
-        return;
+        QObject::connect(preferences, SIGNAL(deviceChanged(QString)),
+                control, SLOT(setDevice(QString)));
 
-    QSettings().setValue(QLatin1String("device"), device);
-    control->setDevice(device);
+        preferences->show();
+    } else {
+        // TODO: needs also a raise?
+        preferences->activateWindow();
+    }
 }
 
 void MainWindowPrivate::on_control_infoStarted()
@@ -239,11 +240,7 @@ MainWindow::MainWindow() :
 
     connectSlotsByNameToPrivate(this, d.get());
 
-    if (!QSettings().contains(QLatin1String("device")))
-        QSettings().setValue(QLatin1String("device"), d->control->device());
-    else
-        d->control->setDevice(QSettings().value
-                (QLatin1String("device")).toString());
+    d->control->setDevice(PreferencesDialog::currentDevice());
 
 //    d->initialConnect = false;
     d->initialConnect = true;

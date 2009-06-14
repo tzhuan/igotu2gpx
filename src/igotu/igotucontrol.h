@@ -39,7 +39,8 @@ public:
 
     // usb:vendor:product, serial:n or image:base64
     QString device() const;
-    void setDevice(const QString &device);
+    // default device for the platform
+    static QString defaultDevice();
 
     // may throw
     void info();
@@ -52,6 +53,9 @@ public:
 
     // Returns true if no tasks are pending anymore
     bool queuesEmpty();
+
+public Q_SLOTS:
+    void setDevice(const QString &device);
 
 Q_SIGNALS:
     void infoStarted();
