@@ -17,6 +17,7 @@
 #CLEBS_DISABLED *= examples unittests
 
 #unix:BOOSTINCLUDEDIR = /usr/include
+#unix:BOOSTPOLIB = boost_program_options-mt
 
 #macx:BOOSTROOT = /usr/local
 #macx:BOOSTINCLUDEDIR = $${BOOSTROOT}/include/boost-1_38

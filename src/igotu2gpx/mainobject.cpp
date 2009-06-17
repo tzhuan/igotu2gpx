@@ -38,8 +38,8 @@ public Q_SLOTS:
     void on_control_infoFailed(const QString &message);
 
     void on_control_contentsStarted();
-    void on_control_contentsBlocksFinished(unsigned num, unsigned total);
-    void on_control_contentsFinished(const QByteArray &contents, unsigned count);
+    void on_control_contentsBlocksFinished(uint num, uint total);
+    void on_control_contentsFinished(const QByteArray &contents, uint count);
     void on_control_contentsFailed(const QString &message);
 
 public:
@@ -132,13 +132,13 @@ void MainObjectPrivate::on_control_contentsStarted()
         fprintf(stderr, "%s\n", qPrintable(tr("Retrieving data...")));
 }
 
-void MainObjectPrivate::on_control_contentsBlocksFinished(unsigned num, unsigned total)
+void MainObjectPrivate::on_control_contentsBlocksFinished(uint num, uint total)
 {
     if (Verbose::verbose() >= 0 && num > 0)
         fprintf(stderr, "%s\n", qPrintable(tr("Retrieved block %1/%2").arg(num).arg(total)));
 }
 
-void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents, unsigned count)
+void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents, uint count)
 {
     try {
         if (!raw.isEmpty()) {

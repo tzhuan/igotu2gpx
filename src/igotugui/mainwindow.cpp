@@ -51,8 +51,8 @@ public Q_SLOTS:
     void on_control_infoFailed(const QString &message);
 
     void on_control_contentsStarted();
-    void on_control_contentsBlocksFinished(unsigned num, unsigned total);
-    void on_control_contentsFinished(const QByteArray &contents, unsigned count);
+    void on_control_contentsBlocksFinished(uint num, uint total);
+    void on_control_contentsFinished(const QByteArray &contents, uint count);
     void on_control_contentsFailed(const QString &message);
 
 public:
@@ -150,15 +150,15 @@ void MainWindowPrivate::on_control_contentsStarted()
     wait(tr("Retrieving data..."), false);
 }
 
-void MainWindowPrivate::on_control_contentsBlocksFinished(unsigned num,
-        unsigned total)
+void MainWindowPrivate::on_control_contentsBlocksFinished(uint num,
+        uint total)
 {
     waiter->progressBar()->setMaximum(total);
     waiter->progressBar()->setValue(num);
 }
 
 void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
-        unsigned count)
+        uint count)
 {
     delete waiter;
 

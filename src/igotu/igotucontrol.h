@@ -64,8 +64,8 @@ Q_SIGNALS:
 
     void contentsStarted();
     // number of blocks finished, from 0 to blocks
-    void contentsBlocksFinished(unsigned num, unsigned total);
-    void contentsFinished(const QByteArray &contents, unsigned count);
+    void contentsBlocksFinished(uint num, uint total);
+    void contentsFinished(const QByteArray &contents, uint count);
     void contentsFailed(const QString &message);
 
 protected:

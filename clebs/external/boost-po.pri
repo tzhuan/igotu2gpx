@@ -22,6 +22,7 @@ clebsCheck(boost-po) {
 
     unix:!macx {
 	isEmpty(BOOSTINCLUDEDIR):BOOSTINCLUDEDIR = /usr/include
+	isEmpty(BOOSTPOLIB):BOOSTPOLIB = boost_program_options-mt
 
 	exists($${BOOSTINCLUDEDIR}/boost/program_options):CLEBS_DEPENDENCIES *= boost-po
     }
@@ -53,7 +54,7 @@ clebsDependency(boost-po) {
 
     unix:!macx {
 	INCLUDEPATH *= $${BOOSTINCLUDEDIR}
-	LIBS *= -lboost_program_options-mt
+	LIBS *= -l$${BOOSTPOLIB}
     }
 }
 

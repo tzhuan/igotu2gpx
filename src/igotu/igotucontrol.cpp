@@ -57,8 +57,8 @@ Q_SIGNALS:
     void infoFailed(const QString &message);
 
     void contentsStarted();
-    void contentsBlocksFinished(unsigned num, unsigned total);
-    void contentsFinished(const QByteArray &contents, unsigned count);
+    void contentsBlocksFinished(uint num, uint total);
+    void contentsFinished(const QByteArray &contents, uint count);
     void contentsFailed(const QString &message);
 
 private:
@@ -159,7 +159,7 @@ void IgotuControlPrivateWorker::info()
             throw IgotuError(tr("Uninitialized device"));
 
         status += tr("Schedule date: %1").arg(igotuPoints.firstScheduleDate()
-                .toString(Qt::DefaultLocaleLongDate)) + QLatin1Char('\n');
+                .toString(Qt::SystemLocaleDate)) + QLatin1Char('\n');
         status += tr("Schedule date offset: %1 days").arg(igotuPoints
                 .dateOffset()) + QLatin1Char('\n');
         QList<unsigned> tablePlans = igotuPoints.scheduleTablePlans();
@@ -192,10 +192,10 @@ void IgotuControlPrivateWorker::info()
                         printed = true;
                     }
                     status += QLatin1String("  ") +
-                        tr("Start time: %1").arg(entry.startTime().toString(Qt::DefaultLocaleLongDate)) +
+                        tr("Start time: %1").arg(entry.startTime().toString(Qt::SystemLocaleDate)) +
                         QLatin1Char('\n');
                     status += QLatin1String("  ") +
-                        tr("End time: %1").arg(entry.endTime().toString(Qt::DefaultLocaleLongDate)) +
+                        tr("End time: %1").arg(entry.endTime().toString(Qt::SystemLocaleDate)) +
                         QLatin1Char('\n');
                     status += QLatin1String("  ") +
                         tr("Log interval: %1 s").arg(entry.logInterval()) +
