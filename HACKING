@@ -103,12 +103,12 @@ Internal memory read? (used for number of datapoints):
   YY: big endian read position
   ZZ: read data
 
-Model type?:
+ModelCommand:
   Command chunk 1: 93 05 04 00 03 01 9F 00
   Response:        93 00 00
   Command chunk 2: 00 00 00 00 00 00 00 SS
   Response:        93 00 03 XX XX YY
-  XX: always C220
+  XX: always C220?
   YY: 14 for GT-120, 15 for GT-200
 
 Internal memory read? (used for model type):

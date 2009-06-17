@@ -39,18 +39,38 @@ public:
 
     unsigned serialNumber() const;
     QString firmwareVersion() const;
-    QString deviceName() const;
 
 private:
     unsigned id;
     QString version;
+};
+
+class IGOTU_EXPORT ModelCommand : public IgotuCommand
+{
+public:
+    ModelCommand(DataConnection *connection);
+
+    virtual QByteArray sendAndReceive();
+
+    enum Model {
+        Unknown,
+        // Gt100,
+        Gt120,
+        Gt200
+    };
+
+    Model modelId() const;
+    QString modelName() const;
+
+private:
+    Model id;
     QString name;
 };
 
 class IGOTU_EXPORT CountCommand : public IgotuCommand
 {
 public:
-    CountCommand(DataConnection *connection);
+    CountCommand(DataConnection *connection, bool gt120BugWorkaround);
 
     virtual QByteArray sendAndReceive();
 
@@ -58,6 +78,7 @@ public:
 
 private:
     unsigned count;
+    bool gt120BugWorkaround;
 };
 
 class IGOTU_EXPORT ReadCommand : public IgotuCommand

@@ -138,12 +138,22 @@ void IgotuControlPrivateWorker::info()
         QString status;
         if (connection) {
             NmeaSwitchCommand(connection.get(), false).sendAndReceive();
+
             IdentificationCommand id(connection.get());
             id.sendAndReceive();
             status += tr("S/N: %1\n").arg(id.serialNumber());
             status += tr("Firmware version: %1\n").arg(id.firmwareVersion());
-            status += tr("Model: %1\n").arg(id.deviceName());
-            CountCommand countCommand(connection.get());
+
+            ModelCommand model(connection.get());
+            model.sendAndReceive();
+            if (model.modelId() != ModelCommand::Unknown)
+                status += tr("Model: %1\n").arg(model.modelName());
+            else
+                status += tr("Model: %1, please inform mh21@piware.de\n")
+                    .arg(model.modelName());
+
+            CountCommand countCommand(connection.get(),
+                    model.modelId() == ModelCommand::Gt120);
             countCommand.sendAndReceive();
             unsigned count = countCommand.trackPointCount();
             status += tr("Number of trackpoints: %1\n").arg(count);
@@ -257,16 +267,23 @@ void IgotuControlPrivateWorker::contents()
         unsigned count;
         if (connection) {
             NmeaSwitchCommand(connection.get(), false).sendAndReceive();
-            CountCommand countCommand(connection.get());
+
+            ModelCommand model(connection.get());
+            model.sendAndReceive();
+
+            CountCommand countCommand(connection.get(),
+                    model.modelId() == ModelCommand::Gt120);
             countCommand.sendAndReceive();
             count = countCommand.trackPointCount();
             const unsigned blocks = 1 + (count + 0x7f) / 0x80;
+
             for (unsigned i = 0; i < blocks; ++i) {
                 emit contentsBlocksFinished(i, blocks);
                 data += ReadCommand(connection.get(), i * 0x1000,
                         0x1000).sendAndReceive();
             }
             emit contentsBlocksFinished(blocks, blocks);
+
             NmeaSwitchCommand(connection.get(), true).sendAndReceive();
         } else {
             data = image;

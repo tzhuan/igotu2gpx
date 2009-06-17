@@ -25,6 +25,8 @@
 namespace igotu
 {
 
+// TODO: some of these return codes should be localized
+
 // NmeaSwitchCommand ===========================================================
 
 NmeaSwitchCommand::NmeaSwitchCommand(DataConnection *connection, bool enable) :
@@ -62,19 +64,6 @@ QByteArray IdentificationCommand::sendAndReceive()
     version = QString().sprintf("%u.%02u",
             *reinterpret_cast<const uchar*>(result.data() + 4),
             *reinterpret_cast<const uchar*>(result.data() + 5));
-    switch (*reinterpret_cast<const uchar*>(result.data() + 4)) {
-    case 2:
-        // GT-100 is model 1, GT-200 is model two
-        // TODO: @trip PC can figure it out
-        name = QLatin1String("GT-100/GT-200");
-        break;
-    case 3:
-        name = QLatin1String("GT-120");
-        break;
-    default:
-        name = QLatin1String("Unknown model");
-        break;
-    }
     return result;
 }
 
@@ -88,15 +77,60 @@ QString IdentificationCommand::firmwareVersion() const
     return version;
 }
 
-QString IdentificationCommand::deviceName() const
+// ModelCommand ================================================================
+
+ModelCommand::ModelCommand(DataConnection *connection) :
+    IgotuCommand(connection)
+{
+    QByteArray command(15, 0);
+    command.replace(0, 7, "\x93\x05\x04\x00\x03\x01\x9F");
+    setCommand(command);
+}
+
+QByteArray ModelCommand::sendAndReceive()
+{
+    const QByteArray result = IgotuCommand::sendAndReceive();
+    if (result.size() < 3)
+        throw IgotuError(tr("Response too short"));
+    const unsigned part1 = qFromLittleEndian<quint16>
+        (reinterpret_cast<const uchar*>(result.data()));
+    const unsigned part2 =
+        *reinterpret_cast<const uchar*>(result.data() + 2);
+
+    name = QString::fromLatin1("Unknown (%1)").arg(QString::fromAscii
+            (result.toHex()));
+    id = Unknown;
+    if (part1 == 0xC220) {
+        switch (part2) {
+        case 0x14:
+            name = QLatin1String("GT120");
+            id = Gt120;
+            break;
+        case 0x15:
+            name = QLatin1String("GT200");
+            id = Gt200;
+            break;
+        }
+    }
+
+    return result;
+}
+
+ModelCommand::Model ModelCommand::modelId() const
+{
+    return id;
+}
+
+QString ModelCommand::modelName() const
 {
     return name;
 }
 
 // CountCommand ================================================================
 
-CountCommand::CountCommand(DataConnection *connection) :
-    IgotuCommand(connection)
+CountCommand::CountCommand(DataConnection *connection, bool gt120BugWorkaround) :
+    IgotuCommand(connection),
+    gt120BugWorkaround(gt120BugWorkaround)
 {
     QByteArray command(15, 0);
     command.replace(0, 3, "\x93\x0b\x03");
@@ -117,7 +151,8 @@ QByteArray CountCommand::sendAndReceive()
     // again (apparently only for this command); because libusb support is
     // synchronous, we cannot be sure that the next command purges the transmit
     // buffer before.
-    connection()->send(QByteArray(), true);
+    if (gt120BugWorkaround)
+        connection()->send(QByteArray(), true);
 
     return result;
 }
