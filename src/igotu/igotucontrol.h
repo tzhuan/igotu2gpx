@@ -46,12 +46,14 @@ public:
     void info();
     // may throw
     void contents();
+    // may throw
+    void purge();
 
     // schedules a slot of an object that will be called when all tasks have
     // been processed
     void notify(QObject *object, const char *method);
 
-    // Returns true if no tasks are pending anymore
+    // Returns true if no tasks are pending
     bool queuesEmpty();
 
 public Q_SLOTS:
@@ -63,10 +65,16 @@ Q_SIGNALS:
     void infoFailed(const QString &message);
 
     void contentsStarted();
-    // number of blocks finished, from 0 to blocks
+    // number of blocks finished, from 0 to total
     void contentsBlocksFinished(uint num, uint total);
     void contentsFinished(const QByteArray &contents, uint count);
     void contentsFailed(const QString &message);
+
+    void purgeStarted();
+    // number of blocks finished, from 0 to total
+    void purgeBlocksFinished(uint num, uint total);
+    void purgeFinished();
+    void purgeFailed(const QString &message);
 
 protected:
     boost::scoped_ptr<IgotuControlPrivate> d;

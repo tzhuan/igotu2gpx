@@ -46,6 +46,7 @@ public:
 public Q_SLOTS:
     void info();
     void contents();
+    void purge();
     void notify(QObject *object, const QByteArray &method);
 
 private:
@@ -60,6 +61,11 @@ Q_SIGNALS:
     void contentsBlocksFinished(uint num, uint total);
     void contentsFinished(const QByteArray &contents, uint count);
     void contentsFailed(const QString &message);
+
+    void purgeStarted();
+    void purgeBlocksFinished(uint num, uint total);
+    void purgeFinished();
+    void purgeFailed(const QString &message);
 
 private:
     IgotuControlPrivate * const p;
@@ -78,6 +84,7 @@ public:
 Q_SIGNALS:
     void info();
     void contents();
+    void purge();
     void notify(QObject *object, const QByteArray &method);
 
 public:
@@ -302,6 +309,74 @@ void IgotuControlPrivateWorker::contents()
     p->semaphore.release();
 }
 
+void IgotuControlPrivateWorker::purge()
+{
+    emit purgeStarted();
+    try {
+        connect();
+
+        if (!connection)
+            throw IgotuError(tr("Need an actual device to purge"));
+
+        NmeaSwitchCommand(connection.get(), false).sendAndReceive();
+
+        ModelCommand model(connection.get());
+        model.sendAndReceive();
+
+        switch (model.modelId()) {
+        case ModelCommand::Gt120: {
+            bool purgeBlocks = false;
+            const unsigned blocks = 0x200;
+            for (unsigned i = blocks - 1; i > 0; --i) {
+                emit purgeBlocksFinished(blocks - i - 1, blocks);
+                if (purgeBlocks) {
+                    while (UnknownWriteCommand2(connection.get(), 0x0001).sendAndReceive() !=
+                            QByteArray(1, '\x00')) {
+                        // just wait, TODO: timeout
+                    }
+                } else {
+                    if (ReadCommand(connection.get(), i * 0x1000, 0x10).sendAndReceive() !=
+                        QByteArray(0x10, '\xff'))
+                        purgeBlocks = true;
+                    else
+                        continue;
+                }
+                UnknownWriteCommand1(connection.get(), 0x00).sendAndReceive();
+                WriteCommand(connection.get(), 0x20, i * 0x1000, QByteArray()).sendAndReceive();
+            }
+            if (purgeBlocks) {
+                UnknownPurgeCommand1(connection.get(), 0x1e).sendAndReceive();
+                UnknownPurgeCommand1(connection.get(), 0x1f).sendAndReceive();
+                while (UnknownWriteCommand2(connection.get(), 0x0001).sendAndReceive() !=
+                        QByteArray(1, '\x00')) {
+                    // just wait, TODO: timeout
+                }
+            }
+            UnknownPurgeCommand1(connection.get(), 0x1e).sendAndReceive();
+            UnknownPurgeCommand1(connection.get(), 0x1f).sendAndReceive();
+            emit purgeBlocksFinished(blocks, blocks);
+            break; }
+        case ModelCommand::Gt200: {
+            // TODO: better error message
+            throw IgotuError(tr("Unable to purge this device model"));
+            break; }
+        default:
+            // TODO: better error message
+            throw IgotuError(tr("Unable to purge this device model"));
+        }
+
+        NmeaSwitchCommand(connection.get(), true).sendAndReceive();
+
+        emit purgeFinished();
+    } catch (const std::exception &e) {
+        emit purgeFailed(QString::fromLocal8Bit(e.what()));
+    }
+    connection.reset();
+    image.clear();
+
+    p->semaphore.release();
+}
+
 void IgotuControlPrivateWorker::notify(QObject *object, const QByteArray &method)
 {
     QMetaObject::invokeMethod(object, method);
@@ -331,10 +406,21 @@ IgotuControl::IgotuControl(QObject *parent) :
     connect(&d->worker, SIGNAL(contentsFailed(QString)),
              this, SIGNAL(contentsFailed(QString)));
 
+    connect(&d->worker, SIGNAL(purgeStarted()),
+             this, SIGNAL(purgeStarted()));
+    connect(&d->worker, SIGNAL(purgeBlocksFinished(uint,uint)),
+             this, SIGNAL(purgeBlocksFinished(uint,uint)));
+    connect(&d->worker, SIGNAL(purgeFinished()),
+             this, SIGNAL(purgeFinished()));
+    connect(&d->worker, SIGNAL(purgeFailed(QString)),
+             this, SIGNAL(purgeFailed(QString)));
+
     connect(d.get(), SIGNAL(info()),
              &d->worker, SLOT(info()));
     connect(d.get(), SIGNAL(contents()),
              &d->worker, SLOT(contents()));
+    connect(d.get(), SIGNAL(purge()),
+             &d->worker, SLOT(purge()));
     connect(d.get(), SIGNAL(notify(QObject*,QByteArray)),
              &d->worker, SLOT(notify(QObject*,QByteArray)));
 
@@ -391,6 +477,13 @@ void IgotuControl::contents()
     if (!d->semaphore.tryAcquire())
         throw IgotuError(tr("Too many concurrent tasks"));
     emit d->contents();
+}
+
+void IgotuControl::purge()
+{
+    if (!d->semaphore.tryAcquire())
+        throw IgotuError(tr("Too many concurrent tasks"));
+    emit d->purge();
 }
 
 void IgotuControl::notify(QObject *object, const char *method)

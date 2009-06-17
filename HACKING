@@ -127,21 +127,12 @@ ReadCommand:
   Response:        93 00 00
   Command chunk 2: YY YY 00 00 00 00 00 SS
   Response:        93 XX XX ZZ...
-  XX: big endian read size (always 1000 for @trip PC)
+  XX: big endian read size (1000 for read, 0010 for purge)
   YY: big endian read position
   ZZ: read data
 
 Flash erase commands
 ~~~~~~~~~~~~~~~~~~~~
-
-Read:
-  Command chunk 1: 93 05 07 XX XX 04 03 YY
-  Response:        93 00 00
-  Command chunk 2: YY YY 00 00 00 00 00 SS
-  Response:        93 XX XX ZZ...
-  XX: big endian read size (always 0010 for purge)
-  YY: big endian read position
-  ZZ: read data
 
 UnknownWriteCommand1:
   Command chunk 1: 93 06 04 00 XX 01 06 00
@@ -150,7 +141,7 @@ UnknownWriteCommand1:
   Response:        93 00 00
   XX: 00 for purge, 01? for write
 
-Write:
+WriteCommand:
   Command chunk 1: 93 06 07 XX XX 04 WW YY
   Response:        93 00 00
   Command chunk 2: YY YY 00 00 00 00 00 SS
@@ -196,12 +187,12 @@ Pseudo code for a GT-120 purge:
       while UnknownWriteCommand2(0x0001) != 0x00:
         pass
     else:
-      if Read(i, 0x10) != rep(0xff, 0x10):
+      if ReadCommand(i, 0x10) != rep(0xff, 0x10):
         purge = true
       else:
         continue
     UnknownWriteCommand1(0x00)
-    Write(0x20, '')
+    WriteCommand(0x20, i, '')
   if purge:
     UnknownPurgeCommand1(0x1e)
     UnknownPurgeCommand1(0x1f)
@@ -217,12 +208,12 @@ Pseudo code for a GT-200 purge:
       while UnknownWriteCommand2(0x0001) != 0x00:
         pass
     else:
-      if Read(i, 0x10) != rep(0xff, 0x10):
+      if ReadCommand(i, 0x10) != rep(0xff, 0x10):
         purge = true
       else:
         continue
     UnknownWriteCommand1(0x00)
-    Write(0x20, '')
+    WriteCommand(0x20, i, '')
   UnknownPurgeCommand2()
   if purge:
       while UnknownWriteCommand2(0x0001) != 0x00:

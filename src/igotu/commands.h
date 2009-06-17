@@ -98,21 +98,42 @@ private:
 class IGOTU_EXPORT WriteCommand : public IgotuCommand
 {
 public:
-    WriteCommand(DataConnection *connection, unsigned pos,
+    WriteCommand(DataConnection *connection, unsigned writeMode, unsigned pos,
             const QByteArray &data);
 
     virtual QByteArray sendAndReceive();
 
-    void setData(const QByteArray &data);
-    QByteArray data() const;
+private:
+    QByteArray data;
+};
 
-    void setPosition(unsigned value);
-    unsigned position() const;
+class IGOTU_EXPORT UnknownWriteCommand1 : public IgotuCommand
+{
+public:
+    UnknownWriteCommand1(DataConnection *connection, unsigned mode);
+
+    virtual QByteArray sendAndReceive();
+};
+
+class IGOTU_EXPORT UnknownWriteCommand2 : public IgotuCommand
+{
+public:
+    UnknownWriteCommand2(DataConnection *connection, unsigned size);
+
+    virtual QByteArray sendAndReceive();
 
 private:
-    unsigned pos;
-    QByteArray contents;
+    unsigned size;
 };
+
+class IGOTU_EXPORT UnknownPurgeCommand1 : public IgotuCommand
+{
+public:
+    UnknownPurgeCommand1(DataConnection *connection, unsigned mode);
+
+    virtual QByteArray sendAndReceive();
+};
+
 } // namespace igotu
 
 #endif

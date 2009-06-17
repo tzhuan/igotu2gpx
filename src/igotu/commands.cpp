@@ -184,7 +184,7 @@ QByteArray ReadCommand::sendAndReceive()
 {
     result = IgotuCommand::sendAndReceive();
     if (unsigned(result.size()) < size)
-        throw IgotuError(tr("Response too short"));
+        throw IgotuError(tr("Wrong response length"));
     return result;
 }
 
@@ -195,17 +195,17 @@ QByteArray ReadCommand::data() const
 
 // WriteCommand ================================================================
 
-WriteCommand::WriteCommand(DataConnection *connection, unsigned pos,
-        const QByteArray &data) :
+WriteCommand::WriteCommand(DataConnection *connection, unsigned writeMode,
+        unsigned pos, const QByteArray &data) :
     IgotuCommand(connection),
-    pos(pos),
-    contents(data)
+    data(data)
 {
     QByteArray command(15, 0);
     command.replace(0, 3, "\x93\x06\x07");
     command[3] = (data.size() >> 0x08) & 0xff;
     command[4] = (data.size() >> 0x00) & 0xff;
-    command.replace(5, 2, "\x04\x02");
+    command[5] = '\x04';
+    command[6] = writeMode;
     command[7] = (pos >> 0x10) & 0xff;
     command[8] = (pos >> 0x08) & 0xff;
     command[9] = (pos >> 0x00) & 0xff;
@@ -215,30 +215,71 @@ WriteCommand::WriteCommand(DataConnection *connection, unsigned pos,
 QByteArray WriteCommand::sendAndReceive()
 {
     IgotuCommand::sendAndReceive();
-    for (unsigned i = 0; i < (unsigned(contents.size()) + 6) / 7; ++i)
-        IgotuCommand(connection(), contents.mid(i * 7, 7)).sendAndReceive();
+    for (unsigned i = 0; i < (unsigned(data.size()) + 6) / 7; ++i)
+        IgotuCommand(connection(), data.mid(i * 7, 7)).sendAndReceive();
     return QByteArray();
 }
 
-void WriteCommand::setData(const QByteArray &data)
+// UnknownWriteCommand1 ========================================================
+
+UnknownWriteCommand1::UnknownWriteCommand1(DataConnection *connection,
+        unsigned mode) :
+    IgotuCommand(connection)
 {
-    contents = data;
+    QByteArray command(15, 0);
+    command.replace(0, 7, "\x93\x06\x04\x00\x00\x01\x06");
+    command[4] = mode;
+    setCommand(command);
 }
 
-QByteArray WriteCommand::data() const
+QByteArray UnknownWriteCommand1::sendAndReceive()
 {
-    return contents;
+    const QByteArray result = IgotuCommand::sendAndReceive();
+    if (!result.isEmpty())
+        throw IgotuError(tr("Response too long"));
+    return result;
 }
 
-void WriteCommand::setPosition(unsigned value)
+// UnknownWriteCommand2 ========================================================
+
+UnknownWriteCommand2::UnknownWriteCommand2(DataConnection *connection,
+        unsigned size) :
+    IgotuCommand(connection),
+    size(size)
 {
-    pos = value;
+    QByteArray command(15, 0);
+    command.replace(0, 7, "\x93\x05\x04\x00\x00\x01\x05");
+    command[3] = (size >> 0x08) & 0xff;
+    command[4] = (size >> 0x00) & 0xff;
+    setCommand(command);
 }
 
-unsigned WriteCommand::position() const
+QByteArray UnknownWriteCommand2::sendAndReceive()
 {
-    return pos;
+    const QByteArray result = IgotuCommand::sendAndReceive();
+    if (unsigned(result.size()) != size)
+        throw IgotuError(tr("Wrong response length"));
+    return result;
 }
 
+// UnknownPurgeCommand1 ========================================================
+
+UnknownPurgeCommand1::UnknownPurgeCommand1(DataConnection *connection,
+        unsigned mode) :
+    IgotuCommand(connection)
+{
+    QByteArray command(15, 0);
+    command.replace(0, 3, "\x93\x0c\x00");
+    command[3] = mode;
+    setCommand(command);
+}
+
+QByteArray UnknownPurgeCommand1::sendAndReceive()
+{
+    const QByteArray result = IgotuCommand::sendAndReceive();
+    if (!result.isEmpty())
+        throw IgotuError(tr("Response too long"));
+    return result;
+}
 } // namespace igotu
 
