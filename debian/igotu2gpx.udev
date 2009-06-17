@@ -1,0 +1,1 @@
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", SYSFS{idVendor}=="0df7", SYSFS{idProduct}=="0900", GROUP="plugdev", MODE="0664"
