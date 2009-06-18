@@ -6,4 +6,4 @@ StartupWMClass=igotugui
 Terminal=false
 Type=Application
 Icon=igotu2gpx-gui
-Categories=Qt;Graphics;Photography;
+Categories=Qt;Utility;Photography;
