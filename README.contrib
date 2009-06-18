@@ -1,0 +1,33 @@
+contrib/create-dmg
+~~~~~~~~~~~~~~~~~~
+
+- Creates a read-only disk image of the contents of a folder for Mac OS X
+- Retrieved with
+  git clone git://github.com/andreyvit/yoursway-create-dmg.git
+- Licensed under the same license as Adium, which is the GNU General Public
+  License, version 2 or later
+
+contrib/openup
+~~~~~~~~~~~~~~
+
+- Program to set the "first-open-window" field of a volume
+- Retrieved from http://tcltkaqua.sourceforge.net/8.4.4/Tools/openUp.c
+- Licensed under the Apple Public Source License Version 1.1
+
+contrib/tango
+~~~~~~~~~~~~~
+
+- Basic set of desktop icons that follow the Tango icon style guidelines
+- Retrieved with 
+  cvs -d:pserver:anoncvs@anoncvs.freedesktop.org:/cvs/tango co tango-icon-theme
+- Released into the public domain
+
+src/igotugui/qticonloader.*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Freedesktop icons in Qt4
+- Retrieved with
+  svn co svn://labs.trolltech.com/svn/iconloader
+- Licensed under the same conditions as Qt, which includes
+  * GNU Lesser General Public License version 2.1
+  * GNU General Public License version 3
