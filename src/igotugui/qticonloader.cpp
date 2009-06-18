@@ -253,7 +253,7 @@ QIconTheme QtIconLoaderImplementation::parseIndexFile(const QString &themeName) 
     if (themeIndex.exists()) {
         QSettings indexReader(themeIndex.fileName(), QSettings::IniFormat);
         Q_FOREACH (const QString &key, indexReader.allKeys()) {
-            if (key.endsWith("/Size")) {
+            if (key.endsWith(QLatin1String("/Size"))) {
                 if (int size = indexReader.value(key).toInt())
                 dirList.insertMulti(size, key.left(key.size() - 5));
         }

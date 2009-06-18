@@ -81,6 +81,8 @@ QString IconStoragePrivate::fileName(IconStorage::IconName name)
     switch(name) {
     case IconStorage::SaveIcon:
         return QLatin1String("actions//document-save");
+    case IconStorage::PurgeIcon:
+        return QLatin1String("actions//edit-clear");
     case IconStorage::InfoIcon:
         return QLatin1String("status//dialog-information");
     case IconStorage::QuitIcon:

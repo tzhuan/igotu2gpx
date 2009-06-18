@@ -25,7 +25,8 @@
 
 // On Unix, 4 file paths are searched in the following order:
 // 1. the home direcory(XDG_DATA_HOME/igotu2gpx, .local/lib/igotu2gpx)
-// 2. the directory where igotu2gpx is installed(../share/igotu2gpx, ../lib/igotu2gpx)
+// 2. the directory where igotu2gpx is installed (../share/igotu2gpx,
+//    ../lib/igotu2gpx)
 // 3  or the directory where igotu2gpx is located
 // 4. the default directories(XDG_DATA_DIRS, /usr/local/lib:/usr/lib)
 //

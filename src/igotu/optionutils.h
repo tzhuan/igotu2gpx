@@ -30,8 +30,8 @@
 
 #include <vector>
 
-// To be found when used with and without "namespace igotu", these functions must
-// be declared outside of a namespace
+// To be found when used with and without "namespace igotu", these functions
+// must be declared outside of a namespace
 //
 // These functions can't be in the cpp file, otherwise gcc will instantiate
 // *hidden* rtti info for the boost::any template instantiations and when used,

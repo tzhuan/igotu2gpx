@@ -27,6 +27,7 @@ public:
     enum IconName {
         InfoIcon,
         SaveIcon,
+        PurgeIcon,
         QuitIcon,
         GuiIcon,
     };

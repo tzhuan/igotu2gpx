@@ -128,7 +128,8 @@ QString ModelCommand::modelName() const
 
 // CountCommand ================================================================
 
-CountCommand::CountCommand(DataConnection *connection, bool gt120BugWorkaround) :
+CountCommand::CountCommand(DataConnection *connection,
+        bool gt120BugWorkaround) :
     IgotuCommand(connection),
     gt120BugWorkaround(gt120BugWorkaround)
 {

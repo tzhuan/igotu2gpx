@@ -20,7 +20,6 @@
 #include "igotu/igotucontrol.h"
 #include "igotu/igotupoints.h"
 #include "igotu/utils.h"
-
 #include "iconstorage.h"
 #include "mainwindow.h"
 #include "preferencesdialog.h"
@@ -32,6 +31,8 @@
 #include <QMessageBox>
 #include <QPointer>
 #include <QProgressBar>
+#include <QPushButton>
+#include <QStyle>
 #include <QTimer>
 
 using namespace igotu;
@@ -43,6 +44,7 @@ public Q_SLOTS:
     void on_actionAbout_activated();
     void on_actionInfo_activated();
     void on_actionSave_activated();
+    void on_actionPurge_activated();
     void on_actionPreferences_activated();
     void on_actionQuit_activated();
 
@@ -54,6 +56,11 @@ public Q_SLOTS:
     void on_control_contentsBlocksFinished(uint num, uint total);
     void on_control_contentsFinished(const QByteArray &contents, uint count);
     void on_control_contentsFailed(const QString &message);
+
+    void on_control_purgeStarted();
+    void on_control_purgeBlocksFinished(uint num, uint total);
+    void on_control_purgeFinished();
+    void on_control_purgeFailed(const QString &message);
 
 public:
     void critical(const QString &text);
@@ -68,10 +75,7 @@ public:
     bool initialConnect;
 };
 
-void MainWindowPrivate::on_actionSave_activated()
-{
-    control->contents();
-}
+// MainWindowPrivate ===========================================================
 
 void MainWindowPrivate::on_actionAbout_activated()
 {
@@ -92,14 +96,43 @@ void MainWindowPrivate::on_actionAbout_activated()
         "<br/>").arg(QLatin1String(IGOTU_VERSION_STR)));
 }
 
+void MainWindowPrivate::on_actionQuit_activated()
+{
+    QCoreApplication::quit();
+}
+
 void MainWindowPrivate::on_actionInfo_activated()
 {
     control->info();
 }
 
-void MainWindowPrivate::on_actionQuit_activated()
+void MainWindowPrivate::on_actionSave_activated()
 {
-    QCoreApplication::quit();
+    control->contents();
+}
+
+void MainWindowPrivate::on_actionPurge_activated()
+{
+    // TODO: give some more info, warn because experimental and not available
+    // for all types
+    QPointer<QMessageBox> messageBox(new QMessageBox(QMessageBox::Question,
+                QString(),
+                tr("Do you really want to remove all tracks from the tracker?"),
+                QMessageBox::Cancel, p));
+    QPushButton * const purgeButton = messageBox->addButton(tr("Purge"),
+            QMessageBox::AcceptRole);
+    if (messageBox->style()->styleHint
+            (QStyle::SH_DialogButtonBox_ButtonsHaveIcons))
+        purgeButton->setIcon(IconStorage::get(IconStorage::PurgeIcon));
+    messageBox->setDefaultButton(purgeButton);
+    // necessary so MacOS X gives us a sheet
+    messageBox->setWindowModality(Qt::WindowModal);
+    messageBox->exec();
+
+    if (messageBox->clickedButton() == purgeButton)
+        control->purge();
+
+    delete messageBox;
 }
 
 void MainWindowPrivate::on_actionPreferences_activated()
@@ -182,6 +215,8 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
         if (file.write(gpxData) != gpxData.length())
             throw IgotuError(tr("Unable to save to file: %1")
                     .arg(file.errorString()));
+
+        control->info();
     } catch (const std::exception &e) {
         critical(tr("Unable to save data: %1")
                 .arg(QString::fromLocal8Bit(e.what())));
@@ -189,6 +224,37 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
 }
 
 void MainWindowPrivate::on_control_contentsFailed(const QString &message)
+{
+    delete waiter;
+
+    critical(tr("Unable to connect to gps tracker: %1").arg(message));
+}
+
+void MainWindowPrivate::on_control_purgeStarted()
+{
+    wait(tr("Purging data..."), false);
+}
+
+void MainWindowPrivate::on_control_purgeBlocksFinished(uint num,
+        uint total)
+{
+    waiter->progressBar()->setMaximum(total);
+    waiter->progressBar()->setValue(num);
+}
+
+void MainWindowPrivate::on_control_purgeFinished()
+{
+    delete waiter;
+
+    try {
+        control->info();
+    } catch (const std::exception &e) {
+        critical(tr("Unable to purge data: %1")
+                .arg(QString::fromLocal8Bit(e.what())));
+    }
+}
+
+void MainWindowPrivate::on_control_purgeFailed(const QString &message)
 {
     delete waiter;
 
@@ -226,10 +292,13 @@ MainWindow::MainWindow() :
     d->ui.reset(new Ui::MainWindow);
     d->ui->setupUi(this);
 
+    // TODO: menu icons on all platforms?
     d->ui->actionInfo->setIcon
         (IconStorage::get(IconStorage::InfoIcon));
     d->ui->actionSave->setIcon
         (IconStorage::get(IconStorage::SaveIcon));
+    d->ui->actionPurge->setIcon
+        (IconStorage::get(IconStorage::PurgeIcon));
     d->ui->actionQuit->setIcon
         (IconStorage::get(IconStorage::QuitIcon));
     d->ui->actionAbout->setIcon
@@ -242,7 +311,6 @@ MainWindow::MainWindow() :
 
     d->control->setDevice(PreferencesDialog::currentDevice());
 
-//    d->initialConnect = false;
     d->initialConnect = true;
     QTimer::singleShot(0, d->ui->actionInfo, SLOT(trigger()));
 }

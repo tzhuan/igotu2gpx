@@ -102,7 +102,8 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId) :
 
         int result = usb_detach_kernel_driver_np(d->handle.get(), 0);
         if (result < 0)
-            throw IgotuError(tr("Unable to detach kernel driver '%1' from device: %1")
+            throw IgotuError(tr
+                    ("Unable to detach kernel driver '%1' from device: %1")
                     .arg(QString::fromAscii(buf),
                         QString::fromLocal8Bit(strerror(-result))));
     }

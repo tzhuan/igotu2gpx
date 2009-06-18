@@ -61,12 +61,15 @@ int main(int argc, char *argv[])
         po::notify(variables);
 
         if (variables.count("version")) {
-            std::cout << "igotugui (igotu2gpx) " << IGOTU_VERSION_STR << "\n"
-                      << "Copyright (C) 2009 Michael Hofmann\n"
-                      << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
-                      << "This is free software: you are free to change and redistribute it.\n"
-                      << "There is NO WARRANTY, to the extent permitted by law.\n\n"
-                      << "Written by Michael Hofmann.\n";
+            std::cout
+                << "igotugui (igotu2gpx) " << IGOTU_VERSION_STR << "\n"
+                << "Copyright (C) 2009 Michael Hofmann\n"
+                << "License GPLv3+: GNU GPL version 3 or later "
+                   "<http://gnu.org/licenses/gpl.html>\n"
+                << "This is free software: "
+                   "you are free to change and redistribute it.\n"
+                << "There is NO WARRANTY, to the extent permitted by law.\n\n"
+                << "Written by Michael Hofmann.\n";
             return 0;
         }
         if (variables.count("help")) {

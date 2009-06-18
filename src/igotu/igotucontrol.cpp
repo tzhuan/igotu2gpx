@@ -104,7 +104,7 @@ IgotuControlPrivate::IgotuControlPrivate() :
 {
 }
 
-// IgotuControlPrivateWorker ====================================================
+// IgotuControlPrivateWorker ===================================================
 
 IgotuControlPrivateWorker::IgotuControlPrivateWorker(IgotuControlPrivate *pub) :
     p(pub)
@@ -116,7 +116,8 @@ void IgotuControlPrivateWorker::connect()
     connection.reset();
     image.clear();
 
-    const QString protocol = p->device.section(QLatin1Char(':'), 0, 0).toLower();
+    const QString protocol = p->device.section(QLatin1Char(':'), 0, 0)
+        .toLower();
     const QString name = p->device.section(QLatin1Char(':'), 1);
     if (protocol == QLatin1String ("image")) {
         image = QByteArray::fromBase64(name.toAscii());
@@ -205,15 +206,16 @@ void IgotuControlPrivateWorker::info()
                     if (!entry.isValid())
                         continue;
                     if (!printed) {
-                        status += tr("Schedule %1:").arg(plan) + QLatin1Char('\n');
+                        status += tr("Schedule %1:").arg(plan) +
+                            QLatin1Char('\n');
                         printed = true;
                     }
                     status += QLatin1String("  ") +
-                        tr("Start time: %1").arg(entry.startTime().toString(Qt::SystemLocaleDate)) +
-                        QLatin1Char('\n');
+                        tr("Start time: %1").arg(entry.startTime().toString
+                                (Qt::SystemLocaleDate)) + QLatin1Char('\n');
                     status += QLatin1String("  ") +
-                        tr("End time: %1").arg(entry.endTime().toString(Qt::SystemLocaleDate)) +
-                        QLatin1Char('\n');
+                        tr("End time: %1").arg(entry.endTime().toString
+                                (Qt::SystemLocaleDate)) + QLatin1Char('\n');
                     status += QLatin1String("  ") +
                         tr("Log interval: %1 s").arg(entry.logInterval()) +
                         QLatin1Char('\n');
@@ -221,7 +223,8 @@ void IgotuControlPrivateWorker::info()
                         status += QLatin1String("  ") +
                             tr("Interval change: above %1 km/h, use %2 s")
                             .arg(qRound(entry.intervalChangeSpeed()))
-                            .arg(entry.changedLogInterval()) + QLatin1Char('\n');
+                            .arg(entry.changedLogInterval()) +
+                            QLatin1Char('\n');
                     } else {
                         status += QLatin1String("  ") +
                             tr("Interval change: disabled") + QLatin1Char('\n');
@@ -231,7 +234,8 @@ void IgotuControlPrivateWorker::info()
         } else {
             status += tr("Schedule table: disabled") + QLatin1Char('\n');
             ScheduleTableEntry entry = igotuPoints.scheduleTableEntries(1)[0];
-            status += tr("Log interval: %1 s").arg(entry.logInterval()) + QLatin1Char('\n');
+            status += tr("Log interval: %1 s").arg(entry.logInterval()) +
+                QLatin1Char('\n');
             if (entry.isIntervalChangeEnabled()) {
                 status += tr("Interval change: above %1 km/h, use %2 s")
                         .arg(qRound(entry.intervalChangeSpeed()))
@@ -243,15 +247,15 @@ void IgotuControlPrivateWorker::info()
 
         status += tr("LEDs: %1").arg(igotuPoints.ledsEnabled() ? tr("enabled") :
                 tr("disabled")) + QLatin1Char('\n');
-        status += tr("Button: %1").arg(igotuPoints.isButtonEnabled() ? tr("enabled")
-                : tr("disabled")) + QLatin1Char('\n');
+        status += tr("Button: %1").arg(igotuPoints.isButtonEnabled() ?
+                tr("enabled") : tr("disabled")) + QLatin1Char('\n');
 
-        status += tr("Security version: %1").arg(igotuPoints.securityVersion()) +
-            QLatin1Char('\n');
+        status += tr("Security version: %1").arg(igotuPoints.securityVersion())
+            + QLatin1Char('\n');
         if (igotuPoints.securityVersion() == 0) {
-            status += tr("Password: %1, [%2]")
-                .arg(igotuPoints.isPasswordEnabled() ? tr("enabled") : tr("disabled"),
-                igotuPoints.password()) + QLatin1Char('\n');
+            status += tr("Password: %1, [%2]").arg
+                (igotuPoints.isPasswordEnabled() ? tr("enabled") :
+                 tr("disabled"), igotuPoints.password()) + QLatin1Char('\n');
         }
 
         emit infoFinished(status, contents);
@@ -330,25 +334,26 @@ void IgotuControlPrivateWorker::purge()
             for (unsigned i = blocks - 1; i > 0; --i) {
                 emit purgeBlocksFinished(blocks - i - 1, blocks);
                 if (purgeBlocks) {
-                    while (UnknownWriteCommand2(connection.get(), 0x0001).sendAndReceive() !=
-                            QByteArray(1, '\x00')) {
+                    while (UnknownWriteCommand2(connection.get(), 0x0001)
+                            .sendAndReceive() != QByteArray(1, '\x00')) {
                         // just wait, TODO: timeout
                     }
                 } else {
-                    if (ReadCommand(connection.get(), i * 0x1000, 0x10).sendAndReceive() !=
-                        QByteArray(0x10, '\xff'))
+                    if (ReadCommand(connection.get(), i * 0x1000, 0x10)
+                            .sendAndReceive() != QByteArray(0x10, '\xff'))
                         purgeBlocks = true;
                     else
                         continue;
                 }
                 UnknownWriteCommand1(connection.get(), 0x00).sendAndReceive();
-                WriteCommand(connection.get(), 0x20, i * 0x1000, QByteArray()).sendAndReceive();
+                WriteCommand(connection.get(), 0x20, i * 0x1000, QByteArray())
+                    .sendAndReceive();
             }
             if (purgeBlocks) {
                 UnknownPurgeCommand1(connection.get(), 0x1e).sendAndReceive();
                 UnknownPurgeCommand1(connection.get(), 0x1f).sendAndReceive();
-                while (UnknownWriteCommand2(connection.get(), 0x0001).sendAndReceive() !=
-                        QByteArray(1, '\x00')) {
+                while (UnknownWriteCommand2(connection.get(), 0x0001)
+                        .sendAndReceive() != QByteArray(1, '\x00')) {
                     // just wait, TODO: timeout
                 }
             }
@@ -377,7 +382,8 @@ void IgotuControlPrivateWorker::purge()
     p->semaphore.release();
 }
 
-void IgotuControlPrivateWorker::notify(QObject *object, const QByteArray &method)
+void IgotuControlPrivateWorker::notify(QObject *object,
+        const QByteArray &method)
 {
     QMetaObject::invokeMethod(object, method);
 }

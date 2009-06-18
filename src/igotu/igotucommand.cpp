@@ -84,11 +84,13 @@ unsigned IgotuCommandPrivate::sendCommand(const QByteArray &data)
     for (unsigned i = 0; i < pieces; ++i) {
         // TODO: check whether it is ok to purge the buffers before *all*
         // commands on Mac OS X
-        connection->send(command.mid(i * 8, 8), i == 0 && purgeBuffersBeforeSend);
+        connection->send(command.mid(i * 8, 8), i == 0 &&
+                purgeBuffersBeforeSend);
         responseSize = receiveResponseSize();
         if (responseSize < 0)
             throw IgotuDeviceError
-                (IgotuCommand::tr("Device responded with error code: %1").arg(responseSize));
+                (IgotuCommand::tr("Device responded with error code: %1")
+                 .arg(responseSize));
         if (responseSize != 0 && i + 1 < pieces)
             throw IgotuProtocolError
                 (IgotuCommand::tr("Non-empty intermediate reply packet: %1")
@@ -205,8 +207,10 @@ QByteArray IgotuCommand::sendAndReceive()
                 // ignore protocol errors if switched to NMEA mode
                 if (d->ignoreProtocolErrors) {
                     if (Verbose::verbose() > 0) {
-                        fprintf(stderr, "Command: %s\n", d->command.toHex().data());
-                        fprintf(stderr, "Failed protocol (ignored): %s\n", e.what());
+                        fprintf(stderr, "Command: %s\n",
+                                d->command.toHex().data());
+                        fprintf(stderr, "Failed protocol (ignored): %s\n",
+                                e.what());
                     }
                     return remainder;
                 }
@@ -214,7 +218,8 @@ QByteArray IgotuCommand::sendAndReceive()
                 ++protocolErrors;
                 if (protocolErrors <= 5) {
                     if (Verbose::verbose() > 0) {
-                        fprintf(stderr, "Command: %s\n", d->command.toHex().data());
+                        fprintf(stderr, "Command: %s\n",
+                                d->command.toHex().data());
                         fprintf(stderr, "Failed protocol: %s\n", e.what());
                     }
                     continue;
@@ -225,7 +230,8 @@ QByteArray IgotuCommand::sendAndReceive()
                 ++deviceErrors;
                 if (deviceErrors <= 3) {
                     if (Verbose::verbose() > 0) {
-                        fprintf(stderr, "Command: %s\n", d->command.toHex().data());
+                        fprintf(stderr, "Command: %s\n",
+                                d->command.toHex().data());
                         fprintf(stderr, "Device failure: %s\n", e.what());
                     }
                     continue;

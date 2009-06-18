@@ -34,13 +34,19 @@ class MainObjectPrivate : public QObject
     Q_OBJECT
 public Q_SLOTS:
     void on_control_infoStarted();
-    void on_control_infoFinished(const QString &info, const QByteArray &contents);
+    void on_control_infoFinished(const QString &info,
+            const QByteArray &contents);
     void on_control_infoFailed(const QString &message);
 
     void on_control_contentsStarted();
     void on_control_contentsBlocksFinished(uint num, uint total);
     void on_control_contentsFinished(const QByteArray &contents, uint count);
     void on_control_contentsFailed(const QString &message);
+
+    void on_control_purgeStarted();
+    void on_control_purgeBlocksFinished(uint num, uint total);
+    void on_control_purgeFinished();
+    void on_control_purgeFailed(const QString &message);
 
 public:
     MainObject *p;
@@ -135,10 +141,12 @@ void MainObjectPrivate::on_control_contentsStarted()
 void MainObjectPrivate::on_control_contentsBlocksFinished(uint num, uint total)
 {
     if (Verbose::verbose() >= 0 && num > 0)
-        fprintf(stderr, "%s\n", qPrintable(tr("Retrieved block %1/%2").arg(num).arg(total)));
+        fprintf(stderr, "%s\n",
+                qPrintable(tr("Retrieved block %1/%2").arg(num).arg(total)));
 }
 
-void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents, uint count)
+void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
+        uint count)
 {
     try {
         if (!raw.isEmpty()) {
@@ -169,7 +177,8 @@ void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents, 
                 printf("  Flags 0x%02x\n", igotuPoint.flags());
                 printf("  Timeout %u s\n", igotuPoint.timeout());
                 printf("  MSVs_QCN %u\n", igotuPoint.msvsQcn());
-                printf("  Weight criteria 0x%02x\n", igotuPoint.weightCriteria());
+                printf("  Weight criteria 0x%02x\n",
+                        igotuPoint.weightCriteria());
                 printf("  Sleep time %u\n", igotuPoint.sleepTime());
             }
         } else {
@@ -184,6 +193,31 @@ void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents, 
 }
 
 void MainObjectPrivate::on_control_contentsFailed(const QString &message)
+{
+    fprintf(stderr, "%s\n", qPrintable(tr
+                ("Unable to connect to gps tracker: %1").arg(message)));
+    QCoreApplication::quit();
+}
+
+void MainObjectPrivate::on_control_purgeStarted()
+{
+    if (Verbose::verbose() >= 0)
+        fprintf(stderr, "%s\n", qPrintable(tr("Purging data...")));
+}
+
+void MainObjectPrivate::on_control_purgeBlocksFinished(uint num, uint total)
+{
+    if (Verbose::verbose() >= 0 && num > 0)
+        fprintf(stderr, "%s\n",
+                qPrintable(tr("Purged block %1/%2").arg(num).arg(total)));
+}
+
+void MainObjectPrivate::on_control_purgeFinished()
+{
+    QCoreApplication::quit();
+}
+
+void MainObjectPrivate::on_control_purgeFailed(const QString &message)
 {
     fprintf(stderr, "%s\n", qPrintable(tr
                 ("Unable to connect to gps tracker: %1").arg(message)));
@@ -223,6 +257,11 @@ void MainObject::save(bool details, const QString &raw)
     d->raw = raw;
 
     d->control->contents();
+}
+
+void MainObject::purge()
+{
+    d->control->purge();
 }
 
 #include "mainobject.moc"
