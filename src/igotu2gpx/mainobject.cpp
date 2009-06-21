@@ -162,8 +162,8 @@ void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
                 printf("Record %u\n", ++index);
                 if (igotuPoint.isWayPoint())
                     printf("  Waypoint\n");
-                printf("  Date %s\n", qPrintable(igotuPoint.dateTime()
-                            .toString(Qt::ISODate)));
+                printf("  Date %s\n", qPrintable(igotuPoint.dateTimeString
+                            (control->utcOffset())));
                 printf("  Latitude %.6f\n", igotuPoint.latitude());
                 printf("  Longitude %.6f\n", igotuPoint.longitude());
                 printf("  Elevation %.1f m\n", igotuPoint.elevation());
@@ -183,7 +183,7 @@ void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
             }
         } else {
             IgotuPoints igotuPoints(contents, count);
-            printf("%s", qPrintable(igotuPoints.gpx()));
+            printf("%s", qPrintable(igotuPoints.gpx(control->utcOffset())));
         }
     } catch (const std::exception &e) {
         fprintf(stderr, "%s\n", qPrintable(tr("Unable to save data: %1")
@@ -226,7 +226,7 @@ void MainObjectPrivate::on_control_purgeFailed(const QString &message)
 
 // MainObject ==================================================================
 
-MainObject::MainObject(const QString &device) :
+MainObject::MainObject(const QString &device, int utcOffset) :
     d(new MainObjectPrivate)
 {
     d->p = this;
@@ -238,6 +238,8 @@ MainObject::MainObject(const QString &device) :
 
     if (!device.isEmpty())
         d->control->setDevice(device);
+
+    d->control->setUtcOffset(utcOffset);
 }
 
 MainObject::~MainObject()

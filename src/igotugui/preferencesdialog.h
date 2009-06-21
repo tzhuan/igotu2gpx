@@ -36,12 +36,14 @@ public:
     ~PreferencesDialog();
 
     static QString currentDevice();
+    static int currentUtcOffset();
 
 protected:
     boost::scoped_ptr<PreferencesDialogPrivate> d;
 
 Q_SIGNALS:
     void deviceChanged(const QString &device);
+    void utcOffsetChanged(int seconds);
 };
 
 #endif

@@ -42,6 +42,9 @@ public:
     bool isWayPoint() const;
 
     QDateTime dateTime() const;
+    // offset in seconds
+    QString dateTimeString(int utcOffset = 0) const;
+
     // in degrees
     double longitude() const;
     // in degrees
@@ -102,7 +105,7 @@ public:
     ~IgotuPoints();
 
     QList<IgotuPoint> points() const;
-    QString gpx() const;
+    QString gpx(int utcOffset = 0) const;
 
     bool isValid() const;
 

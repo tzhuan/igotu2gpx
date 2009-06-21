@@ -42,6 +42,9 @@ public:
     // default device for the platform
     static QString defaultDevice();
 
+    int utcOffset() const;
+    static int defaultUtcOffset();
+
     // may throw
     void info();
     // may throw
@@ -58,6 +61,7 @@ public:
 
 public Q_SLOTS:
     void setDevice(const QString &device);
+    void setUtcOffset(int seconds);
 
 Q_SIGNALS:
     void infoStarted();

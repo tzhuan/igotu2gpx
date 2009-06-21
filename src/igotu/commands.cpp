@@ -32,8 +32,7 @@ namespace igotu
 NmeaSwitchCommand::NmeaSwitchCommand(DataConnection *connection, bool enable) :
     IgotuCommand(connection)
 {
-    QByteArray command(15, 0);
-    command.replace(0, 3, "\x93\x01\x01");
+    QByteArray command("\x93\x01\x01\0\0\0\0\0\0\0\0\0\0\0\0", 15);
     command[3] = enable ? '\x00' : '\x03';
     setCommand(command);
 
@@ -48,8 +47,7 @@ NmeaSwitchCommand::NmeaSwitchCommand(DataConnection *connection, bool enable) :
 IdentificationCommand::IdentificationCommand(DataConnection *connection) :
     IgotuCommand(connection)
 {
-    QByteArray command(15, 0);
-    command.replace(0, 2, "\x93\x0a");
+    QByteArray command("\x93\x0a\0\0\0\0\0\0\0\0\0\0\0\0\0", 15);
     setCommand(command);
 }
 
@@ -82,8 +80,7 @@ QString IdentificationCommand::firmwareVersion() const
 ModelCommand::ModelCommand(DataConnection *connection) :
     IgotuCommand(connection)
 {
-    QByteArray command(15, 0);
-    command.replace(0, 7, "\x93\x05\x04\x00\x03\x01\x9F");
+    QByteArray command("\x93\x05\x04\x00\x03\x01\x9f\0\0\0\0\0\0\0\0", 15);
     setCommand(command);
 }
 
@@ -92,7 +89,7 @@ QByteArray ModelCommand::sendAndReceive()
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (result.size() < 3)
         throw IgotuError(tr("Response too short"));
-    const unsigned part1 = qFromLittleEndian<quint16>
+    const unsigned part1 = qFromBigEndian<quint16>
         (reinterpret_cast<const uchar*>(result.data()));
     const unsigned part2 =
         *reinterpret_cast<const uchar*>(result.data() + 2);
@@ -103,12 +100,12 @@ QByteArray ModelCommand::sendAndReceive()
     if (part1 == 0xC220) {
         switch (part2) {
         case 0x14:
-            name = QLatin1String("GT120");
-            id = Gt120;
-            break;
-        case 0x15:
             name = QLatin1String("GT200");
             id = Gt200;
+            break;
+        case 0x15:
+            name = QLatin1String("GT120");
+            id = Gt120;
             break;
         }
     }
@@ -133,9 +130,7 @@ CountCommand::CountCommand(DataConnection *connection,
     IgotuCommand(connection),
     gt120BugWorkaround(gt120BugWorkaround)
 {
-    QByteArray command(15, 0);
-    command.replace(0, 3, "\x93\x0b\x03");
-    command.replace(4, 1, "\x1d");
+    QByteArray command("\x93\x0b\x03\x00\x1d\0\0\0\0\0\0\0\0\0\0", 15);
     setCommand(command);
 }
 
@@ -170,11 +165,9 @@ ReadCommand::ReadCommand(DataConnection *connection, unsigned pos,
     IgotuCommand(connection),
     size(size)
 {
-    QByteArray command(15, 0);
-    command.replace(0, 3, "\x93\x05\x07");
+    QByteArray command("\x93\x05\x07\x00\x00\x04\x03\0\0\0\0\0\0\0\0", 15);
     command[3] = (size >> 0x08) & 0xff;
     command[4] = (size >> 0x00) & 0xff;
-    command.replace(5, 2, "\x04\x03");
     command[7] = (pos >> 0x10) & 0xff;
     command[8] = (pos >> 0x08) & 0xff;
     command[9] = (pos >> 0x00) & 0xff;
@@ -201,11 +194,9 @@ WriteCommand::WriteCommand(DataConnection *connection, unsigned writeMode,
     IgotuCommand(connection),
     data(data)
 {
-    QByteArray command(15, 0);
-    command.replace(0, 3, "\x93\x06\x07");
+    QByteArray command("\x93\x06\x07\x00\x00\x04\0\0\0\0\0\0\0\0\0", 15);
     command[3] = (data.size() >> 0x08) & 0xff;
     command[4] = (data.size() >> 0x00) & 0xff;
-    command[5] = '\x04';
     command[6] = writeMode;
     command[7] = (pos >> 0x10) & 0xff;
     command[8] = (pos >> 0x08) & 0xff;
@@ -227,8 +218,7 @@ UnknownWriteCommand1::UnknownWriteCommand1(DataConnection *connection,
         unsigned mode) :
     IgotuCommand(connection)
 {
-    QByteArray command(15, 0);
-    command.replace(0, 7, "\x93\x06\x04\x00\x00\x01\x06");
+    QByteArray command("\x93\x06\x04\x00\x00\x01\x06\0\0\0\0\0\0\0\0", 15);
     command[4] = mode;
     setCommand(command);
 }
@@ -248,8 +238,7 @@ UnknownWriteCommand2::UnknownWriteCommand2(DataConnection *connection,
     IgotuCommand(connection),
     size(size)
 {
-    QByteArray command(15, 0);
-    command.replace(0, 7, "\x93\x05\x04\x00\x00\x01\x05");
+    QByteArray command("\x93\x05\x04\x00\x00\x01\x05\0\0\0\0\0\0\0\0", 15);
     command[3] = (size >> 0x08) & 0xff;
     command[4] = (size >> 0x00) & 0xff;
     setCommand(command);
@@ -269,8 +258,7 @@ UnknownPurgeCommand1::UnknownPurgeCommand1(DataConnection *connection,
         unsigned mode) :
     IgotuCommand(connection)
 {
-    QByteArray command(15, 0);
-    command.replace(0, 3, "\x93\x0c\x00");
+    QByteArray command("\x93\x0c\0\0\0\0\0\0\0\0\0\0\0\0\0", 15);
     command[3] = mode;
     setCommand(command);
 }

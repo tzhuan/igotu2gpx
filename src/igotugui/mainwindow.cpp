@@ -143,6 +143,8 @@ void MainWindowPrivate::on_actionPreferences_activated()
 
         QObject::connect(preferences, SIGNAL(deviceChanged(QString)),
                 control, SLOT(setDevice(QString)));
+        QObject::connect(preferences, SIGNAL(utcOffsetChanged(int)),
+                control, SLOT(setUtcOffset(int)));
 
         preferences->show();
     } else {
@@ -197,7 +199,7 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
 
     try {
         IgotuPoints igotuPoints(contents, count);
-        QByteArray gpxData = igotuPoints.gpx().toUtf8();
+        QByteArray gpxData = igotuPoints.gpx(control->utcOffset()).toUtf8();
 
         QString filePath = QFileDialog::getSaveFileName(p, tr("Save GPS data"),
                 QDateTime::currentDateTime().toString(QLatin1String
@@ -310,6 +312,7 @@ MainWindow::MainWindow() :
     connectSlotsByNameToPrivate(this, d.get());
 
     d->control->setDevice(PreferencesDialog::currentDevice());
+    d->control->setUtcOffset(PreferencesDialog::currentUtcOffset());
 
     d->initialConnect = true;
     QTimer::singleShot(0, d->ui->actionInfo, SLOT(trigger()));

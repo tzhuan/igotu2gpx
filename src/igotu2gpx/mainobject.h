@@ -29,7 +29,7 @@ class MainObject : public QObject
 {
     Q_OBJECT
 public:
-    MainObject(const QString &device);
+    MainObject(const QString &device, int utcOffset);
     ~MainObject();
 
     void info(const QByteArray &contents = QByteArray());

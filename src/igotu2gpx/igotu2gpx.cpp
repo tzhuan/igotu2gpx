@@ -54,6 +54,7 @@ int main(int argc, char *argv[])
     // Command line parsing (uses C++ output)
 
     QString rawPath, action;
+    int offset = 0;
 
     po::options_description options("Options");
     options.add_options()
@@ -79,6 +80,9 @@ int main(int argc, char *argv[])
 
         ("verbose,v",
          "increase the amount of informative messages")
+        ("utc-offset", po::value<int>(&offset),
+         "time zone offset from UTC in seconds")
+
         ("action", po::value<QString>(&action),
          "info: show general info\n"
          "dump: dump the trackpoints\n"
@@ -136,7 +140,7 @@ int main(int argc, char *argv[])
 
         Verbose::setVerbose(variables.count("verbose"));
 
-        MainObject mainObject(device);
+        MainObject mainObject(device, offset);
 
         if (action == QLatin1String("info")) {
             mainObject.info();

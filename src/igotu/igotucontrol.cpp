@@ -93,6 +93,7 @@ public:
     EventThread thread;
     IgotuControlPrivateWorker worker;
     QString device;
+    int utcOffset;
 };
 
 // IgotuControlPrivate =========================================================
@@ -395,6 +396,7 @@ IgotuControl::IgotuControl(QObject *parent) :
     d(new IgotuControlPrivate)
 {
     setDevice(defaultDevice());
+    setUtcOffset(defaultUtcOffset());
 
     connect(&d->worker, SIGNAL(infoStarted()),
              this, SIGNAL(infoStarted()));
@@ -461,6 +463,21 @@ QString IgotuControl::defaultDevice()
     return QLatin1String("usb:0df7:0900");
 #endif
     return QLatin1String("unknown");
+}
+
+void IgotuControl::setUtcOffset(int utcOffset)
+{
+    d->utcOffset = utcOffset;
+}
+
+int IgotuControl::utcOffset() const
+{
+    return d->utcOffset;
+}
+
+int IgotuControl::defaultUtcOffset()
+{
+    return 0;
 }
 
 bool IgotuControl::queuesEmpty()

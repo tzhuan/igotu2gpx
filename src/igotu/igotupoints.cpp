@@ -134,6 +134,21 @@ QDateTime IgotuPoint::dateTime() const
          Qt::UTC);
 }
 
+QString IgotuPoint::dateTimeString(int utcOffset) const
+{
+    const QDateTime date = dateTime().addSecs(utcOffset);
+
+    QString result = date.toString(QLatin1String("yyyy-MM-dd'T'hh:mm:ss.zzz"));
+    if (utcOffset == 0)
+        result += QLatin1Char('Z');
+    else
+        result += QString::fromLatin1("%1%2:%3")
+            .arg(utcOffset < 0 ? QLatin1Char('-') : QLatin1Char('+'))
+            .arg((utcOffset / 3600) % 24, 2, 10, QLatin1Char('0'))
+            .arg((utcOffset / 60) % 60, 2, 10, QLatin1Char('0'));
+    return result;
+}
+
 bool IgotuPoint::isWayPoint() const
 {
     return record[0] & 0x04;
@@ -301,7 +316,7 @@ QString IgotuPoints::password() const
     return QString::fromUtf16(result.data(), result.size());
 }
 
-QString IgotuPoints::gpx() const
+QString IgotuPoints::gpx(int utcOffset) const
 {
     QString result;
     QTextStream out(&result);
@@ -325,8 +340,11 @@ QString IgotuPoints::gpx() const
             << "lon=\"" << point.longitude() << "\">\n"
             << qSetRealNumberPrecision(2)
             << xmlIndent(2) << "<ele>" << point.elevation() << "</ele>\n"
-            << xmlIndent(2) << "<time>" << point.dateTime().toString
-                (QLatin1String("yyyy-MM-dd'T'hh:mm:ss.zzz'Z'")) << "</time>\n"
+            << xmlIndent(2) << "<time>" << point.dateTimeString(utcOffset)
+                << "</time>\n"
+            // TODO: must be the number of satellites used, not seen -> check
+//            << xmlIndent(4) << "<sat>" << point.satellites().count()
+//                << "</sat>\n"
             << xmlIndent(1) << "</wpt>\n";
     }
 
@@ -341,8 +359,11 @@ QString IgotuPoints::gpx() const
             << "lon=\"" << point.longitude() << "\">\n"
             << qSetRealNumberPrecision(2)
             << xmlIndent(4) << "<ele>" << point.elevation() << "</ele>\n"
-            << xmlIndent(4) << "<time>" << point.dateTime().toString
-                (QLatin1String("yyyy-MM-dd'T'hh:mm:ss.zzz'Z'")) << "</time>\n"
+            << xmlIndent(4) << "<time>" << point.dateTimeString(utcOffset)
+                << "</time>\n"
+            // TODO: must be the number of satellites used, not seen -> check
+//            << xmlIndent(4) << "<sat>" << point.satellites().count()
+//                << "</sat>\n"
             << xmlIndent(4) << "<speed>" << point.speed() << "</speed>\n"
             << xmlIndent(3) << "</trkpt>\n";
     }
