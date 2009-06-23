@@ -1,3 +1,6 @@
+Included code
+-------------
+
 contrib/create-dmg
 ~~~~~~~~~~~~~~~~~~
 
@@ -31,3 +34,36 @@ src/igotugui/qticonloader.*
 - Licensed under the same conditions as Qt, which includes
   * GNU Lesser General Public License version 2.1
   * GNU General Public License version 3
+
+Linked libraries
+----------------
+
+Qt
+~~
+
+- Cross-platform application and UI framework
+- Available at http://www.qtsoftware.com/
+- Licenses include
+  * GNU Lesser General Public License version 2.1
+  * GNU General Public License version 3
+
+boost
+~~~~~
+
+- Peer-reviewed portable C++ source libraries
+- Available at http://www.boost.org/
+- Licensed under the Boost Software License, version 1
+
+libusb
+~~~~~~
+
+- User level access to USB devices
+- Available at http://libusb.sourceforge.net/
+- Licensed under the GNU General Public License, version 2 or later
+
+libmarble
+~~~~~~~~~
+
+- Virtual globe and world atlas
+- Available at http://edu.kde.org/marble/
+- Licensed under the GNU Lesser General Public License, version 2.1
