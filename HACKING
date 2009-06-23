@@ -182,17 +182,18 @@ following pseudo code:
 
 Pseudo code for a GT-120 purge:
   purge = false
-  for i = 0x1ff000; i > 0; i -= 0x1000:
+  blocks = 0x200
+  for i = blocks - 1; i > 0; --i:
     if purge:
       while UnknownWriteCommand2(0x0001) != 0x00:
         pass
     else:
-      if ReadCommand(i, 0x10) != rep(0xff, 0x10):
+      if ReadCommand(i * 0x1000, 0x10) != rep(0xff, 0x10):
         purge = true
       else:
         continue
     UnknownWriteCommand1(0x00)
-    WriteCommand(0x20, i, '')
+    WriteCommand(0x20, i * 0x1000, '')
   if purge:
     UnknownPurgeCommand1(0x1e)
     UnknownPurgeCommand1(0x1f)
@@ -203,17 +204,18 @@ Pseudo code for a GT-120 purge:
 
 Pseudo code for a GT-200 purge:
   purge = false
-  for i = 0x0ff000; i > 0; i -= 0x1000:
+  blocks = 0x100
+  for i = blocks - 1; i > 0; --i:
     if purge:
       while UnknownWriteCommand2(0x0001) != 0x00:
         pass
     else:
-      if ReadCommand(i, 0x10) != rep(0xff, 0x10):
+      if ReadCommand(i * 0x1000, 0x10) != rep(0xff, 0x10):
         purge = true
       else:
         continue
     UnknownWriteCommand1(0x00)
-    WriteCommand(0x20, i, '')
+    WriteCommand(0x20, i * 0x1000, '')
   UnknownPurgeCommand2()
   if purge:
       while UnknownWriteCommand2(0x0001) != 0x00:

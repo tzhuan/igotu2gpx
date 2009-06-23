@@ -134,41 +134,51 @@ while len(parts) > 0:
         #                (responsesize, len(response) - 3))
         #    return query, response[3:]
 
-        # NMEA
+        # NmeaSwitchCommand
         if query.startswith('\x93\x01\x01'):
-            print 'NMEA disabled: %02x (%s, returned %d)' % (ord(query[3]),
-                    format_query(query, 4), size)
-        # Identification
+            print 'NmeaSwitchCommand(enable = %d)' % (query[3] == 0)
+        # IdentificationCommand
         elif query.startswith('\x93\x0a'):
-            idresponse = unpack_from('<IBB4s', response)
-            print 'Identification: s/n %d, version %u.%02u, unknown %s (%s, returned %d)' % (idresponse[0],
-                    idresponse[1], idresponse[2], idresponse[3].encode('hex'),
-                    format_query(query, 2), size)
-        # Count
+            r = unpack_from('<IBB4s', response)
+            print 'IdentificationCommand()'
+            print '  serialNumber() -> %d' % (r[0])
+            print '  firmwareVersion() -> %u.%02u' % (r[1], r[2])
+        # CountCommand
         elif query.startswith('\x93\x0b\x03') and query[4] == '\x1d':
-            countresponse = unpack_from('>xH', response)
-            print 'Trackpoint count: count %d (%s, returned %d)' % (
-                    countresponse[0], format_query(query, 5), size)
-        # Memory read
-        elif query.startswith('\x93\x0b'):
-            readquery = unpack_from('>xxBH', query)
-            print 'Memory read: pos %04x, size %02x (%s, returned %d)' % (
-                    readquery[1], readquery[0],
-                    format_query(query, 5), size)
-        # Read
+            r = unpack_from('>xH', response)
+            print 'CountCommand()'
+            print '  trackPointCount() -> %d' % (r[0])
+        # ModelCommand
+        elif query.startswith('\x93\x05\x04\x00\x03\x01\x9f'):
+            r = unpack_from('>BH', response)
+            print 'ModelCommand()'
+            print '  modelName() -> 0x%06x' % (r[0] * 0x10000 + r[1])
+        # ReadCommand
         elif query.startswith('\x93\x05\x07') and query[5:7] == '\x04\x03':
-            readquery = unpack_from('>xxxHxxBH', query)
-            print 'Block read: pos %06x, size %04x (%s, returned %d)' % (readquery[1] *
-                    0x10000 + readquery[2], readquery[0],
-                    format_query(query, 10), size)
-        # Write
-        elif query.startswith('\x93\x06\x07') and query[5:7] == '\x04\x02':
-            writequery = unpack_from('>xxxHxxxH', query)
-            print 'Block write: pos %04x, size %04x (%s, returned %d)' % (writequery[1],
-                    writequery[0], format_query(query, 10), size)
-            rawdatapackages = (writequery[0] + 6) / 7
+            r = unpack_from('>xxxHxxBH', query)
+            print 'ReadCommand(pos = 0x%06x, size = 0x%04x)' % (r[1] * 0x10000 +
+                    r[2], r[0])
+        # UnknownPurgeCommand1
+        elif query.startswith('\x93\x0c\x00'):
+            r = unpack_from('>xxxB', query)
+            print 'UnknownPurgeCommand1(mode = 0x%02x)' % (r[0])
+        # UnknownWriteCommand1
+        elif query.startswith('\x93\x06\x04\x00') and query[5:7] == '\x01\x06':
+            r = unpack_from('>xxxxB', query)
+            print 'UnknownWriteCommand1(mode = 0x%02x)' % (r[0])
+        # WriteCommand
+        elif query.startswith('\x93\x06\x07') and query[5] == '\x04':
+            r = unpack_from('>xxxHxBBH', query)
+            print 'WriteCommand(mode = 0x%02x, pos = 0x%06x, size = 0x%04x)' % (r[1],
+                    r[2] * 0x1000 + r[3], r[0])
+            rawdatapackages = (r[0] + 6) / 7
+        # UnknownWriteCommand2
+        elif query.startswith('\x93\x05\x04') and query[5:7] == '\x01\x05':
+            r = unpack_from('>xxxH', query)
+            print 'UnknownWriteCommand2(size = 0x%04x)' % (r[0])
         else:
             print 'Unknown query: %s, returned %d' % (format_query(query, 15),
                     size)
+        print '  %s, returned %d' % (format_query(query, 15), size)
     if len(response) > 0:
         print format_hex(response),
