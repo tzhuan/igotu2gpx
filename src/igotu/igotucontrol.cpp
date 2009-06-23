@@ -124,7 +124,7 @@ void IgotuControlPrivateWorker::connect()
         image = QByteArray::fromBase64(name.toAscii());
 #ifdef Q_OS_WIN32
     } else if (protocol == QLatin1String("serial")) {
-        connection.reset(new Win32SerialConnection(name.toUint()));
+        connection.reset(new Win32SerialConnection(name.toUInt()));
 #elif defined(Q_OS_LINUX) || defined(Q_OS_MACX)
     } else if (protocol == QLatin1String("usb")) {
         connection.reset(new LibusbConnection(name.section(QLatin1Char(':'), 0,

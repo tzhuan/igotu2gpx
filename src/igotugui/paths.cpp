@@ -136,6 +136,7 @@ QStringList Paths::iconDirectories()
     result << relativeToBaseDirectory
            (QStringList() << QLatin1String("/share/icons/hicolor"),
             QStringList() << QLatin1String("/data/icons"));
+                          << QLatin1String("/contrib/tango/icons")); 
     result << directoriesFromEnvironment("XDG_DATA_DIRS",
             QLatin1String("/usr/local/share:/usr/share"),
             QLatin1String("/icons/hicolor"));
@@ -147,7 +148,8 @@ QStringList Paths::iconDirectories()
     result << relativeToBaseDirectory
            (QStringList() << QLatin1String("/share/icons/hicolor")
                           << QLatin1String("/Resources/icons"),
-            QStringList() << QLatin1String("/data/icons"));
+            QStringList() << QLatin1String("/data/icons")
+                          << QLatin1String("/contrib/tango/icons")); 
     result << directoriesFromEnvironment("XDG_DATA_DIRS",
             QLatin1String("/usr/local/share:/usr/share"),
             QLatin1String("/icons/hicolor"));
@@ -158,7 +160,8 @@ QStringList Paths::iconDirectories()
             QLatin1String("/icons");
     result << relativeToBaseDirectory
            (QStringList() << QLatin1String("/icons"),
-            QStringList() << QLatin1String("/data/icons"));
+            QStringList() << QLatin1String("/data/icons")
+                          << QLatin1String("/contrib/tango/icons"));
 #else
 #error FIXME No idea where to find icon directories on this platform
 #endif

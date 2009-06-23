@@ -5,6 +5,8 @@ include($$BASEDIR/clebs.pri)
 
 QT *= gui
 
+win32:LIBS *= -lshell32
+
 SOURCES *= \
     iconstorage.cpp \
     igotugui.cpp \
