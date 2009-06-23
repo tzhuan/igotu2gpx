@@ -128,7 +128,7 @@ void MainObjectPrivate::on_control_infoFinished(const QString &info,
 void MainObjectPrivate::on_control_infoFailed(const QString &message)
 {
     fprintf(stderr, "%s\n", qPrintable(tr
-                ("Unable to connect to gps tracker: %1").arg(message)));
+                ("Unable to obtain info from GPS tracker: %1").arg(message)));
     QCoreApplication::quit();
 }
 
@@ -195,7 +195,7 @@ void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
 void MainObjectPrivate::on_control_contentsFailed(const QString &message)
 {
     fprintf(stderr, "%s\n", qPrintable(tr
-                ("Unable to connect to gps tracker: %1").arg(message)));
+                ("Unable to obtain trackpoints from GPS tracker: %1").arg(message)));
     QCoreApplication::quit();
 }
 
@@ -220,7 +220,7 @@ void MainObjectPrivate::on_control_purgeFinished()
 void MainObjectPrivate::on_control_purgeFailed(const QString &message)
 {
     fprintf(stderr, "%s\n", qPrintable(tr
-                ("Unable to connect to gps tracker: %1").arg(message)));
+                ("Unable to purge GPS tracker: %1").arg(message)));
     QCoreApplication::quit();
 }
 

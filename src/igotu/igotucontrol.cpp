@@ -336,9 +336,12 @@ void IgotuControlPrivateWorker::purge()
             for (unsigned i = blocks - 1; i > 0; --i) {
                 emit purgeBlocksFinished(blocks - i - 1, blocks);
                 if (purgeBlocks) {
-                    while (UnknownWriteCommand2(connection.get(), 0x0001)
-                            .sendAndReceive() != QByteArray(1, '\x00')) {
-                        // just wait, TODO: timeout
+                    for (unsigned retries = 10; retries > 0; --retries) {
+                        if (UnknownWriteCommand2(connection.get(), 0x0001)
+                                .sendAndReceive() == QByteArray(1, '\x00'))
+                            break;
+                        if (retries == 1)
+                            throw IgotuError(tr("Timeout during purge"));
                     }
                 } else {
                     if (ReadCommand(connection.get(), i * 0x1000, 0x10)
@@ -354,22 +357,28 @@ void IgotuControlPrivateWorker::purge()
             if (purgeBlocks) {
                 UnknownPurgeCommand1(connection.get(), 0x1e).sendAndReceive();
                 UnknownPurgeCommand1(connection.get(), 0x1f).sendAndReceive();
-                while (UnknownWriteCommand2(connection.get(), 0x0001)
-                        .sendAndReceive() != QByteArray(1, '\x00')) {
-                    // just wait, TODO: timeout
+                for (unsigned retries = 10; retries > 0; --retries) {
+                    if (UnknownWriteCommand2(connection.get(), 0x0001)
+                            .sendAndReceive() == QByteArray(1, '\x00'))
+                        break;
+                    if (retries == 1)
+                        throw IgotuError(tr("Timeout during purge"));
                 }
             }
             UnknownPurgeCommand1(connection.get(), 0x1e).sendAndReceive();
             UnknownPurgeCommand1(connection.get(), 0x1f).sendAndReceive();
             emit purgeBlocksFinished(blocks, blocks);
             break; }
-        case ModelCommand::Gt200: {
-            // TODO: better error message
-            throw IgotuError(tr("Unable to purge this device model"));
+        case ModelCommand::Gt200:
+            // fallthrough
+        default: {
+            throw IgotuError(tr("%1: No purge support available. If you have "
+                        "time and feel adventurous, create a bug report at "
+                        "https://bugs.launchpad.net/igotu2gpx/+filebug, and "
+                        "follow the steps at "
+                        "https://answers.launchpad.net/igotu2gpx/+faq/480.")
+                    .arg(model.modelName()));
             break; }
-        default:
-            // TODO: better error message
-            throw IgotuError(tr("Unable to purge this device model"));
         }
 
         NmeaSwitchCommand(connection.get(), true).sendAndReceive();

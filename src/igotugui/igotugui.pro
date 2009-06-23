@@ -7,6 +7,8 @@ QT *= gui
 
 win32:LIBS *= -lshell32
 
+# TODO: windows icon file
+
 SOURCES *= \
     iconstorage.cpp \
     igotugui.cpp \

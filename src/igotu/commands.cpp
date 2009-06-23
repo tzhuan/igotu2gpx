@@ -100,11 +100,11 @@ QByteArray ModelCommand::sendAndReceive()
     if (part1 == 0xC220) {
         switch (part2) {
         case 0x14:
-            name = QLatin1String("GT200");
+            name = QLatin1String("GT-200");
             id = Gt200;
             break;
         case 0x15:
-            name = QLatin1String("GT120");
+            name = QLatin1String("GT-120");
             id = Gt120;
             break;
         }
