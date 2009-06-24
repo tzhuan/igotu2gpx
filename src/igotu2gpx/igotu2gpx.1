@@ -30,11 +30,12 @@ igotu2gpx \- command line interface ot the i-gotU gps trackers
 .PP
 \fBigotu2gpx\fP gives access to the i-gotU USB GPS trackers via serial port
 (Windows) or libusb (Linux). It is possible to show the configuration of a GPS
-tracker, dump the internal flash memory and to export tracks and waypoints in
-gpx format.
+tracker, export tracks and waypoints in GPX format and dump and purge the
+internal flash memory.
 .TP
 \fB\-\-action\fR \fIaction\fR
-show general info (info), dump the trackpoints (dump) or show the config changes (diff)
+show general info (info), dump the trackpoints (dump), purge all tracks from
+the GPS tracker (purge) or show the config changes (diff)
 .TP
 \fB\-u\fR, \fB\-\-usb\-device\fR \fIvendor:product\fR
 connect via usb to the device specified by vendor:product (this is the default
@@ -49,13 +50,16 @@ instead of connecting to the gps tracker, use the specified image file (saved
 by "dump \-\-raw")
 .TP
 \fB\-\-gpx\fR
-dump in gpx format (this is the default)
+dump in GPX format (this is the default)
 .TP
 \fB\-\-details\fR
 dump a detailed representation of the track
 .TP
 \fB\-\-raw\fR \fIfile\fR
 dump the raw flash contents of the gps tracker
+.TP
+\fB\-\-utc\-offset\fR \fIseconds\fR
+time zone offset from UTC in seconds for the GPX export
 .TP
 \fB\-\-help\fR
 help message
@@ -71,9 +75,14 @@ table, recording interval settings and the password used:
     igotu2gpx info
 .fi
 .PP
-Dump all tracks and waypoints on a GPS tracker in gpx format:
+Dump all tracks and waypoints on a GPS tracker in GPX format:
 .nf
     igotu2gpx dump > track.gpx
+.fi
+.PP
+Remove all trackpoints from the GPS tracker:
+.nf
+    igotu2gpx purge
 .fi
 .PP
 Dump the complete flash memory of a GPS tracker to a file, and use it later
@@ -101,7 +110,7 @@ something like /dev/ttyUSB0. Do this before you plug the device in:
         sudo tee /sys/bus/usb-serial/drivers/navman/new_id
 .fi
 and then plug your device in. You now have read-only access to the device and
-you can use it as an nmea data source for gpsd.
+you can use it as an NMEA data source for gpsd.
 
 .SH AUTHOR
 .PP

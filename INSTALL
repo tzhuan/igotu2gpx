@@ -1,7 +1,11 @@
+Install instructions
+====================
+
 Dependencies
 ------------
 
 To compile igotu2gpx, you need:
+
 - qt4 (http://www.qtsoftware.com/)
 - boost (http://www.boost.org/)
 - boost-program-options (http://www.boost.org/, included with boost)
@@ -11,37 +15,60 @@ To compile igotu2gpx, you need:
   installation)
 
 On a Ubuntu system, this should get you the dependencies:
+----
     sudo aptitude install libqt4-dev libboost-dev libboost-program-options-dev \
         libusb-dev chrpath
+----
 
 Compiling
 ---------
 
+Linux
+~~~~~
+
 On a Linux system, you can compile with:
+----
     qmake && make && sudo make install
+----
 
 If you get error messages about "Unknown test functions" from qmake, try
 qmake-qt4 instead of qmake.
 
+If you are on a 64bit system and your distributor ships 64bit libraries in
+/lib64 and /usr/lib64, use "qmake LIBDIR=/usr/local/lib64".
+
 If you use a compiler older than gcc 4.0.0, use "qmake CLEBS=novisibility".
+
+Mac OS X
+~~~~~~~~
 
 On a Mac OS X system, a bit more work is necessary. Copy the file
 localconfig-template.pri to localconfig.pri, uncomment the lines with macx:...
 and adjust the paths so that they match your installation. Afterwards, try:
+----
     qmake -spec macx-g++ && make && sudo make install
+----
 which should provide you with a working installation in /usr/local.
 
-On Microsoft Windows with MinGW, do something similar. Copy the file
+Microsoft Windows
+~~~~~~~~~~~~~~~~~
+
+On Microsoft Windows you can compile igotu2gpx with MinGW. Copy the file
 localconfig-template.pri to localconfig.pri, uncomment the lines with win32:...
 and adjust the paths so that they match your installation. Afterwards, try the
 following from the Qt command line:
+----
     qmake && make && make install
+----
 which should provide you with a working installation in bin/debug-installed.
 
 Running
 -------
 
 To get started, try:
-  man igotu2gpx
-  igotu2gpx info
-  igotu2gpx dump
+----
+    igotugui
+    man igotu2gpx
+    igotu2gpx info
+    igotu2gpx dump
+----

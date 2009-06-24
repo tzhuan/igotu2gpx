@@ -1,3 +1,6 @@
+Internals
+=========
+
 Debugging
 ---------
 
@@ -9,28 +12,32 @@ you can actually read them into @trip PC. Close @trip PC and disconnect the
 tracker.
 
 To make @trip PC output debug information, create the two directories
-C:\GT_DEBUG_LOG and C:\GT_DATA_LOG. Because we want to know what is sent to the
-serial port created by the device driver for the GPS tracker, download portmon
-(http://technet.microsoft.com/en-us/sysinternals/bb896644.aspx) and start it.
-Set "Edit->Max Output Bytes" to 4096, select "Options->Show Hex", and choose
-the correct com port for the tracker in "Capture->Ports".
+'C:\GT_DEBUG_LOG' and 'C:\GT_DATA_LOG'. Because we want to know what is sent to
+the serial port created by the device driver for the GPS tracker, download
+portmon (http://technet.microsoft.com/en-us/sysinternals/bb896644.aspx) and
+start it. Set "Edit->Max Output Bytes" to 4096, select "Options->Show Hex", and
+choose the correct com port for the tracker in "Capture->Ports".
 
 Attach the GPS tracker to the PC, start @trip PC and download the complete data
 on the tracker.
 
-C:\GT_DATA_LOG\Data_*.csv now contain decoded data logs of all downloaded
-trackpoints, C:\GT_DEBUG_LOG\GT.log contains debug messages of the driver dll
+'C:\GT_DATA_LOG\Data_*.csv' now contain decoded data logs of all downloaded
+trackpoints, 'C:\GT_DEBUG_LOG\GT.log' contains debug messages of the driver dll
 and the portmon log contains all communication with the device. Use
-"src/serialdecoder/serialdecoder.py portmon.log" to get an idea what the
-commands mean.
+----
+    src/serialdecoder/serialdecoder.py portmon.log
+---- 
+to get an idea what the commands mean.
 
 GPSD support
 ------------
 
 For gpsd support, try the navman kernel driver to get an USB serial device at
 something like /dev/ttyUSB0. Do this before you plug the device in:
+----
     sudo modprobe navman
     echo -n "0x0df7 0x0900" | sudo tee /sys/bus/usb-serial/drivers/navman/new_id
+----
 and then plug your device in. You now have read-only access to the device and
 you can use it as an nmea data source for gpsd.
 
@@ -40,10 +47,14 @@ USB transport
 The i-gotU GT-120 has a vendor id of 0x0df7 and a product id of 0x0900.
 
 Data can be read from interrupt endpoint 0x81 with sth. like
-  usb_interrupt_read(handle, 0x81, buf, size, timeout);
+----
+    usb_interrupt_read(handle, 0x81, buf, size, timeout);
+----
 
 Writes are done with control messages:
-  usb_control_msg(handle, 0x21, 0x09, 0x0200, 0x0000, data, size, timeout);
+----
+    usb_control_msg(handle, 0x21, 0x09, 0x0200, 0x0000, data, size, timeout);
+----
 
 This must be done asynchronously, i.e., writes should be independent from
 reads. If one read completes, the next one must be started immediately.
@@ -63,14 +74,17 @@ contains a checksum (SS) so that the sum of all command bytes is zero.
 Before each command, the connection is cleared, i.e., all superfluous bytes
 that are still in the input buffer are discarded.
 
+----
 Response:
   Data: 93 XX XX
   XX: big endian size (>= 0) or error code (< 0):
       fffe: seems to be a recoverable error
+----
 
 General commands
 ~~~~~~~~~~~~~~~~
 
+----
 NmeaSwitchCommand:
   Command chunk 1: 93 01 01 XX 00 00 00 00
   Response:        93 00 00
@@ -118,10 +132,12 @@ Internal memory read? (used for model type):
   Response:        93 XX XX YY...
   XX: read size
   YY: read data
+----
 
 Flash read commands
 ~~~~~~~~~~~~~~~~~~~
 
+----
 ReadCommand:
   Command chunk 1: 93 05 07 XX XX 04 03 YY
   Response:        93 00 00
@@ -130,10 +146,12 @@ ReadCommand:
   XX: big endian read size (1000 for read, 0010 for purge)
   YY: big endian read position
   ZZ: read data
+----
 
 Flash erase commands
 ~~~~~~~~~~~~~~~~~~~~
 
+----
 UnknownWriteCommand1:
   Command chunk 1: 93 06 04 00 XX 01 06 00
   Response:        93 00 00
@@ -174,13 +192,31 @@ UnknownPurgeCommand2:
   Response:        93 00 00
   Command chunk 2: 00 00 00 00 00 00 00 SS
   Response:        93 00 00
+----
+
+Other commands
+~~~~~~~~~~~~~~
+
+----
+Command used after write (not tested):
+  Command chunk 1: 93 06 04 00 01 01 06 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 00 00
+----
+
+Purge
+-----
 
 @trip PC reads the first 0x10 bytes of each block starting from the end of the
 flash (0x0FF000 or 0x1FF000) and stops at the first block where these bytes are
 not 0xFF. Each block but the first one is then purged according to the
 following pseudo code:
 
-Pseudo code for a GT-120 purge:
+Pseudo code for a GT-120 purge
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+----
   purge = false
   blocks = 0x200
   for i = blocks - 1; i > 0; --i:
@@ -201,8 +237,12 @@ Pseudo code for a GT-120 purge:
       pass
   UnknownPurgeCommand1(0x1e)
   UnknownPurgeCommand1(0x1f)
+----
 
-Pseudo code for a GT-200 purge:
+Pseudo code for a GT-200 purge
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+----
   purge = false
   blocks = 0x100
   for i = blocks - 1; i > 0; --i:
@@ -220,15 +260,7 @@ Pseudo code for a GT-200 purge:
   if purge:
       while UnknownWriteCommand2(0x0001) != 0x00:
         pass
-
-Other commands
-~~~~~~~~~~~~~~
-
-Command used after write (not tested):
-  Command chunk 1: 93 06 04 00 01 01 06 00
-  Response:        93 00 00
-  Command chunk 2: 00 00 00 00 00 00 00 SS
-  Response:        93 00 00
+----
 
 Flash layout
 ------------
@@ -237,6 +269,7 @@ The first data block of 0x1000 bytes contains configuration data, all other
 data blocks contain the gps trackpoints.
 
 Configuration data:
+----
   0x0000: uint8 number of schedule table plans (1 if no schedule used)
   0x0001: uint16 first schedule day (days since 01.01.2000 + 1)
   0x0003: uint8 flags
@@ -259,8 +292,10 @@ Configuration data:
   0x0801: uint8 password enabled: 0x80
   0x0802: uint8 password length in bytes (maximum 0x80)
   0x0803..0x0882: utf16le password
+----
 
 Schedule table entries are stored in records of 0x40 bytes:
+----
   0x00: uint8 start hour (0xff if invalid, 0x00 if no schedule)
   0x01: uint8 start minute (0xff if invalid, 0x00 if no schedule)
   0x02: uint8 end hour (0xff if invalid, 0x00 if no schedule)
@@ -270,8 +305,10 @@ Schedule table entries are stored in records of 0x40 bytes:
   0x08: uint16b logging interval change speed * 1e2 (in m/s)
   0x0a: uint8 changed logging interval (number of seconds - 1)
   ...
+----
 
 Trackpoints are stored in records of 0x20 bytes:
+----
   0x00: uint8 flags
         0x04: waypoint (type = -1)
         0x20: unknown  (type = -4)
@@ -297,3 +334,4 @@ Trackpoints are stored in records of 0x20 bytes:
   0x1d: uint8 MSVs_QCN
   0x1e: uint8 weight criteria
   0x1f: uint8 sleep time
+----
