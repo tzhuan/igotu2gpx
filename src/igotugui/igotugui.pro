@@ -7,7 +7,7 @@ QT *= gui
 
 win32:LIBS *= -lshell32
 
-# TODO: windows icon file
+RC_FILE = $$BASEDIR/data/windows/icon.rc
 
 SOURCES *= \
     iconstorage.cpp \
