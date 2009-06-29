@@ -56,7 +56,7 @@ QByteArray IdentificationCommand::sendAndReceive()
     // TODO: what are the other 4 bytes?
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (result.size() < 6)
-        throw IgotuError(tr("Response too short"));
+        throw IgotuError(igotu::IgotuCommand::tr("Response too short"));
     id = qFromLittleEndian<quint32>(reinterpret_cast<const uchar*>
             (result.data()));
     version = QString().sprintf("%u.%02u",
@@ -88,7 +88,7 @@ QByteArray ModelCommand::sendAndReceive()
 {
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (result.size() < 3)
-        throw IgotuError(tr("Response too short"));
+        throw IgotuError(igotu::IgotuCommand::tr("Response too short"));
     const unsigned part1 = qFromBigEndian<quint16>
         (reinterpret_cast<const uchar*>(result.data()));
     const unsigned part2 =
@@ -139,7 +139,7 @@ QByteArray CountCommand::sendAndReceive()
     // TODO: what is the first byte?
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (result.size() < 3)
-        throw IgotuError(tr("Response too short"));
+        throw IgotuError(igotu::IgotuCommand::tr("Response too short"));
     count = qFromBigEndian<quint16>(reinterpret_cast<const uchar*>
             (result.data() + 1));
 
@@ -178,7 +178,7 @@ QByteArray ReadCommand::sendAndReceive()
 {
     result = IgotuCommand::sendAndReceive();
     if (unsigned(result.size()) < size)
-        throw IgotuError(tr("Wrong response length"));
+        throw IgotuError(igotu::IgotuCommand::tr("Wrong response length"));
     return result;
 }
 
@@ -227,7 +227,7 @@ QByteArray UnknownWriteCommand1::sendAndReceive()
 {
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (!result.isEmpty())
-        throw IgotuError(tr("Response too long"));
+        throw IgotuError(igotu::IgotuCommand::tr("Response too long"));
     return result;
 }
 
@@ -248,7 +248,7 @@ QByteArray UnknownWriteCommand2::sendAndReceive()
 {
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (unsigned(result.size()) != size)
-        throw IgotuError(tr("Wrong response length"));
+        throw IgotuError(igotu::IgotuCommand::tr("Wrong response length"));
     return result;
 }
 
@@ -267,7 +267,7 @@ QByteArray UnknownPurgeCommand1::sendAndReceive()
 {
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (!result.isEmpty())
-        throw IgotuError(tr("Response too long"));
+        throw IgotuError(igotu::IgotuCommand::tr("Response too long"));
     return result;
 }
 } // namespace igotu

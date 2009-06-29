@@ -52,8 +52,7 @@ int IgotuCommandPrivate::receiveResponseSize()
                 ("Response too short: expected %1, got %2 bytes")
                 .arg(3).arg(data.size()));
     if (data[0] != '\x93')
-        throw IgotuProtocolError(IgotuCommand::tr
-                ("Invalid reply packet: %1")
+        throw IgotuProtocolError(IgotuCommand::tr("Invalid reply packet: %1")
                 .arg(QString::fromAscii(data.toHex())));
     return qFromBigEndian<qint16>(reinterpret_cast<const uchar*>
             (data.data() + 1));
@@ -88,12 +87,11 @@ unsigned IgotuCommandPrivate::sendCommand(const QByteArray &data)
                 purgeBuffersBeforeSend);
         responseSize = receiveResponseSize();
         if (responseSize < 0)
-            throw IgotuDeviceError
-                (IgotuCommand::tr("Device responded with error code: %1")
+            throw IgotuDeviceError(IgotuCommand::tr("Device responded with error code: %1")
                  .arg(responseSize));
         if (responseSize != 0 && i + 1 < pieces)
-            throw IgotuProtocolError
-                (IgotuCommand::tr("Non-empty intermediate reply packet: %1")
+            throw IgotuProtocolError(IgotuCommand::tr
+                    ("Non-empty intermediate reply packet: %1")
                     .arg(QString::fromAscii(data.toHex())));
     }
     return responseSize;

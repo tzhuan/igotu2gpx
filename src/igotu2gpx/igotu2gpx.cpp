@@ -146,10 +146,10 @@ int main(int argc, char *argv[])
             mainObject.info();
         } else if (action == QLatin1String("diff")) {
             if (imagePath.isEmpty())
-                throw IgotuError(QCoreApplication::tr("Please specify --image"));
+                throw IgotuError(MainObject::tr("Please specify --image"));
             QFile file(imagePath);
             if (!file.open(QIODevice::ReadOnly))
-                throw IgotuError(QCoreApplication::tr("Unable to read file '%1'")
+                throw IgotuError(MainObject::tr("Unable to read file '%1'")
                         .arg(imagePath));
             mainObject.info(file.readAll().left(0x1000));
         } else if (action == QLatin1String("dump")) {
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
         } else if (action == QLatin1String("purge")) {
             mainObject.purge();
         } else {
-            throw IgotuError(QCoreApplication::tr("Unknown action: %1")
+            throw IgotuError(MainObject::tr("Unknown action: %1")
                     .arg(action));
         }
 

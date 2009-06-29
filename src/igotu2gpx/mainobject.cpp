@@ -110,7 +110,8 @@ static void dumpDiff(const QByteArray &oldData, const QByteArray &newData)
 void MainObjectPrivate::on_control_infoStarted()
 {
     if (Verbose::verbose() >= 0)
-        fprintf(stderr, "%s\n", qPrintable(tr("Retrieving info...")));
+        fprintf(stderr, "%s\n",
+                qPrintable(MainObject::tr("Retrieving info...")));
 }
 
 void MainObjectPrivate::on_control_infoFinished(const QString &info,
@@ -127,7 +128,7 @@ void MainObjectPrivate::on_control_infoFinished(const QString &info,
 
 void MainObjectPrivate::on_control_infoFailed(const QString &message)
 {
-    fprintf(stderr, "%s\n", qPrintable(tr
+    fprintf(stderr, "%s\n", qPrintable(MainObject::tr
                 ("Unable to obtain info from GPS tracker: %1").arg(message)));
     QCoreApplication::quit();
 }
@@ -135,14 +136,15 @@ void MainObjectPrivate::on_control_infoFailed(const QString &message)
 void MainObjectPrivate::on_control_contentsStarted()
 {
     if (Verbose::verbose() >= 0)
-        fprintf(stderr, "%s\n", qPrintable(tr("Retrieving data...")));
+        fprintf(stderr, "%s\n",
+                qPrintable(MainObject::tr("Retrieving data...")));
 }
 
 void MainObjectPrivate::on_control_contentsBlocksFinished(uint num, uint total)
 {
     if (Verbose::verbose() >= 0 && num > 0)
-        fprintf(stderr, "%s\n",
-                qPrintable(tr("Retrieved block %1/%2").arg(num).arg(total)));
+        fprintf(stderr, "%s\n", qPrintable(MainObject::tr
+                    ("Retrieved block %1/%2").arg(num).arg(total)));
 }
 
 void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
@@ -152,7 +154,7 @@ void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
         if (!raw.isEmpty()) {
             QFile file(raw);
             if (!file.open(QIODevice::WriteOnly))
-                throw IgotuError(QCoreApplication::tr("Unable to write to "
+                throw IgotuError(MainObject::tr("Unable to write to "
                             "file '%1'").arg(raw));
             file.write(contents);
         } else if (details) {
@@ -186,15 +188,16 @@ void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
             printf("%s", qPrintable(igotuPoints.gpx(control->utcOffset())));
         }
     } catch (const std::exception &e) {
-        fprintf(stderr, "%s\n", qPrintable(tr("Unable to save data: %1")
-                .arg(QString::fromLocal8Bit(e.what()))));
+        fprintf(stderr, "%s\n", qPrintable(MainObject::tr
+                    ("Unable to save data: %1")
+                    .arg(QString::fromLocal8Bit(e.what()))));
     }
     QCoreApplication::quit();
 }
 
 void MainObjectPrivate::on_control_contentsFailed(const QString &message)
 {
-    fprintf(stderr, "%s\n", qPrintable(tr
+    fprintf(stderr, "%s\n", qPrintable(MainObject::tr
                 ("Unable to obtain trackpoints from GPS tracker: %1").arg(message)));
     QCoreApplication::quit();
 }
@@ -202,14 +205,14 @@ void MainObjectPrivate::on_control_contentsFailed(const QString &message)
 void MainObjectPrivate::on_control_purgeStarted()
 {
     if (Verbose::verbose() >= 0)
-        fprintf(stderr, "%s\n", qPrintable(tr("Purging data...")));
+        fprintf(stderr, "%s\n", qPrintable(MainObject::tr("Purging data...")));
 }
 
 void MainObjectPrivate::on_control_purgeBlocksFinished(uint num, uint total)
 {
     if (Verbose::verbose() >= 0 && num > 0)
-        fprintf(stderr, "%s\n",
-                qPrintable(tr("Purged block %1/%2").arg(num).arg(total)));
+        fprintf(stderr, "%s\n", qPrintable(MainObject::tr
+                    ("Purged block %1/%2").arg(num).arg(total)));
 }
 
 void MainObjectPrivate::on_control_purgeFinished()
@@ -219,7 +222,7 @@ void MainObjectPrivate::on_control_purgeFinished()
 
 void MainObjectPrivate::on_control_purgeFailed(const QString &message)
 {
-    fprintf(stderr, "%s\n", qPrintable(tr
+    fprintf(stderr, "%s\n", qPrintable(MainObject::tr
                 ("Unable to purge GPS tracker: %1").arg(message)));
     QCoreApplication::quit();
 }

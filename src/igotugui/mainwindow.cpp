@@ -79,7 +79,7 @@ public:
 
 void MainWindowPrivate::on_actionAbout_activated()
 {
-    QMessageBox::about(p, tr("About igotu2gpx"), tr(
+    QMessageBox::about(p, MainWindow::tr("About igotu2gpx"), MainWindow::tr(
         "<h3>igotu2gpx %1</h3><br/><br/>"
         "Shows the configuration and decodes the stored tracks and waypoints "
         "of a MobileAction i-gotU USB GPS travel logger."
@@ -114,13 +114,13 @@ void MainWindowPrivate::on_actionSave_activated()
 void MainWindowPrivate::on_actionPurge_activated()
 {
     QPointer<QMessageBox> messageBox(new QMessageBox(QMessageBox::Question,
-                QString(),
-                tr("This function is highly experimental and may brick your GPS "
-                    "tracker! Do you really want to remove all tracks from the "
-                    "tracker?"),
+                QString(), MainWindow::tr
+                ("This function is highly experimental and may brick your GPS "
+                 "tracker! Do you really want to remove all tracks from the "
+                 "tracker?"),
                 QMessageBox::Cancel, p));
-    QPushButton * const purgeButton = messageBox->addButton(tr("Purge"),
-            QMessageBox::AcceptRole);
+    QPushButton * const purgeButton = messageBox->addButton
+        (MainWindow::tr("Purge"), QMessageBox::AcceptRole);
     if (messageBox->style()->styleHint
             (QStyle::SH_DialogButtonBox_ButtonsHaveIcons))
         purgeButton->setIcon(IconStorage::get(IconStorage::PurgeIcon));
@@ -155,7 +155,7 @@ void MainWindowPrivate::on_actionPreferences_activated()
 
 void MainWindowPrivate::on_control_infoStarted()
 {
-    wait(tr("Retrieving info..."), false);
+    wait(MainWindow::tr("Retrieving info..."), false);
 }
 
 void MainWindowPrivate::on_control_infoFinished(const QString &info)
@@ -174,7 +174,7 @@ void MainWindowPrivate::on_control_infoFailed(const QString &message)
     ui->textBrowser->clear();
 
     if (!initialConnect)
-        critical(tr("Unable to obtain info from GPS tracker: %1").arg(message));
+        critical(MainWindow::tr("Unable to obtain info from GPS tracker: %1").arg(message));
 
     initialConnect = false;
 
@@ -182,7 +182,7 @@ void MainWindowPrivate::on_control_infoFailed(const QString &message)
 
 void MainWindowPrivate::on_control_contentsStarted()
 {
-    wait(tr("Retrieving data..."), false);
+    wait(MainWindow::tr("Retrieving data..."), false);
 }
 
 void MainWindowPrivate::on_control_contentsBlocksFinished(uint num,
@@ -201,31 +201,31 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
         IgotuPoints igotuPoints(contents, count);
         QByteArray gpxData = igotuPoints.gpx(control->utcOffset()).toUtf8();
 
-        QString filePath = QFileDialog::getSaveFileName(p, tr("Save GPS data"),
+        QString filePath = QFileDialog::getSaveFileName(p, MainWindow::tr("Save GPS data"),
                 QDateTime::currentDateTime().toString(QLatin1String
                     ("yyyy-MM-dd-hh-mm-ss")) + QLatin1String(".gpx"),
-                tr("GPX files (*.gpx)"));
+                MainWindow::tr("GPX files (*.gpx)"));
 
         if (filePath.isEmpty())
             return;
 
         QFile file(filePath);
         if (!file.open(QIODevice::WriteOnly))
-            throw IgotuError(tr("Unable to create file: %1")
+            throw IgotuError(MainWindow::tr("Unable to create file: %1")
                     .arg(file.errorString()));
 
         if (file.write(gpxData) != gpxData.length())
-            throw IgotuError(tr("Unable to save to file: %1")
+            throw IgotuError(MainWindow::tr("Unable to save to file: %1")
                     .arg(file.errorString()));
     } catch (const std::exception &e) {
-        critical(tr("Unable to save data: %1")
+        critical(MainWindow::tr("Unable to save data: %1")
                 .arg(QString::fromLocal8Bit(e.what())));
     }
 
     try {
         control->info();
     } catch (const std::exception &e) {
-        critical(tr("Unable to obtain info from GPS tracker: %1")
+        critical(MainWindow::tr("Unable to obtain info from GPS tracker: %1")
                 .arg(QString::fromLocal8Bit(e.what())));
     }
 }
@@ -234,12 +234,12 @@ void MainWindowPrivate::on_control_contentsFailed(const QString &message)
 {
     delete waiter;
 
-    critical(tr("Unable to obtain trackpoints from GPS tracker: %1").arg(message));
+    critical(MainWindow::tr("Unable to obtain trackpoints from GPS tracker: %1").arg(message));
 }
 
 void MainWindowPrivate::on_control_purgeStarted()
 {
-    wait(tr("Purging data..."), false);
+    wait(MainWindow::tr("Purging data..."), false);
 }
 
 void MainWindowPrivate::on_control_purgeBlocksFinished(uint num,
@@ -256,7 +256,7 @@ void MainWindowPrivate::on_control_purgeFinished()
     try {
         control->info();
     } catch (const std::exception &e) {
-        critical(tr("Unable to obtain info from GPS tracker: %1")
+        critical(MainWindow::tr("Unable to obtain info from GPS tracker: %1")
                 .arg(QString::fromLocal8Bit(e.what())));
     }
 }
@@ -265,7 +265,7 @@ void MainWindowPrivate::on_control_purgeFailed(const QString &message)
 {
     delete waiter;
 
-    critical(tr("Unable to purge GPS tracker: %1").arg(message));
+    critical(MainWindow::tr("Unable to purge GPS tracker: %1").arg(message));
 }
 
 void MainWindowPrivate::critical(const QString &text)
@@ -280,7 +280,7 @@ void MainWindowPrivate::critical(const QString &text)
 
 void MainWindowPrivate::wait(const QString &text, bool busyIndicator)
 {
-    waiter = new WaitDialog(text, tr("Please wait..."), p);
+    waiter = new WaitDialog(text, MainWindow::tr("Please wait..."), p);
     if (!busyIndicator)
         waiter->progressBar()->setMaximum(1);
     // necessary so MacOS X gives us a sheet
