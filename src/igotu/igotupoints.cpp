@@ -342,9 +342,8 @@ QString IgotuPoints::gpx(int utcOffset) const
             << xmlIndent(2) << "<ele>" << point.elevation() << "</ele>\n"
             << xmlIndent(2) << "<time>" << point.dateTimeString(utcOffset)
                 << "</time>\n"
-            // TODO: must be the number of satellites used, not seen -> check
-//            << xmlIndent(4) << "<sat>" << point.satellites().count()
-//                << "</sat>\n"
+            << xmlIndent(4) << "<sat>" << point.satellites().count()
+                << "</sat>\n"
             << xmlIndent(1) << "</wpt>\n";
     }
 
@@ -361,9 +360,8 @@ QString IgotuPoints::gpx(int utcOffset) const
             << xmlIndent(4) << "<ele>" << point.elevation() << "</ele>\n"
             << xmlIndent(4) << "<time>" << point.dateTimeString(utcOffset)
                 << "</time>\n"
-            // TODO: must be the number of satellites used, not seen -> check
-//            << xmlIndent(4) << "<sat>" << point.satellites().count()
-//                << "</sat>\n"
+            << xmlIndent(4) << "<sat>" << point.satellites().count()
+                << "</sat>\n"
             << xmlIndent(4) << "<speed>" << point.speed() << "</speed>\n"
             << xmlIndent(3) << "</trkpt>\n";
     }
