@@ -2,20 +2,21 @@
 
 [ -d src ] || exit 1
 
-LASTVERSION=0.2.2
-VERSION=0.2.3
+LASTVERSION=`sed -n 's/igotu2gpx (\([^-~]*\).*/\1/p;T;q' debian/changelog`
+VERSION=`echo $LASTVERSION | perl -ne '($ma,$mi,$pa) = /^(\d*)\.(\d*)(?:\.(\d*))?/; $pa ||= 0; $pa += 1; print "$ma.$mi.$pa"'`
 
-echo "global.h: `grep IGOTU_VERSION_STR src/igotu/global.h`"
 echo "last version: $LASTVERSION"
 echo "new version: $VERSION"
-
-echo "- Updated src/igotu/global.h to the right version number?"
-echo "- Updated tools/ubuntu-ppa-release.sh to the same version number?"
-echo "- No uncommitted changes?"
+echo
+echo "No uncommitted changes?"
 read
 
-rm ../build-area/igotu2gpx_$VERSION.orig.tar.gz
+rm -f ../build-area/igotu2gpx_$VERSION.orig.tar.gz
 bzr revert
+
+sed -i 's/#define \(IGOTU_VERSION_STR \).*/\1'"$VERSION/" src/igotu/global.h
+bzr commit -m "New release."
+bzr tag igotu2gpx-$VERSION
 
 MSGFILE=$(tempfile) || exit
 trap "rm -f -- '$MSGFILE'" EXIT
@@ -35,11 +36,13 @@ for dist in intrepid jaunty karmic; do
     ) | grep -v XXXTEMPXXX | sponge debian/changelog
 
     bzr builddeb --builder "debuild $TARBALL -S -pgnome-gpg -sgpg" || true
+    bzr revert
     TARBALL=-sd
 done
 
 rm -f -- "$MSGFILE"
 trap - EXIT
+
 
 echo "Really publish to launchpad?"
 read
