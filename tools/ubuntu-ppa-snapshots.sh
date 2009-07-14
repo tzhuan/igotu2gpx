@@ -2,13 +2,14 @@
 
 [ -d src ] || exit 1
 
-LASTVERSION=0.2.2
-VERSION=0.2.90
+LASTVERSION=`sed -n 's/igotu2gpx (\([^-~]*\).*/\1/p;T;q' debian/changelog`
+VERSION=`echo $LASTVERSION | sed 's/^\([0-9]*\.[0-9]*\).*$/\1.90/'`
 DATE=`date "+%Y%m%d%H%M"`
 
-echo "- Updated src/igotu/global.h to a .90 version number?"
-echo "- Updated tools/ubuntu-ppa-snapshots.sh to the same version number?"
-echo "- No uncommitted changes?"
+echo "last version: $LASTVERSION"
+echo "new version: $VERSION (temporary)"
+echo
+echo "No uncommitted changes?"
 read
 
 bzr revert
@@ -22,7 +23,7 @@ vi "$MSGFILE"
 
 TARBALL=-sa
 for dist in intrepid jaunty karmic; do
-    dch -v $VERSION+bzr$DATE-1ubuntu1~${dist}1 -D $dist "XXXTEMPXXX"
+    dch -v $VERSION+bzr$DATE-1~${dist}1 -D $dist "XXXTEMPXXX"
     (
 	cat debian/changelog | sed -n '0,/XXXTEMPXXX/p'
 	echo "  * Released $dist bzr snapshot."
@@ -30,9 +31,9 @@ for dist in intrepid jaunty karmic; do
 	cat debian/changelog | sed -n '/XXXTEMPXXX/,$p'
     ) | grep -v XXXTEMPXXX | sponge debian/changelog
 
-    bzr commit -m "Temporary commit."
+    sed -i 's/#define \(IGOTU_VERSION_STR \).*/\1'"$VERSION/" src/igotu/global.h
+
     bzr builddeb --builder "debuild $TARBALL -S -pgnome-gpg -sgpg" || true
-    bzr uncommit --force
     bzr revert
     TARBALL=-sd
 done
@@ -43,4 +44,4 @@ trap - EXIT
 echo "Really publish to launchpad?"
 read
 
-dput ppa:igotu2gpx/rc-archive ../build-area/igotu2gpx_$VERSION+bzr$DATE-1ubuntu1~*_source.changes
+dput ppa:igotu2gpx/rc-archive ../build-area/igotu2gpx_$VERSION+bzr$DATE-1~*_source.changes
