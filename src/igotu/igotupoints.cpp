@@ -342,7 +342,7 @@ QString IgotuPoints::gpx(int utcOffset) const
             << xmlIndent(2) << "<ele>" << point.elevation() << "</ele>\n"
             << xmlIndent(2) << "<time>" << point.dateTimeString(utcOffset)
                 << "</time>\n"
-            << xmlIndent(4) << "<sat>" << point.satellites().count()
+            << xmlIndent(2) << "<sat>" << point.satellites().count()
                 << "</sat>\n"
             << xmlIndent(1) << "</wpt>\n";
     }
