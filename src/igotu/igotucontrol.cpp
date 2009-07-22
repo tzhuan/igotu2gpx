@@ -348,7 +348,7 @@ void IgotuControlPrivateWorker::contents()
             data = image;
             if (data.size() < 0x1000)
                 throw IgotuError(IgotuControl::tr("Invalid data"));
-            count = (image.size() - 0x1000) / 0x20;
+            count = (data.size() - 0x1000) / 0x20;
         }
 
         emit contentsFinished(data, count);

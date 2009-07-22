@@ -104,7 +104,13 @@ public:
     IgotuPoints(const QByteArray &dump, unsigned count);
     ~IgotuPoints();
 
+    // all trackpoints
     QList<IgotuPoint> points() const;
+    // isValid() && isWayPoint()
+    QList<IgotuPoint> wayPoints() const;
+    // isValid() and grouped into tracks
+    QList<QList<IgotuPoint> > tracks() const;
+
     QByteArray gpx(int utcOffset = 0) const;
 
     bool isValid() const;

@@ -101,45 +101,38 @@ static QByteArray pointsToKml(const IgotuPoints &points)
            "    </LineStyle>\n"
            "</Style>\n";
 
-    /* TODO: implement waypoints
-    Q_FOREACH (const IgotuPoint &point, points()) {
-        if (!point.isWayPoint() || !point.isValid())
-            continue;
-        out << xmlIndent(1) << "<wpt "
-            << qSetRealNumberPrecision(6)
-            << "lat=\"" << point.latitude() << "\" "
-            << "lon=\"" << point.longitude() << "\">\n"
-            << qSetRealNumberPrecision(2)
-            << xmlIndent(2) << "<ele>" << point.elevation() << "</ele>\n"
-            << xmlIndent(2) << "<time>" << point.dateTimeString(utcOffset)
-                << "</time>\n"
-            << xmlIndent(2) << "<sat>" << point.satellites().count()
-                << "</sat>\n"
-            << xmlIndent(1) << "</wpt>\n";
-    }
-    */
-
-    out << "<Folder>\n"
-           "<Placemark>\n"
-           "<styleUrl>#line</styleUrl>\n"
-           "<LineString>\n"
-           "<tessellate>1</tessellate>\n"
-           "<coordinates>\n";
-    Q_FOREACH (const IgotuPoint &point, points.points()) {
-        if (!point.isValid())
-            continue;
+    Q_FOREACH (const IgotuPoint &point, points.wayPoints()) {
+        out << "<Placemark>\n"
+               "<Point>\n"
+               "<coordinates>\n";
         out << point.longitude() << ',' << point.latitude() << '\n';
+        out << "</coordinates>\n"
+               "</Point>\n"
+               "</Placemark>\n";
     }
-    out << "</coordinates>\n"
-           "</LineString>\n"
-           "</Placemark>\n"
-           "</Folder>\n";
+
+    out << "<Folder>\n";
+    Q_FOREACH (const QList<IgotuPoint> &track, points.tracks()) {
+        out << "<Placemark>\n"
+               "<styleUrl>#line</styleUrl>\n"
+               "<LineString>\n"
+               "<tessellate>1</tessellate>\n"
+               "<coordinates>\n";
+        Q_FOREACH (const IgotuPoint &point, track)
+            out << point.longitude() << ',' << point.latitude() << '\n';
+        out << "</coordinates>\n"
+               "</LineString>\n"
+               "</Placemark>\n";
+    }
+
+    out << "</Folder>\n";
 
     out << "</Document>\n"
            "</kml>\n";
 
     out.flush();
 
+    printf("%s\n", result.data());
     return result;
 }
 

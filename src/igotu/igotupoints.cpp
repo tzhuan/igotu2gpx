@@ -234,6 +234,29 @@ QList<IgotuPoint> IgotuPoints::points() const
     return result;
 }
 
+QList<IgotuPoint> IgotuPoints::wayPoints() const
+{
+    QList<IgotuPoint> result;
+    Q_FOREACH (const IgotuPoint &point, points())
+        if (point.isValid() && point.isWayPoint())
+            result.append(point);
+    return result;
+}
+
+QList<QList<IgotuPoint> > IgotuPoints::tracks() const
+{
+    QList<QList<IgotuPoint> > result;
+    QList<IgotuPoint> current;
+    Q_FOREACH (const IgotuPoint &point, points()) {
+        if (!point.isValid())
+            continue;
+        current.append(point);
+    }
+    if (!current.isEmpty())
+        result.append(current);
+    return result;
+}
+
 bool IgotuPoints::isValid() const
 {
     return dump.mid(0, 0x1000) != QByteArray(0x1000, '\xff');
@@ -332,9 +355,7 @@ QByteArray IgotuPoints::gpx(int utcOffset) const
            "creator=\"igotu2gpx\" "
            "version=\"1.1\">\n";
 
-    Q_FOREACH (const IgotuPoint &point, points()) {
-        if (!point.isWayPoint() || !point.isValid())
-            continue;
+    Q_FOREACH (const IgotuPoint &point, wayPoints())
         out << xmlIndent(1) << "<wpt "
             << qSetRealNumberPrecision(6)
             << "lat=\"" << point.latitude() << "\" "
@@ -346,28 +367,28 @@ QByteArray IgotuPoints::gpx(int utcOffset) const
             << xmlIndent(2) << "<sat>" << point.satellites().count()
                 << "</sat>\n"
             << xmlIndent(1) << "</wpt>\n";
-    }
 
-    out << xmlIndent(1) << "<trk>\n";
-    out << xmlIndent(2) << "<trkseg>\n";
-    Q_FOREACH (const IgotuPoint &point, points()) {
-        if (!point.isValid())
-            continue;
-        out << xmlIndent(3) << "<trkpt "
-            << qSetRealNumberPrecision(6)
-            << "lat=\"" << point.latitude() << "\" "
-            << "lon=\"" << point.longitude() << "\">\n"
-            << qSetRealNumberPrecision(2)
-            << xmlIndent(4) << "<ele>" << point.elevation() << "</ele>\n"
-            << xmlIndent(4) << "<time>" << point.dateTimeString(utcOffset)
-                << "</time>\n"
-            << xmlIndent(4) << "<sat>" << point.satellites().count()
-                << "</sat>\n"
-            << xmlIndent(4) << "<speed>" << point.speed() / 3.6 << "</speed>\n"
-            << xmlIndent(3) << "</trkpt>\n";
+    // TODO: no idea whether we should have multiple tracks or track segments
+    // do the same as @trip PC
+    Q_FOREACH (const QList<IgotuPoint> &track, tracks()) {
+        out << xmlIndent(1) << "<trk>\n";
+        out << xmlIndent(2) << "<trkseg>\n";
+        Q_FOREACH (const IgotuPoint &point, track)
+            out << xmlIndent(3) << "<trkpt "
+                << qSetRealNumberPrecision(6)
+                << "lat=\"" << point.latitude() << "\" "
+                << "lon=\"" << point.longitude() << "\">\n"
+                << qSetRealNumberPrecision(2)
+                << xmlIndent(4) << "<ele>" << point.elevation() << "</ele>\n"
+                << xmlIndent(4) << "<time>" << point.dateTimeString(utcOffset)
+                    << "</time>\n"
+                << xmlIndent(4) << "<sat>" << point.satellites().count()
+                    << "</sat>\n"
+                << xmlIndent(4) << "<speed>" << point.speed() / 3.6 << "</speed>\n"
+                << xmlIndent(3) << "</trkpt>\n";
+        out << xmlIndent(2) << "</trkseg>\n";
+        out << xmlIndent(1) << "</trk>\n";
     }
-    out << xmlIndent(2) << "</trkseg>\n";
-    out << xmlIndent(1) << "</trk>\n";
     out << "</gpx>\n";
 
     out.flush();
