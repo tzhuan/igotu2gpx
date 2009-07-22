@@ -79,12 +79,14 @@ QIcon IconStoragePrivate::get(IconStorage::IconName name)
 QString IconStoragePrivate::fileName(IconStorage::IconName name)
 {
     switch(name) {
-    case IconStorage::SaveIcon:
-        return QLatin1String("actions//document-save");
+    case IconStorage::ReloadIcon:
+        return QLatin1String("actions//view-refresh");
     case IconStorage::PurgeIcon:
         return QLatin1String("actions//edit-clear");
-    case IconStorage::InfoIcon:
-        return QLatin1String("status//dialog-information");
+    case IconStorage::CancelIcon:
+        return QLatin1String("actions//process-stop");
+    case IconStorage::SaveIcon:
+        return QLatin1String("actions//document-save");
     case IconStorage::QuitIcon:
         return QLatin1String("actions//application-exit");
     case IconStorage::GuiIcon:

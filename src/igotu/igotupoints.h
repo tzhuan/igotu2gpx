@@ -105,7 +105,7 @@ public:
     ~IgotuPoints();
 
     QList<IgotuPoint> points() const;
-    QString gpx(int utcOffset = 0) const;
+    QByteArray gpx(int utcOffset = 0) const;
 
     bool isValid() const;
 

@@ -316,10 +316,11 @@ QString IgotuPoints::password() const
     return QString::fromUtf16(result.data(), result.size());
 }
 
-QString IgotuPoints::gpx(int utcOffset) const
+QByteArray IgotuPoints::gpx(int utcOffset) const
 {
-    QString result;
+    QByteArray result;
     QTextStream out(&result);
+    out.setCodec("UTF-8");
     out.setRealNumberNotation(QTextStream::FixedNotation);
     out.setRealNumberPrecision(6);
 

@@ -256,10 +256,10 @@ Pseudo code for a GT-200 purge
         continue
     UnknownWriteCommand1(0x00)
     WriteCommand(0x20, i * 0x1000, '')
-  UnknownPurgeCommand2()
   if purge:
-      while UnknownWriteCommand2(0x0001) != 0x00:
-        pass
+    UnknownPurgeCommand2()
+    while UnknownWriteCommand2(0x0001) != 0x00:
+      pass
 ----
 
 Flash layout

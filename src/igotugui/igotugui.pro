@@ -1,5 +1,5 @@
 BASEDIR = ../..
-CLEBS *= libigotu boost-po
+CLEBS *= libigotu boost-po libmarble
 TARGET = igotugui
 include($$BASEDIR/clebs.pri)
 
@@ -16,7 +16,6 @@ SOURCES *= \
     paths.cpp \
     preferencesdialog.cpp \
     qticonloader.cpp \
-    waitdialog.cpp \
 
 HEADERS *= \
     iconstorage.h \
@@ -24,12 +23,10 @@ HEADERS *= \
     paths.h \
     preferencesdialog.h \
     qticonloader.h \
-    waitdialog.h \
 
 FORMS *= \
     igotugui.ui \
     preferencesdialog.ui \
-    waitdialog.ui \
 
 unix {
     desktopfile.files = igotugui.desktop

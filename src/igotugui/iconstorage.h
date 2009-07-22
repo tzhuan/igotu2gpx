@@ -25,9 +25,10 @@ class IconStorage
 {
 public:
     enum IconName {
-        InfoIcon,
-        SaveIcon,
+        ReloadIcon,
         PurgeIcon,
+        CancelIcon,
+        SaveIcon,
         QuitIcon,
         GuiIcon,
     };

@@ -20,11 +20,13 @@
 #include "igotu/igotucontrol.h"
 #include "igotu/igotupoints.h"
 #include "igotu/utils.h"
+
 #include "iconstorage.h"
 #include "mainwindow.h"
 #include "preferencesdialog.h"
 #include "ui_igotugui.h"
-#include "waitdialog.h"
+
+#include <marble/MarbleMap.h>
 
 #include <QFileDialog>
 #include <QInputDialog>
@@ -33,6 +35,8 @@
 #include <QProgressBar>
 #include <QPushButton>
 #include <QStyle>
+#include <QTemporaryFile>
+#include <QTextStream>
 #include <QTimer>
 
 using namespace igotu;
@@ -42,9 +46,10 @@ class MainWindowPrivate : public QObject
     Q_OBJECT
 public Q_SLOTS:
     void on_actionAbout_activated();
-    void on_actionInfo_activated();
+    void on_actionReload_activated();
     void on_actionSave_activated();
     void on_actionPurge_activated();
+    void on_actionCancel_activated();
     void on_actionPreferences_activated();
     void on_actionQuit_activated();
 
@@ -63,17 +68,80 @@ public Q_SLOTS:
     void on_control_purgeFailed(const QString &message);
 
 public:
-    void critical(const QString &text);
-    void wait(const QString &text, bool busyIndicator);
+    void startBackgroundAction(const QString &text);
+    void updateBackgroundAction(unsigned value, unsigned maximum);
+    void stopBackgroundAction();
+    void abortBackgroundAction(const QString &text);
 
     MainWindow *p;
 
+    QByteArray gpxData;
+
     boost::scoped_ptr<Ui::MainWindow> ui;
     IgotuControl *control;
-    QPointer<WaitDialog> waiter;
+    QProgressBar *progress;
     QPointer<PreferencesDialog> preferences;
-    bool initialConnect;
 };
+
+static QByteArray pointsToKml(const IgotuPoints &points)
+{
+    QByteArray result;
+    QTextStream out(&result);
+    out.setCodec("UTF-8");
+    out.setRealNumberNotation(QTextStream::FixedNotation);
+    out.setRealNumberPrecision(6);
+
+    out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+           "<kml xmlns=\"http://earth.google.com/kml/2.2\">\n"
+           "<Document>\n"
+           "<Style id=\"line\">\n"
+           "    <LineStyle>\n"
+           "    <color>73FF0000</color>\n"
+           "    <width>5</width>\n"
+           "    </LineStyle>\n"
+           "</Style>\n";
+
+    /* TODO: implement waypoints
+    Q_FOREACH (const IgotuPoint &point, points()) {
+        if (!point.isWayPoint() || !point.isValid())
+            continue;
+        out << xmlIndent(1) << "<wpt "
+            << qSetRealNumberPrecision(6)
+            << "lat=\"" << point.latitude() << "\" "
+            << "lon=\"" << point.longitude() << "\">\n"
+            << qSetRealNumberPrecision(2)
+            << xmlIndent(2) << "<ele>" << point.elevation() << "</ele>\n"
+            << xmlIndent(2) << "<time>" << point.dateTimeString(utcOffset)
+                << "</time>\n"
+            << xmlIndent(2) << "<sat>" << point.satellites().count()
+                << "</sat>\n"
+            << xmlIndent(1) << "</wpt>\n";
+    }
+    */
+
+    out << "<Folder>\n"
+           "<Placemark>\n"
+           "<styleUrl>#line</styleUrl>\n"
+           "<LineString>\n"
+           "<tessellate>1</tessellate>\n"
+           "<coordinates>\n";
+    Q_FOREACH (const IgotuPoint &point, points.points()) {
+        if (!point.isValid())
+            continue;
+        out << point.longitude() << ',' << point.latitude() << '\n';
+    }
+    out << "</coordinates>\n"
+           "</LineString>\n"
+           "</Placemark>\n"
+           "</Folder>\n";
+
+    out << "</Document>\n"
+           "</kml>\n";
+
+    out.flush();
+
+    return result;
+}
 
 // MainWindowPrivate ===========================================================
 
@@ -101,14 +169,29 @@ void MainWindowPrivate::on_actionQuit_activated()
     QCoreApplication::quit();
 }
 
-void MainWindowPrivate::on_actionInfo_activated()
+void MainWindowPrivate::on_actionReload_activated()
 {
     control->info();
 }
 
 void MainWindowPrivate::on_actionSave_activated()
 {
-    control->contents();
+    QString filePath = QFileDialog::getSaveFileName(p, MainWindow::tr("Save GPS data"),
+            QDateTime::currentDateTime().toString(QLatin1String
+                ("yyyy-MM-dd-hh-mm-ss")) + QLatin1String(".gpx"),
+            MainWindow::tr("GPX files (*.gpx)"));
+
+    if (filePath.isEmpty())
+        return;
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly))
+        throw IgotuError(MainWindow::tr("Unable to create file: %1")
+                .arg(file.errorString()));
+
+    if (file.write(gpxData) != gpxData.length())
+        throw IgotuError(MainWindow::tr("Unable to save to file: %1")
+                .arg(file.errorString()));
 }
 
 void MainWindowPrivate::on_actionPurge_activated()
@@ -116,8 +199,9 @@ void MainWindowPrivate::on_actionPurge_activated()
     QPointer<QMessageBox> messageBox(new QMessageBox(QMessageBox::Question,
                 QString(), MainWindow::tr
                 ("This function is highly experimental and may brick your GPS "
-                 "tracker! Do you really want to remove all tracks from the "
-                 "tracker?"),
+                 "tracker! Only use it if your GPS tracker has been identified "
+                 "correctly. Do you really want to remove all tracks from the "
+                 "GPS tracker?"),
                 QMessageBox::Cancel, p));
     QPushButton * const purgeButton = messageBox->addButton
         (MainWindow::tr("Purge"), QMessageBox::AcceptRole);
@@ -133,6 +217,11 @@ void MainWindowPrivate::on_actionPurge_activated()
         control->purge();
 
     delete messageBox;
+}
+
+void MainWindowPrivate::on_actionCancel_activated()
+{
+    control->cancel();
 }
 
 void MainWindowPrivate::on_actionPreferences_activated()
@@ -155,138 +244,113 @@ void MainWindowPrivate::on_actionPreferences_activated()
 
 void MainWindowPrivate::on_control_infoStarted()
 {
-    wait(MainWindow::tr("Retrieving info..."), false);
+    startBackgroundAction(MainWindow::tr("Retrieving info..."));
 }
 
 void MainWindowPrivate::on_control_infoFinished(const QString &info)
 {
-    delete waiter;
-
-    ui->textBrowser->setText(info);
-
-    initialConnect = false;
+    ui->info->setText(info);
+    control->contents();
 }
 
 void MainWindowPrivate::on_control_infoFailed(const QString &message)
 {
-    delete waiter;
-
-    ui->textBrowser->clear();
-
-    if (!initialConnect)
-        critical(MainWindow::tr("Unable to obtain info from GPS tracker: %1").arg(message));
-
-    initialConnect = false;
-
+    abortBackgroundAction(MainWindow::tr("Unable to obtain info from GPS tracker: %1")
+            .arg(message));
 }
 
 void MainWindowPrivate::on_control_contentsStarted()
 {
-    wait(MainWindow::tr("Retrieving data..."), false);
+    startBackgroundAction(MainWindow::tr("Retrieving data..."));
 }
 
 void MainWindowPrivate::on_control_contentsBlocksFinished(uint num,
         uint total)
 {
-    waiter->progressBar()->setMaximum(total);
-    waiter->progressBar()->setValue(num);
+    updateBackgroundAction(num, total);
 }
 
 void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
         uint count)
 {
-    delete waiter;
-
     try {
         IgotuPoints igotuPoints(contents, count);
-        QByteArray gpxData = igotuPoints.gpx(control->utcOffset()).toUtf8();
 
-        QString filePath = QFileDialog::getSaveFileName(p, MainWindow::tr("Save GPS data"),
-                QDateTime::currentDateTime().toString(QLatin1String
-                    ("yyyy-MM-dd-hh-mm-ss")) + QLatin1String(".gpx"),
-                MainWindow::tr("GPX files (*.gpx)"));
+        gpxData = igotuPoints.gpx(control->utcOffset());
+        ui->actionSave->setEnabled(true);
 
-        if (filePath.isEmpty())
-            return;
+        QTemporaryFile kmlFile(QDir::tempPath() + QLatin1String("/igotu2gpx_temp_XXXXXX.kml"));
+        if (!kmlFile.open())
+            throw IgotuError(MainWindow::tr("Unable to create kml file: %1")
+                    .arg(kmlFile.errorString()));
+        kmlFile.write(pointsToKml(igotuPoints));
+        kmlFile.flush();
+        // TODO: what is if this is called multiple times?
+        // TODO: zoom to bounding box
+        ui->tracks->addPlaceMarkFile(kmlFile.fileName());
 
-        QFile file(filePath);
-        if (!file.open(QIODevice::WriteOnly))
-            throw IgotuError(MainWindow::tr("Unable to create file: %1")
-                    .arg(file.errorString()));
-
-        if (file.write(gpxData) != gpxData.length())
-            throw IgotuError(MainWindow::tr("Unable to save to file: %1")
-                    .arg(file.errorString()));
+        stopBackgroundAction();
     } catch (const std::exception &e) {
-        critical(MainWindow::tr("Unable to save data: %1")
-                .arg(QString::fromLocal8Bit(e.what())));
-    }
-
-    try {
-        control->info();
-    } catch (const std::exception &e) {
-        critical(MainWindow::tr("Unable to obtain info from GPS tracker: %1")
+        abortBackgroundAction(MainWindow::tr("Unable to save data: %1")
                 .arg(QString::fromLocal8Bit(e.what())));
     }
 }
 
 void MainWindowPrivate::on_control_contentsFailed(const QString &message)
 {
-    delete waiter;
-
-    critical(MainWindow::tr("Unable to obtain trackpoints from GPS tracker: %1").arg(message));
+    abortBackgroundAction(MainWindow::tr("Unable to obtain trackpoints from GPS tracker: %1")
+            .arg(message));
 }
 
 void MainWindowPrivate::on_control_purgeStarted()
 {
-    wait(MainWindow::tr("Purging data..."), false);
+    startBackgroundAction(MainWindow::tr("Purging data..."));
 }
 
 void MainWindowPrivate::on_control_purgeBlocksFinished(uint num,
         uint total)
 {
-    waiter->progressBar()->setMaximum(total);
-    waiter->progressBar()->setValue(num);
+    updateBackgroundAction(num, total);
 }
 
 void MainWindowPrivate::on_control_purgeFinished()
 {
-    delete waiter;
-
-    try {
-        control->info();
-    } catch (const std::exception &e) {
-        critical(MainWindow::tr("Unable to obtain info from GPS tracker: %1")
-                .arg(QString::fromLocal8Bit(e.what())));
-    }
+    stopBackgroundAction();
 }
 
 void MainWindowPrivate::on_control_purgeFailed(const QString &message)
 {
-    delete waiter;
-
-    critical(MainWindow::tr("Unable to purge GPS tracker: %1").arg(message));
+    abortBackgroundAction(MainWindow::tr("Unable to purge GPS tracker: %1").arg(message));
 }
 
-void MainWindowPrivate::critical(const QString &text)
+void MainWindowPrivate::startBackgroundAction(const QString &text)
 {
-    QPointer<QMessageBox> messageBox(new QMessageBox(QMessageBox::Critical,
-                QString(), text, QMessageBox::Ok, p));
-    // necessary so MacOS X gives us a sheet
-    messageBox->setWindowModality(Qt::WindowModal);
-    messageBox->exec();
-    delete messageBox;
+    ui->actionCancel->setEnabled(true);
+    ui->actionReload->setEnabled(false);
+    ui->actionPurge->setEnabled(false);
+    p->statusBar()->showMessage(text);
+    updateBackgroundAction(0, 1);
+    progress->show();
 }
 
-void MainWindowPrivate::wait(const QString &text, bool busyIndicator)
+void MainWindowPrivate::updateBackgroundAction(unsigned value, unsigned maximum)
 {
-    waiter = new WaitDialog(text, MainWindow::tr("Please wait..."), p);
-    if (!busyIndicator)
-        waiter->progressBar()->setMaximum(1);
-    // necessary so MacOS X gives us a sheet
-    waiter->setWindowModality(Qt::WindowModal);
-    waiter->setParent(p, Qt::Sheet);
-    waiter->exec();
+    progress->setMaximum(maximum);
+    progress->setValue(value);
+}
+
+void MainWindowPrivate::stopBackgroundAction()
+{
+    abortBackgroundAction(QString());
+}
+
+void MainWindowPrivate::abortBackgroundAction(const QString &text)
+{
+    ui->actionCancel->setEnabled(false);
+    ui->actionReload->setEnabled(true);
+    ui->actionPurge->setEnabled(true);
+    progress->hide();
+    p->statusBar()->showMessage(text);
 }
 
 // MainWindow ==================================================================
@@ -299,12 +363,14 @@ MainWindow::MainWindow() :
     d->ui.reset(new Ui::MainWindow);
     d->ui->setupUi(this);
 
-    d->ui->actionInfo->setIcon
-        (IconStorage::get(IconStorage::InfoIcon));
-    d->ui->actionSave->setIcon
-        (IconStorage::get(IconStorage::SaveIcon));
+    d->ui->actionReload->setIcon
+        (IconStorage::get(IconStorage::ReloadIcon));
     d->ui->actionPurge->setIcon
         (IconStorage::get(IconStorage::PurgeIcon));
+    d->ui->actionCancel->setIcon
+        (IconStorage::get(IconStorage::CancelIcon));
+    d->ui->actionSave->setIcon
+        (IconStorage::get(IconStorage::SaveIcon));
     d->ui->actionQuit->setIcon
         (IconStorage::get(IconStorage::QuitIcon));
     d->ui->actionAbout->setIcon
@@ -318,8 +384,24 @@ MainWindow::MainWindow() :
     d->control->setDevice(PreferencesDialog::currentDevice());
     d->control->setUtcOffset(PreferencesDialog::currentUtcOffset());
 
-    d->initialConnect = true;
-    QTimer::singleShot(0, d->ui->actionInfo, SLOT(trigger()));
+    // This is a hack to get a HttpDownloadManager instance from MarbleMap
+    // because we can't instantiate it ourselves
+    d->ui->tracks->map()->setDownloadUrl(QUrl());
+//    d->ui->tracks->map()->setProjection(Marble::Mercator);
+    d->ui->tracks->setMapThemeId(QLatin1String("earth/openstreetmap/openstreetmap.dgml"));
+    // TODO: disable plugins that are not used (wikipedia)
+
+    // Progress bar
+    d->progress = new QProgressBar(this);
+    d->progress->setMaximum(0);
+    d->progress->setSizePolicy
+        (QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
+    d->progress->setMinimumWidth(120);
+    d->progress->setMaximumHeight(16);
+    d->progress->hide();
+    statusBar()->addPermanentWidget(d->progress);
+
+    QTimer::singleShot(0, d->ui->actionReload, SLOT(trigger()));
 }
 
 MainWindow::~MainWindow()
@@ -330,16 +412,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
     Q_UNUSED(event);
 
-    while (!d->control->queuesEmpty()) {
-        // will only be reached at initial connect
-        QPointer<QDialog> waiter(new WaitDialog
-                (tr("Please wait until all tasks are finished..."),
-                 tr("Please wait..."),
-                 this));
-        d->control->notify(waiter, "reject");
-        waiter->exec();
-        delete waiter;
-    }
+    while (!d->control->queuesEmpty())
+        d->control->cancel();
 }
 
 #include "mainwindow.moc"

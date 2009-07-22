@@ -162,6 +162,9 @@ while len(parts) > 0:
         elif query.startswith('\x93\x0c\x00'):
             r = unpack_from('>xxxB', query)
             print 'UnknownPurgeCommand1(mode = 0x%02x)' % (r[0])
+        # UnknownPurgeCommand2
+        elif query.startswith('\x93\x08\x02'):
+            print 'UnknownPurgeCommand2()'
         # UnknownWriteCommand1
         elif query.startswith('\x93\x06\x04\x00') and query[5:7] == '\x01\x06':
             r = unpack_from('>xxxxB', query)

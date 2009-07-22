@@ -1,4 +1,4 @@
-CLEBS_REQUIRED *= qtversion430 boost-po
+CLEBS_REQUIRED *= qtversion430 boost-po libmarble
 unix:CLEBS_REQUIRED *= libusb
 unix:!macx:CLEBS_SUGGESTED *= chrpath
 

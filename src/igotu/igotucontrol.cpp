@@ -81,8 +81,8 @@ class IgotuControlPrivate : public QObject
 public:
     IgotuControlPrivate();
 
-    // throws if there is already a task running
-    void startTask();
+    // returns false if there is already a task running
+    bool startTask();
     void requestCancel();
     // also resets the cancel flag so that following calls to this function
     // return false again
@@ -114,13 +114,14 @@ IgotuControlPrivate::IgotuControlPrivate() :
 {
 }
 
-void IgotuControlPrivate::startTask()
+bool IgotuControlPrivate::startTask()
 {
     if (!semaphore.tryAcquire())
-        throw IgotuError(IgotuControl::tr("Too many concurrent tasks"));
+        return false;
 
     QMutexLocker locker(&cancelLock);
     cancel = false;
+    return true;
 }
 
 bool IgotuControlPrivate::cancelRequested()
@@ -583,19 +584,22 @@ bool IgotuControl::queuesEmpty()
 
 void IgotuControl::info()
 {
-    d->startTask();
+    if (!d->startTask())
+        return;
     emit d->info();
 }
 
 void IgotuControl::contents()
 {
-    d->startTask();
+    if (!d->startTask())
+        return;
     emit d->contents();
 }
 
 void IgotuControl::purge()
 {
-    d->startTask();
+    if (!d->startTask())
+        return;
     emit d->purge();
 }
 

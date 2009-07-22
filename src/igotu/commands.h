@@ -134,6 +134,14 @@ public:
     virtual QByteArray sendAndReceive();
 };
 
+class IGOTU_EXPORT UnknownPurgeCommand2 : public IgotuCommand
+{
+public:
+    UnknownPurgeCommand2(DataConnection *connection);
+
+    virtual QByteArray sendAndReceive();
+};
+
 } // namespace igotu
 
 #endif

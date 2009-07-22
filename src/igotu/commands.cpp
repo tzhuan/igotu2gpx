@@ -270,5 +270,23 @@ QByteArray UnknownPurgeCommand1::sendAndReceive()
         throw IgotuError(igotu::IgotuCommand::tr("Response too long"));
     return result;
 }
+
+// UnknownPurgeCommand2 ========================================================
+
+UnknownPurgeCommand2::UnknownPurgeCommand2(DataConnection *connection) :
+    IgotuCommand(connection)
+{
+    QByteArray command("\x93\x08\x02\0\0\0\0\0\0\0\0\0\0\0\0", 15);
+    setCommand(command);
+}
+
+QByteArray UnknownPurgeCommand2::sendAndReceive()
+{
+    const QByteArray result = IgotuCommand::sendAndReceive();
+    if (!result.isEmpty())
+        throw IgotuError(igotu::IgotuCommand::tr("Response too long"));
+    return result;
+}
+
 } // namespace igotu
 

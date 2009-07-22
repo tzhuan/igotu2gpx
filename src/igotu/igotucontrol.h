@@ -52,6 +52,9 @@ public:
     // may throw
     void purge();
 
+    // signals the thread to cancel the currently running operation
+    void cancel();
+
     // schedules a slot of an object that will be called when all tasks have
     // been processed
     void notify(QObject *object, const char *method);

@@ -185,7 +185,8 @@ void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
             }
         } else {
             IgotuPoints igotuPoints(contents, count);
-            printf("%s", qPrintable(igotuPoints.gpx(control->utcOffset())));
+            printf("%s", qPrintable(QString::fromUtf8
+                        (igotuPoints.gpx(control->utcOffset()))));
         }
     } catch (const std::exception &e) {
         fprintf(stderr, "%s\n", qPrintable(MainObject::tr
