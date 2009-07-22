@@ -81,6 +81,13 @@ class IgotuControlPrivate : public QObject
 public:
     IgotuControlPrivate();
 
+    // throws if there is already a task running
+    void startTask();
+    void requestCancel();
+    // also resets the cancel flag so that following calls to this function
+    // return false again
+    bool cancelRequested();
+
 Q_SIGNALS:
     void info();
     void contents();
@@ -90,6 +97,8 @@ Q_SIGNALS:
 public:
     unsigned taskCount;
     QSemaphore semaphore;
+    QMutex cancelLock;
+    bool cancel;
     EventThread thread;
     IgotuControlPrivateWorker worker;
     QString device;
@@ -103,6 +112,33 @@ IgotuControlPrivate::IgotuControlPrivate() :
     semaphore(taskCount),
     worker(this)
 {
+}
+
+void IgotuControlPrivate::startTask()
+{
+    if (!semaphore.tryAcquire())
+        throw IgotuError(IgotuControl::tr("Too many concurrent tasks"));
+
+    QMutexLocker locker(&cancelLock);
+    cancel = false;
+}
+
+bool IgotuControlPrivate::cancelRequested()
+{
+    QMutexLocker locker(&cancelLock);
+
+    if (!cancel)
+        return false;
+
+    cancel = false;
+    return true;
+}
+
+void IgotuControlPrivate::requestCancel()
+{
+    QMutexLocker locker(&cancelLock);
+
+    cancel = true;
 }
 
 // IgotuControlPrivateWorker ===================================================
@@ -247,17 +283,22 @@ void IgotuControlPrivateWorker::info()
             }
         }
 
-        status += IgotuControl::tr("LEDs: %1").arg(igotuPoints.ledsEnabled() ? IgotuControl::tr("enabled") :
-                IgotuControl::tr("disabled")) + QLatin1Char('\n');
-        status += IgotuControl::tr("Button: %1").arg(igotuPoints.isButtonEnabled() ?
-                IgotuControl::tr("enabled") : IgotuControl::tr("disabled")) + QLatin1Char('\n');
-
-        status += IgotuControl::tr("Security version: %1").arg(igotuPoints.securityVersion())
+        status += IgotuControl::tr("LEDs: %1").arg(igotuPoints.ledsEnabled() ?
+                IgotuControl::tr("enabled") : IgotuControl::tr("disabled")) +
+            QLatin1Char('\n');
+        status += IgotuControl::tr("Button: %1")
+            .arg(igotuPoints.isButtonEnabled() ?
+                    IgotuControl::tr("enabled") : IgotuControl::tr("disabled"))
             + QLatin1Char('\n');
+
+        status += IgotuControl::tr("Security version: %1")
+            .arg(igotuPoints.securityVersion()) + QLatin1Char('\n');
         if (igotuPoints.securityVersion() == 0) {
-            status += IgotuControl::tr("Password: %1, [%2]").arg
-                (igotuPoints.isPasswordEnabled() ? IgotuControl::tr("enabled") :
-                 IgotuControl::tr("disabled"), igotuPoints.password()) + QLatin1Char('\n');
+            status += IgotuControl::tr("Password: %1, [%2]")
+                .arg(igotuPoints.isPasswordEnabled() ?
+                        IgotuControl::tr("enabled") :
+                        IgotuControl::tr("disabled"),
+                        igotuPoints.password()) + QLatin1Char('\n');
         }
 
         emit infoFinished(status, contents);
@@ -292,6 +333,10 @@ void IgotuControlPrivateWorker::contents()
 
             for (unsigned i = 0; i < blocks; ++i) {
                 emit contentsBlocksFinished(i, blocks);
+                if (p->cancelRequested()) {
+                    NmeaSwitchCommand(connection.get(), true).sendAndReceive();
+                    throw IgotuError(IgotuControl::tr("Cancelled"));
+                }
                 data += ReadCommand(connection.get(), i * 0x1000,
                         0x1000).sendAndReceive();
             }
@@ -335,6 +380,10 @@ void IgotuControlPrivateWorker::purge()
             const unsigned blocks = 0x200;
             for (unsigned i = blocks - 1; i > 0; --i) {
                 emit purgeBlocksFinished(blocks - i - 1, blocks);
+                if (p->cancelRequested()) {
+                    NmeaSwitchCommand(connection.get(), true).sendAndReceive();
+                    throw IgotuError(IgotuControl::tr("Cancelled"));
+                }
                 if (purgeBlocks) {
                     for (unsigned retries = 10; retries > 0; --retries) {
                         if (UnknownWriteCommand2(connection.get(), 0x0001)
@@ -369,8 +418,42 @@ void IgotuControlPrivateWorker::purge()
             UnknownPurgeCommand1(connection.get(), 0x1f).sendAndReceive();
             emit purgeBlocksFinished(blocks, blocks);
             break; }
-        case ModelCommand::Gt200:
-            // fallthrough
+        case ModelCommand::Gt200: {
+            bool purgeBlocks = false;
+            const unsigned blocks = 0x100;
+            for (unsigned i = blocks - 1; i > 0; --i) {
+                emit purgeBlocksFinished(blocks - i - 1, blocks);
+                if (purgeBlocks) {
+                    for (unsigned retries = 10; retries > 0; --retries) {
+                        if (UnknownWriteCommand2(connection.get(), 0x0001)
+                                .sendAndReceive() == QByteArray(1, '\x00'))
+                            break;
+                        if (retries == 1)
+                            throw IgotuError(IgotuControl::tr("Timeout during purge"));
+                    }
+                } else {
+                    if (ReadCommand(connection.get(), i * 0x1000, 0x10)
+                            .sendAndReceive() != QByteArray(0x10, '\xff'))
+                        purgeBlocks = true;
+                    else
+                        continue;
+                }
+                UnknownWriteCommand1(connection.get(), 0x00).sendAndReceive();
+                WriteCommand(connection.get(), 0x20, i * 0x1000, QByteArray())
+                    .sendAndReceive();
+            }
+            if (purgeBlocks) {
+                UnknownPurgeCommand2(connection.get()).sendAndReceive();
+                for (unsigned retries = 10; retries > 0; --retries) {
+                    if (UnknownWriteCommand2(connection.get(), 0x0001)
+                            .sendAndReceive() == QByteArray(1, '\x00'))
+                        break;
+                    if (retries == 1)
+                        throw IgotuError(IgotuControl::tr("Timeout during purge"));
+                }
+            }
+            emit purgeBlocksFinished(blocks, blocks);
+            break; }
         default: {
             throw IgotuError(IgotuControl::tr("%1: No purge support available. If you have "
                         "time and feel adventurous, create a bug report at "
@@ -500,23 +583,25 @@ bool IgotuControl::queuesEmpty()
 
 void IgotuControl::info()
 {
-    if (!d->semaphore.tryAcquire())
-        throw IgotuError(tr("Too many concurrent tasks"));
+    d->startTask();
     emit d->info();
 }
 
 void IgotuControl::contents()
 {
-    if (!d->semaphore.tryAcquire())
-        throw IgotuError(tr("Too many concurrent tasks"));
+    d->startTask();
     emit d->contents();
 }
 
 void IgotuControl::purge()
 {
-    if (!d->semaphore.tryAcquire())
-        throw IgotuError(tr("Too many concurrent tasks"));
+    d->startTask();
     emit d->purge();
+}
+
+void IgotuControl::cancel()
+{
+    d->requestCancel();
 }
 
 void IgotuControl::notify(QObject *object, const char *method)
