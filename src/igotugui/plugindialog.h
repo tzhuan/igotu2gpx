@@ -16,17 +16,24 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU2GPX_SRC_IGOTUGUI_PATHS_H_
-#define _IGOTU2GPX_SRC_IGOTUGUI_PATHS_H_
+#ifndef _IGOTU2GPX_SRC_IGOTUGUI_PLUGINDIALOG_H_
+#define _IGOTU2GPX_SRC_IGOTUGUI_PLUGINDIALOG_H_
 
-#include <QStringList>
+#include <boost/scoped_ptr.hpp>
 
-class Paths
+#include <QDialog>
+
+class PluginDialogPrivate;
+
+class PluginDialog : public QDialog
 {
+    Q_OBJECT
 public:
-    static QStringList pluginDirectories();
-    static QStringList iconDirectories();
+    PluginDialog(QWidget *parent = NULL);
+    ~PluginDialog();
+
+private:
+    boost::scoped_ptr<PluginDialogPrivate> d;
 };
 
 #endif
-

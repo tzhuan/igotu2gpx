@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2008  Michael Hofmann <mh21@piware.de>                       *
+ * Copyright (C) 2009  Michael Hofmann <mh21@piware.de>                       *
  *                                                                            *
  * This program is free software; you can redistribute it and/or modify       *
  * it under the terms of the GNU General Public License as published by       *
@@ -16,16 +16,42 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU2GPX_SRC_IGOTUGUI_PATHS_H_
-#define _IGOTU2GPX_SRC_IGOTUGUI_PATHS_H_
+#ifndef _IGOTU2GPX_SRC_IGOTUGUI_PLUGINLOADER_H_
+#define _IGOTU2GPX_SRC_IGOTUGUI_PLUGINLOADER_H_
 
-#include <QStringList>
+#include <QMap>
+#include <QObject>
 
-class Paths
+class PluginLoader : public QObject
 {
+    Q_OBJECT
 public:
-    static QStringList pluginDirectories();
-    static QStringList iconDirectories();
+    PluginLoader(QObject *parent = NULL);
+    ~PluginLoader();
+
+    QList<QObject*> allAvailablePlugins();
+    template <typename T> QList<T*> availablePlugins();
+
+    QString pluginPath(const QObject *plugin) const;
+    QMap<QString, QString> pluginsWithErrors() const;
+
+public Q_SLOTS:
+    void reloadPlugins();
+
+Q_SIGNALS:
+    void pluginsLoaded();
+};
+
+template <typename T>
+QList<T*> PluginLoader::availablePlugins()
+{
+    QList<T*> result;
+
+    Q_FOREACH (QObject * const plugin, allAvailablePlugins())
+        if (T * const casted = qobject_cast<T*> (plugin))
+            result.append(casted);
+
+    return result;
 };
 
 #endif

@@ -167,3 +167,35 @@ QStringList Paths::iconDirectories()
 #endif
     return uniqueDirectoryList(result);
 }
+
+QStringList Paths::pluginDirectories()
+{
+    QStringList result;
+#if defined(Q_OS_LINUX)
+    result << QDir::homePath() + QLatin1String("/.local/lib") + DIRECTORY;
+    result << relativeToBaseDirectory
+           (QStringList() << QLatin1String("/lib") + DIRECTORY,
+            QStringList());
+    result << QLatin1String("/usr/local/lib") + DIRECTORY;
+    result << QLatin1String("/usr/lib") + DIRECTORY;
+#elif defined(Q_OS_MACX)
+    // TODO: all MacOS X native dirs are missing
+    result << QDir::homePath() + QLatin1String("/.local/lib") + DIRECTORY;
+    result << relativeToBaseDirectory
+           (QStringList() << QLatin1String("/lib") + DIRECTORY,
+            QStringList());
+    result << QLatin1String("/usr/local/lib") + DIRECTORY;
+    result << QLatin1String("/usr/lib") + DIRECTORY;
+#elif defined(Q_OS_WIN)
+    result << windowsConfigPath(CSIDL_APPDATA) + DIRECTORY +
+            QLatin1String("/lib");
+    result << windowsConfigPath(CSIDL_COMMON_APPDATA) + DIRECTORY +
+            QLatin1String("/lib");
+    result << relativeToBaseDirectory
+           (QStringList() << QLatin1String("/lib"),
+            QStringList());
+#else
+#error FIXME No idea where to find plugin directories on this platform
+#endif
+    return uniqueDirectoryList(result);
+}

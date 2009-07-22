@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2008  Michael Hofmann <mh21@piware.de>                       *
+ * Copyright (C) 2009 Michael Hofmann <mh21@piware.de>                        *
  *                                                                            *
  * This program is free software; you can redistribute it and/or modify       *
  * it under the terms of the GNU General Public License as published by       *
@@ -16,17 +16,41 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU2GPX_SRC_IGOTUGUI_PATHS_H_
-#define _IGOTU2GPX_SRC_IGOTUGUI_PATHS_H_
+#ifndef _IGOTU2GPX_SRC_IGOTUGUI_TRACKVISUALIZER_H_
+#define _IGOTU2GPX_SRC_IGOTUGUI_TRACKVISUALIZER_H_
 
-#include <QStringList>
+#include <QWidget>
 
-class Paths
+#include <QtPlugin>
+
+namespace igotu
 {
-public:
-    static QStringList pluginDirectories();
-    static QStringList iconDirectories();
+    class IgotuPoints;
 };
 
-#endif
+class TrackVisualizer : public QWidget
+{
+public:
+    TrackVisualizer(QWidget *parent = NULL) :
+        QWidget(parent)
+    {
+    }
 
+    virtual void setTracks(const igotu::IgotuPoints &points) = 0;
+};
+
+class TrackVisualizerCreator
+{
+public:
+    virtual ~TrackVisualizerCreator()
+    {
+    }
+
+    virtual QStringList trackVisualizers() const = 0;
+    virtual TrackVisualizer *createTrackVisualizer(const QString &name,
+            QWidget *parent = NULL) const = 0;
+};
+
+Q_DECLARE_INTERFACE(TrackVisualizerCreator, "de.mh21.igotu2gpx.trackvisualizer/1.0")
+
+#endif

@@ -14,6 +14,8 @@ SOURCES *= \
     igotugui.cpp \
     mainwindow.cpp \
     paths.cpp \
+    plugindialog.cpp \
+    pluginloader.cpp \
     preferencesdialog.cpp \
     qticonloader.cpp \
 
@@ -21,11 +23,14 @@ HEADERS *= \
     iconstorage.h \
     mainwindow.h \
     paths.h \
+    plugindialog.h \
+    pluginloader.h \
     preferencesdialog.h \
     qticonloader.h \
 
 FORMS *= \
     igotugui.ui \
+    plugindialog.ui \
     preferencesdialog.ui \
 
 unix {

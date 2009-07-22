@@ -23,20 +23,18 @@
 
 #include "iconstorage.h"
 #include "mainwindow.h"
+#include "plugindialog.h"
+#include "pluginloader.h"
 #include "preferencesdialog.h"
+#include "trackvisualizer.h"
 #include "ui_igotugui.h"
 
-#include <marble/MarbleMap.h>
-
 #include <QFileDialog>
-#include <QInputDialog>
 #include <QMessageBox>
 #include <QPointer>
 #include <QProgressBar>
 #include <QPushButton>
 #include <QStyle>
-#include <QTemporaryFile>
-#include <QTextStream>
 #include <QTimer>
 
 using namespace igotu;
@@ -45,13 +43,14 @@ class MainWindowPrivate : public QObject
 {
     Q_OBJECT
 public Q_SLOTS:
-    void on_actionAbout_activated();
-    void on_actionReload_activated();
-    void on_actionSave_activated();
-    void on_actionPurge_activated();
-    void on_actionCancel_activated();
-    void on_actionPreferences_activated();
-    void on_actionQuit_activated();
+    void on_actionAbout_triggered();
+    void on_actionAboutPlugins_triggered();
+    void on_actionReload_triggered();
+    void on_actionSave_triggered();
+    void on_actionPurge_triggered();
+    void on_actionCancel_triggered();
+    void on_actionPreferences_triggered();
+    void on_actionQuit_triggered();
 
     void on_control_infoStarted();
     void on_control_infoFinished(const QString &info);
@@ -81,67 +80,16 @@ public:
     IgotuControl *control;
     QProgressBar *progress;
     QPointer<PreferencesDialog> preferences;
+    PluginLoader *pluginLoader;
+    QList<TrackVisualizer*> visualizers;
 };
-
-static QByteArray pointsToKml(const IgotuPoints &points)
-{
-    QByteArray result;
-    QTextStream out(&result);
-    out.setCodec("UTF-8");
-    out.setRealNumberNotation(QTextStream::FixedNotation);
-    out.setRealNumberPrecision(6);
-
-    out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-           "<kml xmlns=\"http://earth.google.com/kml/2.2\">\n"
-           "<Document>\n"
-           "<Style id=\"line\">\n"
-           "    <LineStyle>\n"
-           "    <color>73FF0000</color>\n"
-           "    <width>5</width>\n"
-           "    </LineStyle>\n"
-           "</Style>\n";
-
-    Q_FOREACH (const IgotuPoint &point, points.wayPoints()) {
-        out << "<Placemark>\n"
-               "<Point>\n"
-               "<coordinates>\n";
-        out << point.longitude() << ',' << point.latitude() << '\n';
-        out << "</coordinates>\n"
-               "</Point>\n"
-               "</Placemark>\n";
-    }
-
-    out << "<Folder>\n";
-    Q_FOREACH (const QList<IgotuPoint> &track, points.tracks()) {
-        out << "<Placemark>\n"
-               "<styleUrl>#line</styleUrl>\n"
-               "<LineString>\n"
-               "<tessellate>1</tessellate>\n"
-               "<coordinates>\n";
-        Q_FOREACH (const IgotuPoint &point, track)
-            out << point.longitude() << ',' << point.latitude() << '\n';
-        out << "</coordinates>\n"
-               "</LineString>\n"
-               "</Placemark>\n";
-    }
-
-    out << "</Folder>\n";
-
-    out << "</Document>\n"
-           "</kml>\n";
-
-    out.flush();
-
-    printf("%s\n", result.data());
-    return result;
-}
 
 // MainWindowPrivate ===========================================================
 
-void MainWindowPrivate::on_actionAbout_activated()
+void MainWindowPrivate::on_actionAbout_triggered()
 {
-    QMessageBox::about(p, MainWindow::tr("About igotu2gpx"), MainWindow::tr(
-        "<h3>igotu2gpx %1</h3><br/><br/>"
+    QMessageBox::about(p, MainWindow::tr("About Igotu2gpx"), MainWindow::tr(
+        "<h3>Igotu2gpx %1</h3><br/><br/>"
         "Shows the configuration and decodes the stored tracks and waypoints "
         "of a MobileAction i-gotU USB GPS travel logger."
         "<br/><br/>"
@@ -157,17 +105,29 @@ void MainWindowPrivate::on_actionAbout_activated()
         "<br/>").arg(QLatin1String(IGOTU_VERSION_STR)));
 }
 
-void MainWindowPrivate::on_actionQuit_activated()
+void MainWindowPrivate::on_actionAboutPlugins_triggered()
+{
+    try {
+        PluginDialog *pluginDialog = new PluginDialog(p);
+        pluginDialog->show();
+    } catch (const std::exception &e) {
+        QMessageBox::critical(p, tr("Plugin Error"),
+                tr("Unable to display available plugins\n%1")
+                .arg(QString::fromLocal8Bit(e.what())));
+    }
+}
+
+void MainWindowPrivate::on_actionQuit_triggered()
 {
     QCoreApplication::quit();
 }
 
-void MainWindowPrivate::on_actionReload_activated()
+void MainWindowPrivate::on_actionReload_triggered()
 {
     control->info();
 }
 
-void MainWindowPrivate::on_actionSave_activated()
+void MainWindowPrivate::on_actionSave_triggered()
 {
     QString filePath = QFileDialog::getSaveFileName(p, MainWindow::tr("Save GPS data"),
             QDateTime::currentDateTime().toString(QLatin1String
@@ -187,7 +147,7 @@ void MainWindowPrivate::on_actionSave_activated()
                 .arg(file.errorString()));
 }
 
-void MainWindowPrivate::on_actionPurge_activated()
+void MainWindowPrivate::on_actionPurge_triggered()
 {
     QPointer<QMessageBox> messageBox(new QMessageBox(QMessageBox::Question,
                 QString(), MainWindow::tr
@@ -212,12 +172,12 @@ void MainWindowPrivate::on_actionPurge_activated()
     delete messageBox;
 }
 
-void MainWindowPrivate::on_actionCancel_activated()
+void MainWindowPrivate::on_actionCancel_triggered()
 {
     control->cancel();
 }
 
-void MainWindowPrivate::on_actionPreferences_activated()
+void MainWindowPrivate::on_actionPreferences_triggered()
 {
     if (!preferences) {
         preferences = new PreferencesDialog(p);
@@ -272,15 +232,16 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
         gpxData = igotuPoints.gpx(control->utcOffset());
         ui->actionSave->setEnabled(true);
 
-        QTemporaryFile kmlFile(QDir::tempPath() + QLatin1String("/igotu2gpx_temp_XXXXXX.kml"));
-        if (!kmlFile.open())
-            throw IgotuError(MainWindow::tr("Unable to create kml file: %1")
-                    .arg(kmlFile.errorString()));
-        kmlFile.write(pointsToKml(igotuPoints));
-        kmlFile.flush();
-        // TODO: what is if this is called multiple times?
-        // TODO: zoom to bounding box
-        ui->tracks->addPlaceMarkFile(kmlFile.fileName());
+        QString errorMessage;
+        Q_FOREACH (TrackVisualizer *visualizer, visualizers) {
+            try {
+                visualizer->setTracks(igotuPoints);
+            } catch (const std::exception &e) {
+                errorMessage = QString::fromLocal8Bit(e.what());
+            }
+        }
+        if (!errorMessage.isEmpty())
+            throw IgotuError(errorMessage);
 
         stopBackgroundAction();
     } catch (const std::exception &e) {
@@ -372,17 +333,32 @@ MainWindow::MainWindow() :
     d->control = new IgotuControl(this);
     d->control->setObjectName(QLatin1String("control"));
 
+    d->pluginLoader = new PluginLoader(this);
+    d->pluginLoader->setObjectName(QLatin1String("pluginLoader"));
+
     connectSlotsByNameToPrivate(this, d.get());
 
     d->control->setDevice(PreferencesDialog::currentDevice());
     d->control->setUtcOffset(PreferencesDialog::currentUtcOffset());
 
-    // This is a hack to get a HttpDownloadManager instance from MarbleMap
-    // because we can't instantiate it ourselves
-    d->ui->tracks->map()->setDownloadUrl(QUrl());
-//    d->ui->tracks->map()->setProjection(Marble::Mercator);
-    d->ui->tracks->setMapThemeId(QLatin1String("earth/openstreetmap/openstreetmap.dgml"));
-    // TODO: disable plugins that are not used (wikipedia)
+    typedef QPair<const TrackVisualizerCreator*, QString> VisualizerId;
+    QList<VisualizerId> visualizerIds;
+    Q_FOREACH (const TrackVisualizerCreator * const creator,
+            PluginLoader().availablePlugins<TrackVisualizerCreator>())
+        Q_FOREACH (const QString &visualizer, creator->trackVisualizers())
+            visualizerIds.append(qMakePair(creator, visualizer));
+    if (visualizerIds.count() == 1) {
+        QLayout * const verticalLayout = new QVBoxLayout(d->ui->tracks);
+        verticalLayout->setMargin(0);
+
+        TrackVisualizer * const visualizer = visualizerIds[0].first
+            ->createTrackVisualizer(visualizerIds[0].second, d->ui->tracks);
+        d->visualizers.append(visualizer);
+
+        verticalLayout->addWidget(visualizer);
+    } else {
+        // TODO
+    }
 
     // Progress bar
     d->progress = new QProgressBar(this);

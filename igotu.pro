@@ -11,6 +11,8 @@ clebsDirs(src/igotu)
 clebsDirs(src/igotu2gpx, src/igotu)
 clebsDirs(src/igotugui, src/igotu)
 
+clebsDirs(src/marblevisualizer, src/igotu, marblevisualizer)
+
 clebsDirs(data)
 clebsDirs(contrib/tango)
 
