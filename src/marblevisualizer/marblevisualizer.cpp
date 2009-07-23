@@ -42,6 +42,7 @@ public:
 
 private:
     Marble::MarbleWidget *tracks;
+    QTemporaryFile kmlFile;
 };
 
 class MarbleVisualizerCreator :
@@ -109,7 +110,6 @@ static QByteArray pointsToKml(const IgotuPoints &points)
 
     out.flush();
 
-    printf("%s\n", result.data());
     return result;
 }
 
@@ -136,7 +136,7 @@ MarbleVisualizer::MarbleVisualizer(QWidget *parent) :
 
 void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points)
 {
-    QTemporaryFile kmlFile(QDir::tempPath() + QLatin1String("/igotu2gpx_temp_XXXXXX.kml"));
+    kmlFile.setFileTemplate(QDir::tempPath() + QLatin1String("/igotu2gpx_temp_XXXXXX.kml"));
     if (!kmlFile.open())
         throw IgotuError(tr("Unable to create kml file: %1")
                 .arg(kmlFile.errorString()));

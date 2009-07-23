@@ -35,6 +35,7 @@
 #include <QProgressBar>
 #include <QPushButton>
 #include <QStyle>
+#include <QTabWidget>
 #include <QTimer>
 
 using namespace igotu;
