@@ -1,4 +1,5 @@
-CLEBS_REQUIRED *= qtversion430 boost-po libmarble
+CLEBS_REQUIRED *= qtversion430 boost-po
+CLEBS_SUGGESTED *= libmarble
 unix:CLEBS_REQUIRED *= libusb
 unix:!macx:CLEBS_SUGGESTED *= chrpath
 
@@ -12,6 +13,7 @@ clebsDirs(src/igotu2gpx, src/igotu)
 clebsDirs(src/igotugui, src/igotu)
 
 clebsDirs(src/marblevisualizer, src/igotu, marblevisualizer)
+clebsDirs(src/listvisualizer, src/igotu)
 
 clebsDirs(data)
 clebsDirs(contrib/tango)

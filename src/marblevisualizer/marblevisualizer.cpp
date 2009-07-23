@@ -1,8 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2008 Michael Hofmann <mh21@piware.de>                        *
- * Copyright (C) 2008 Division of Experimental Otorhinolaryngology K.U.Leuven *
- *                                                                            *
- * Original version written by Maarten Lambert.                               *
+ * Copyright (C) 2009 Michael Hofmann <mh21@piware.de>                        *
  *                                                                            *
  * This program is free software; you can redistribute it and/or modify       *
  * it under the terms of the GNU General Public License as published by       *
@@ -40,6 +37,8 @@ public:
     MarbleVisualizer(QWidget *parent = NULL);
 
     virtual void setTracks(const igotu::IgotuPoints &points);
+    virtual QString tabTitle() const;
+    virtual int priority() const;
 
 private:
     Marble::MarbleWidget *tracks;
@@ -146,6 +145,16 @@ void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points)
     // TODO: what is if this is called multiple times?
     // TODO: zoom to bounding box
     tracks->addPlaceMarkFile(kmlFile.fileName());
+}
+
+QString MarbleVisualizer::tabTitle() const
+{
+    return tr("Map");
+}
+
+int MarbleVisualizer::priority() const
+{
+    return 0;
 }
 
 // MarbleVisualizerCreator =====================================================

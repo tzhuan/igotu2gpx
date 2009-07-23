@@ -348,16 +348,21 @@ MainWindow::MainWindow() :
         Q_FOREACH (const QString &visualizer, creator->trackVisualizers())
             visualizerIds.append(qMakePair(creator, visualizer));
     if (visualizerIds.count() == 1) {
-        QLayout * const verticalLayout = new QVBoxLayout(d->ui->tracks);
-        verticalLayout->setMargin(0);
-
         TrackVisualizer * const visualizer = visualizerIds[0].first
-            ->createTrackVisualizer(visualizerIds[0].second, d->ui->tracks);
+            ->createTrackVisualizer(visualizerIds[0].second, d->ui->centralWidget);
+        d->ui->centralWidget->layout()->addWidget(visualizer);
         d->visualizers.append(visualizer);
-
-        verticalLayout->addWidget(visualizer);
     } else {
-        // TODO
+        QMultiMap<int, TrackVisualizer*> visualizers;
+        Q_FOREACH (const VisualizerId &id, visualizerIds) {
+            TrackVisualizer * const visualizer = id.first->createTrackVisualizer(id.second);
+            visualizers.insert(visualizer->priority(), visualizer);
+        }
+        d->visualizers = visualizers.values();
+        QTabWidget * const tabs = new QTabWidget(d->ui->centralWidget);
+        d->ui->centralWidget->layout()->addWidget(tabs);
+        Q_FOREACH (TrackVisualizer * const visualizer, d->visualizers)
+            tabs->addTab(visualizer, visualizer->tabTitle());
     }
 
     // Progress bar
