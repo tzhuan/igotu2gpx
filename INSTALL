@@ -40,6 +40,22 @@ If you are on a 64bit system and your distributor ships 64bit libraries in
 
 If you use a compiler older than gcc 4.0.0, use "qmake CLEBS=novisibility".
 
+If you get an error message of 
+----
+    /usr/local/bin/igotugui: error while loading shared libraries:
+        libigotu.so.1: cannot open shared object file: No such file or directory
+----
+although it got installed correctly, you might be missing library path. It
+might help to create a file "/etc/ld.so.conf.d/local.conf" with the following
+content:
+-----------
+    /usr/local/lib
+-----------
+and run:
+----
+    ldconfig
+----
+
 Mac OS X
 ~~~~~~~~
 
