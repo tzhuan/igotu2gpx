@@ -36,11 +36,6 @@ namespace po = boost::program_options;
 
 int main(int argc, char *argv[])
 {
-#if QT_VERSION >= 0x040500
-    // This crashes libmarble, at least up to 0.7 and on nvidia
-    // can be tested with "-graphicssystem opengl" command line parameters
-    // QApplication::setGraphicsSystem(QLatin1String("opengl"));
-#endif
     QApplication app(argc, argv);
     app.setApplicationName(QLatin1String("igotugui"));
     app.setOrganizationName(QLatin1String("mh21.de"));

@@ -12,10 +12,10 @@ clebsCheck(libmarble) {
     }
 
     macx {
-	isEmpty(MARBLEROOT):MARBLEROOT = /usr/local
-	isEmpty(MARBLEINCLUDEDIR):MARBLEINCLUDEDIR = $${MARBLEROOT}/include
+	isEmpty(MARBLEROOT):MARBLEROOT = /Applications/Marble.app/Contents/MacOS
+	isEmpty(MARBLEINCLUDEDIR):MARBLEINCLUDEDIR = $${MARBLEROOT}/resources/data/include
 	isEmpty(MARBLELIBDIR):MARBLELIBDIR = $${MARBLEROOT}/lib
-	isEmpty(MARBLELIB):MARBLELIB = libmarblewidget
+	isEmpty(MARBLELIB):MARBLELIB = marblewidget
 
 	exists($${MARBLEINCLUDEDIR}/marble):CLEBS_DEPENDENCIES *= libmarble
     }

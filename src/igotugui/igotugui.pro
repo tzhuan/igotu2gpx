@@ -1,5 +1,5 @@
 BASEDIR = ../..
-CLEBS *= libigotu boost-po libmarble
+CLEBS *= libigotu boost-po
 TARGET = igotugui
 include($$BASEDIR/clebs.pri)
 

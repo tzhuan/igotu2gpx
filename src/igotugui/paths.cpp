@@ -179,10 +179,11 @@ QStringList Paths::pluginDirectories()
     result << QLatin1String("/usr/local/lib") + DIRECTORY;
     result << QLatin1String("/usr/lib") + DIRECTORY;
 #elif defined(Q_OS_MACX)
-    // TODO: all MacOS X native dirs are missing
+    // TODO: for the MacOS X native case, user config is missing
     result << QDir::homePath() + QLatin1String("/.local/lib") + DIRECTORY;
     result << relativeToBaseDirectory
-           (QStringList() << QLatin1String("/lib") + DIRECTORY,
+           (QStringList() << QLatin1String("/lib") + DIRECTORY
+                          << QLatin1String("/PlugIns"),
             QStringList());
     result << QLatin1String("/usr/local/lib") + DIRECTORY;
     result << QLatin1String("/usr/lib") + DIRECTORY;

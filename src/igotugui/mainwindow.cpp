@@ -23,6 +23,7 @@
 
 #include "iconstorage.h"
 #include "mainwindow.h"
+#include "paths.h"
 #include "plugindialog.h"
 #include "pluginloader.h"
 #include "preferencesdialog.h"
@@ -46,6 +47,7 @@ class MainWindowPrivate : public QObject
 public Q_SLOTS:
     void on_actionAbout_triggered();
     void on_actionAboutPlugins_triggered();
+    void on_actionDebug_triggered();
     void on_actionReload_triggered();
     void on_actionSave_triggered();
     void on_actionPurge_triggered();
@@ -116,6 +118,21 @@ void MainWindowPrivate::on_actionAboutPlugins_triggered()
                 tr("Unable to display available plugins\n%1")
                 .arg(QString::fromLocal8Bit(e.what())));
     }
+}
+
+void MainWindowPrivate::on_actionDebug_triggered()
+{
+    const QString message = MainWindow::tr(
+        "<h3>Versions</h3>"
+            "Compiled against Qt %1<br/>"
+            "Running with Qt %2"
+        "<h3>Icon Directories</h3>%4"
+        "<h3>Plugin Directories</h3>%5").arg(
+            QLatin1String(QT_VERSION_STR),
+            QLatin1String(qVersion()),
+            Paths::iconDirectories().join(QLatin1String("<br/>")),
+            Paths::pluginDirectories().join(QLatin1String("<br/>")));
+    QMessageBox::information(p, MainWindow::tr("Debug Information"), message);
 }
 
 void MainWindowPrivate::on_actionQuit_triggered()

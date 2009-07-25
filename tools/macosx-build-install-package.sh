@@ -8,19 +8,22 @@ DMG="$ROOT".dmg
 IDENTIFIER=de.mh21.igotu2gpx
 GUI=igotugui
 CMDLINE=igotu2gpx
+QT="Core Gui Network Svg Xml Script DBus"
 
 SOURCE=bin/debug
 CONTENTS="$APP"/Contents
 MACOS="$CONTENTS"/MacOS
 FRAMEWORKS="$CONTENTS"/Frameworks
 RESOURCES="$CONTENTS"/Resources
+PLUGINS="$CONTENTS"/PlugIns
 
 make
 rm -rf "$APP" "$DMG"
-mkdir -p "$FRAMEWORKS" "$RESOURCES" "$MACOS"
+mkdir -p "$FRAMEWORKS" "$RESOURCES" "$MACOS" "$PLUGINS"
 cp "$SOURCE"/"$GUI" "$MACOS"
 cp "$SOURCE"/"$CMDLINE" "$MACOS"
 cp "$SOURCE"/libigotu.1.dylib "$FRAMEWORKS"
+cp "$SOURCE"/lib*visualizer.dylib "$PLUGINS"
 cp data/mac/igotugui.icns "$RESOURCES"/igotu2gpx.icns
 cp -R data/icons "$RESOURCES"
 cp -R contrib/tango/icons "$RESOURCES"
@@ -56,30 +59,34 @@ cat > "$RESOURCES"/qt.conf << EOF
 Plugins = PlugIns
 EOF
 
-cp -R /Library/FrameWorks/QtCore.framework "$FRAMEWORKS"
-cp -R /Library/FrameWorks/QtGui.framework "$FRAMEWORKS"
+for i in $QT; do
+    cp -R /Library/FrameWorks/Qt$i.framework "$FRAMEWORKS"
+done
 rm "$FRAMEWORKS"/*/Headers
 rm "$FRAMEWORKS"/*/*.prl
 rm -r "$FRAMEWORKS"/*/Versions/Current/Headers
 
+cp /Applications/Marble.app/Contents/MacOS/lib/libmarblewidget.0.7.1.dylib "$FRAMEWORKS"
 cp /usr/local/lib/libboost_program_options-xgcc40-mt-1_39.dylib "$FRAMEWORKS"
 cp /usr/local/lib/libusb-0.1.4.dylib "$FRAMEWORKS"
 
-strip -x "$FRAMEWORKS"/QtCore.framework/Versions/Current/QtCore
-strip -x "$FRAMEWORKS"/QtGui.framework/Versions/Current/QtGui
-strip -x "$FRAMEWORKS"/libigotu.1.dylib
-strip -x "$FRAMEWORKS"/libboost_program_options-xgcc40-mt-1_39.dylib
-strip -x "$FRAMEWORKS"/libusb-0.1.4.dylib
-strip -x "$MACOS"/"$CMDLINE"
-strip -x "$MACOS"/"$GUI"
+if [ "$1" != "debug" ]; then
+    for i in $QT; do
+	strip -x "$FRAMEWORKS"/Qt$i.framework/Versions/Current/Qt$i
+    done
+    strip -x "$FRAMEWORKS"/libigotu.1.dylib
+    strip -x "$FRAMEWORKS"/libboost_program_options-xgcc40-mt-1_39.dylib
+    strip -x "$FRAMEWORKS"/libusb-0.1.4.dylib
+    strip -x "$MACOS"/"$CMDLINE"
+    strip -x "$MACOS"/"$GUI"
+fi
 
-install_name_tool -change QtCore.framework/Versions/4/QtCore @executable_path/../FrameWorks/QtCore.framework/Versions/4/QtCore "$FRAMEWORKS"/QtGui.framework/Versions/Current/QtGui
-install_name_tool -change QtCore.framework/Versions/4/QtCore @executable_path/../FrameWorks/QtCore.framework/Versions/4/QtCore "$FRAMEWORKS"/libigotu.1.dylib
-install_name_tool -change QtCore.framework/Versions/4/QtCore @executable_path/../FrameWorks/QtCore.framework/Versions/4/QtCore "$MACOS"/"$CMDLINE"
-install_name_tool -change QtCore.framework/Versions/4/QtCore @executable_path/../FrameWorks/QtCore.framework/Versions/4/QtCore "$MACOS"/"$GUI"
-install_name_tool -change QtGui.framework/Versions/4/QtGui @executable_path/../FrameWorks/QtGui.framework/Versions/4/QtGui "$MACOS"/"$GUI"
-install_name_tool -change libigotu.1.dylib @executable_path/../FrameWorks/libigotu.1.dylib "$MACOS"/"$CMDLINE"
-install_name_tool -change libigotu.1.dylib @executable_path/../FrameWorks/libigotu.1.dylib "$MACOS"/"$GUI"
-install_name_tool -change libboost_program_options-xgcc40-mt-1_39.dylib @executable_path/../FrameWorks/libboost_program_options-xgcc40-mt-1_39.dylib "$MACOS"/"$CMDLINE"
-install_name_tool -change libboost_program_options-xgcc40-mt-1_39.dylib @executable_path/../FrameWorks/libboost_program_options-xgcc40-mt-1_39.dylib "$MACOS"/"$GUI"
-install_name_tool -change /usr/local/lib/libusb-0.1.4.dylib @executable_path/../FrameWorks/libusb-0.1.4.dylib "$FRAMEWORKS"/libigotu.1.dylib
+for i in "$FRAMEWORKS"/Qt*.framework/Versions/Current/Qt* "$PLUGINS"/*.dylib "$FRAMEWORKS"/*.dylib "$MACOS"/*; do
+    for j in $QT; do
+	install_name_tool -change Qt$j.framework/Versions/4/Qt$j @executable_path/../FrameWorks/Qt$j.framework/Versions/4/Qt$j "$i"
+    done
+    install_name_tool -change libigotu.1.dylib @executable_path/../FrameWorks/libigotu.1.dylib "$i"
+    install_name_tool -change libboost_program_options-xgcc40-mt-1_39.dylib @executable_path/../FrameWorks/libboost_program_options-xgcc40-mt-1_39.dylib "$i"
+    install_name_tool -change /usr/local/lib/libusb-0.1.4.dylib @executable_path/../FrameWorks/libusb-0.1.4.dylib "$i"
+    install_name_tool -change @executable_path/lib/libmarblewidget.7.dylib @executable_path/../FrameWorks/libmarblewidget.0.7.1.dylib "$i"
+done
