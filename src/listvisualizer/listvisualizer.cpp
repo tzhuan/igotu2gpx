@@ -77,7 +77,7 @@ void ListVisualizer::setTracks(const igotu::IgotuPoints &points)
     Q_FOREACH (const QList<IgotuPoint> &track, points.tracks())
         items.append(new QTreeWidgetItem((QTreeWidget*)NULL, QStringList()
                     << tr("Track %1").arg(items.count() + 1)
-                    << tr("%n points", NULL, track.count())));
+                    << tr("%n point(s)", NULL, track.count())));
 
     tracks->clear();
     tracks->insertTopLevelItems(0, items);

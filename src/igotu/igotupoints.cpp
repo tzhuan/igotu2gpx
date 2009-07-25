@@ -44,8 +44,17 @@ bool IgotuPoint::isValid() const
     // This test is used by @trip PC
     if (latitude() == 0 && longitude() == 0)
         return false;
-    // TODO:this is too simple, location and time information can still be valid
-    return (uchar(record[0]) & ~0x04) == 0;
+    return (uchar(record[0]) & 0x20) == 0;
+}
+
+bool IgotuPoint::isWayPoint() const
+{
+    return uchar(record[0]) & 0x04;
+}
+
+bool IgotuPoint::isTrackStart() const
+{
+    return uchar(record[0]) & 0x40;
 }
 
 unsigned IgotuPoint::flags() const
@@ -149,11 +158,6 @@ QString IgotuPoint::dateTimeString(int utcOffset) const
     return result;
 }
 
-bool IgotuPoint::isWayPoint() const
-{
-    return record[0] & 0x04;
-}
-
 QByteArray IgotuPoint::hex() const
 {
     return record.toHex();
@@ -248,6 +252,10 @@ QList<QList<IgotuPoint> > IgotuPoints::tracks() const
     QList<QList<IgotuPoint> > result;
     QList<IgotuPoint> current;
     Q_FOREACH (const IgotuPoint &point, points()) {
+        if (point.isTrackStart() && !current.isEmpty()) {
+            result.append(current);
+            current.clear();
+        }
         if (!point.isValid())
             continue;
         current.append(point);

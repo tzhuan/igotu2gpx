@@ -40,6 +40,7 @@ public:
 
     bool isValid() const;
     bool isWayPoint() const;
+    bool isTrackStart() const;
 
     QDateTime dateTime() const;
     // offset in seconds

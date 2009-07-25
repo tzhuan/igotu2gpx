@@ -164,6 +164,8 @@ void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
                 printf("Record %u\n", ++index);
                 if (igotuPoint.isWayPoint())
                     printf("  Waypoint\n");
+                if (igotuPoint.isTrackStart())
+                    printf("  Track start\n");
                 printf("  Date %s\n", qPrintable(igotuPoint.dateTimeString
                             (control->utcOffset())));
                 printf("  Latitude %.6f\n", igotuPoint.latitude());

@@ -310,9 +310,9 @@ Schedule table entries are stored in records of 0x40 bytes:
 Trackpoints are stored in records of 0x20 bytes:
 ----
   0x00: uint8 flags
-        0x04: waypoint (type = -1)
-        0x20: unknown  (type = -4)
-        0x40: unknown  (type = -2)
+        0x04: waypoint    (type = -1)
+        0x20: ignored     (type = -4)
+        0x40: track start (type = -2)
   0x01: uint8 YYYYMMMM
         YY year - 2000
         MM month (starting with 1)
