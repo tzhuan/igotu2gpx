@@ -253,7 +253,7 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
         QString errorMessage;
         Q_FOREACH (TrackVisualizer *visualizer, visualizers) {
             try {
-                visualizer->setTracks(igotuPoints);
+                visualizer->setTracks(igotuPoints, control->utcOffset());
             } catch (const std::exception &e) {
                 errorMessage = QString::fromLocal8Bit(e.what());
             }

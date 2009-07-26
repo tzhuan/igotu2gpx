@@ -31,7 +31,7 @@ class ListVisualizer: public TrackVisualizer
 public:
     ListVisualizer(QWidget *parent = NULL);
 
-    virtual void setTracks(const igotu::IgotuPoints &points);
+    virtual void setTracks(const igotu::IgotuPoints &points, int utcOffset);
     virtual QString tabTitle() const;
     virtual int priority() const;
 
@@ -55,6 +55,24 @@ Q_EXPORT_PLUGIN2(listVisualizer, ListVisualizerCreator)
 
 using namespace igotu;
 
+static QString formatCoordinates(const IgotuPoint &point)
+{
+    const double longitude = point.longitude();
+    const int longitudeSeconds = qRound(qAbs(longitude * 3600));
+    const double latitude = point.latitude();
+    const int latitudeSeconds = qRound(qAbs(latitude * 3600));
+    return QString::fromUtf8("%1\xc2\xb0%2'%3\"%4, %5\xc2\xb0%6'%7\"%8")
+        .arg(longitudeSeconds / 3600)
+        .arg((longitudeSeconds / 60) % 60)
+        .arg(longitudeSeconds % 60)
+        .arg(longitude < 0 ? ListVisualizer::tr("W") : ListVisualizer::tr("E"))
+        .arg(latitudeSeconds / 3600)
+        .arg((latitudeSeconds / 60) % 60)
+        .arg(latitudeSeconds % 60)
+        .arg(latitude < 0 ? ListVisualizer::tr("S") : ListVisualizer::tr("N"));
+
+}
+
 // ListVisualizer ==============================================================
 
 ListVisualizer::ListVisualizer(QWidget *parent) :
@@ -64,23 +82,33 @@ ListVisualizer::ListVisualizer(QWidget *parent) :
     verticalLayout->setMargin(0);
 
     tracks = new QTreeWidget(this);
-    tracks->setObjectName(QString::fromUtf8("tracks"));
-    tracks->setColumnCount(2);
-    tracks->header()->hide();
+    tracks->setObjectName(QLatin1String("tracks"));
+    tracks->setAllColumnsShowFocus(true);
+    tracks->setRootIsDecorated(false);
+    tracks->setColumnCount(3);
+    tracks->setHeaderLabels(QStringList()
+            << tr("Date")
+            << tr("Position")
+            << tr("Number of trackpoints"));
 
     verticalLayout->addWidget(tracks);
 }
 
-void ListVisualizer::setTracks(const igotu::IgotuPoints &points)
+void ListVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset)
 {
     QList<QTreeWidgetItem*> items;
-    Q_FOREACH (const QList<IgotuPoint> &track, points.tracks())
+    Q_FOREACH (const QList<IgotuPoint> &track, points.tracks()) {
+        QString date = track.at(0).humanDateTimeString(utcOffset);
         items.append(new QTreeWidgetItem((QTreeWidget*)NULL, QStringList()
-                    << tr("Track %1").arg(items.count() + 1)
+                    << date
+                    << formatCoordinates(track.at(0))
                     << tr("%n point(s)", NULL, track.count())));
+    }
 
     tracks->clear();
     tracks->insertTopLevelItems(0, items);
+    for (unsigned i = 0; i < 3; ++i)
+        tracks->resizeColumnToContents(i);
 }
 
 QString ListVisualizer::tabTitle() const

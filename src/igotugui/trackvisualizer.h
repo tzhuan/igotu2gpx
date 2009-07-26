@@ -36,7 +36,7 @@ public:
     {
     }
 
-    virtual void setTracks(const igotu::IgotuPoints &points) = 0;
+    virtual void setTracks(const igotu::IgotuPoints &points, int utcOffset) = 0;
     virtual QString tabTitle() const = 0;
     // lower is better
     virtual int priority() const = 0;

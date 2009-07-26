@@ -202,7 +202,7 @@ void IgotuControlPrivateWorker::info()
                     model.modelId() == ModelCommand::Gt120);
             countCommand.sendAndReceive();
             unsigned count = countCommand.trackPointCount();
-            status += IgotuControl::tr("Number of trackpoints: %1\n").arg(count);
+            status += IgotuControl::tr("Number of raw trackpoints: %1\n").arg(count);
             contents = ReadCommand(connection.get(), 0, 0x1000)
                 .sendAndReceive();
             NmeaSwitchCommand(connection.get(), true).sendAndReceive();

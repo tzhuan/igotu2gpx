@@ -36,13 +36,16 @@ class MarbleVisualizer: public TrackVisualizer
 public:
     MarbleVisualizer(QWidget *parent = NULL);
 
-    virtual void setTracks(const igotu::IgotuPoints &points);
+    virtual void setTracks(const igotu::IgotuPoints &points, int utcOffset);
     virtual QString tabTitle() const;
     virtual int priority() const;
 
+    void initMarble();
+
 private:
+    QLayout *verticalLayout;
     Marble::MarbleWidget *tracks;
-    QTemporaryFile kmlFile;
+    boost::scoped_ptr<QTemporaryFile> kmlFile;
 };
 
 class MarbleVisualizerCreator :
@@ -118,11 +121,18 @@ static QByteArray pointsToKml(const IgotuPoints &points)
 MarbleVisualizer::MarbleVisualizer(QWidget *parent) :
     TrackVisualizer(parent)
 {
-    QLayout * const verticalLayout = new QVBoxLayout(this);
+    verticalLayout = new QVBoxLayout(this);
     verticalLayout->setMargin(0);
 
+    tracks = NULL;
+    initMarble();
+}
+
+void MarbleVisualizer::initMarble()
+{
+    delete tracks;
     tracks = new Marble::MarbleWidget(this);
-    tracks->setObjectName(QString::fromUtf8("tracks"));
+    tracks->setObjectName(QLatin1String("tracks"));
 
     verticalLayout->addWidget(tracks);
 
@@ -134,17 +144,39 @@ MarbleVisualizer::MarbleVisualizer(QWidget *parent) :
     // TODO: disable plugins that are not used (wikipedia)
 }
 
-void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points)
+void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset)
 {
-    kmlFile.setFileTemplate(QDir::tempPath() + QLatin1String("/igotu2gpx_temp_XXXXXX.kml"));
-    if (!kmlFile.open())
+    Q_UNUSED(utcOffset);
+
+    // TODO: crashes marble, ugly hacky workaround
+//    if (kmlFile)
+//        tracks->removePlaceMarkKey(kmlFile->fileName());
+    double longitude;
+    double latitude;
+    int zoom;
+    bool restoreView = false;
+    if (tracks) {
+        longitude = tracks->centerLongitude();
+        latitude = tracks->centerLatitude();
+        zoom = tracks->zoom();
+        restoreView = true;
+    }
+    initMarble();
+    if (restoreView) {
+        tracks->setCenterLongitude(longitude);
+        tracks->setCenterLatitude(latitude);
+        tracks->zoomView(zoom);
+    }
+
+    kmlFile.reset(new QTemporaryFile(QDir::tempPath() +
+                QLatin1String("/igotu2gpx_temp_XXXXXX.kml")));
+    if (!kmlFile->open())
         throw IgotuError(tr("Unable to create kml file: %1")
-                .arg(kmlFile.errorString()));
-    kmlFile.write(pointsToKml(points));
-    kmlFile.flush();
-    // TODO: what is if this is called multiple times?
+                .arg(kmlFile->errorString()));
+    kmlFile->write(pointsToKml(points));
+    kmlFile->flush();
+    tracks->addPlaceMarkFile(kmlFile->fileName());
     // TODO: zoom to bounding box
-    tracks->addPlaceMarkFile(kmlFile.fileName());
 }
 
 QString MarbleVisualizer::tabTitle() const

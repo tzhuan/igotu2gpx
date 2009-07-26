@@ -163,7 +163,7 @@ QStringList Paths::iconDirectories()
             QStringList() << QLatin1String("/data/icons")
                           << QLatin1String("/contrib/tango/icons"));
 #else
-#error FIXME No idea where to find icon directories on this platform
+#error No idea where to find icon directories on this platform
 #endif
     return uniqueDirectoryList(result);
 }
@@ -196,7 +196,7 @@ QStringList Paths::pluginDirectories()
            (QStringList() << QLatin1String("/lib"),
             QStringList());
 #else
-#error FIXME No idea where to find plugin directories on this platform
+#error No idea where to find plugin directories on this platform
 #endif
     return uniqueDirectoryList(result);
 }

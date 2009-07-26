@@ -44,6 +44,8 @@ public:
 
     QDateTime dateTime() const;
     // offset in seconds
+    QString humanDateTimeString(int utcOffset = 0) const;
+    // offset in seconds
     QString dateTimeString(int utcOffset = 0) const;
 
     // in degrees

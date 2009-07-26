@@ -158,6 +158,19 @@ QString IgotuPoint::dateTimeString(int utcOffset) const
     return result;
 }
 
+QString IgotuPoint::humanDateTimeString(int utcOffset) const
+{
+    const QDateTime date = dateTime().addSecs(utcOffset);
+
+    QString result = date.toString(QLatin1String("yyyy-MM-dd hh:mm:ss"));
+    if (utcOffset != 0)
+        result += QString::fromLatin1("%1%2:%3")
+            .arg(utcOffset < 0 ? QLatin1Char('-') : QLatin1Char('+'))
+            .arg((utcOffset / 3600) % 24, 2, 10, QLatin1Char('0'))
+            .arg((utcOffset / 60) % 60, 2, 10, QLatin1Char('0'));
+    return result;
+}
+
 QByteArray IgotuPoint::hex() const
 {
     return record.toHex();
@@ -376,8 +389,6 @@ QByteArray IgotuPoints::gpx(int utcOffset) const
                 << "</sat>\n"
             << xmlIndent(1) << "</wpt>\n";
 
-    // TODO: no idea whether we should have multiple tracks or track segments
-    // do the same as @trip PC
     Q_FOREACH (const QList<IgotuPoint> &track, tracks()) {
         out << xmlIndent(1) << "<trk>\n";
         out << xmlIndent(2) << "<trkseg>\n";
