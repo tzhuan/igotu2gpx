@@ -27,6 +27,7 @@
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QList>
+#include <QMetaType>
 
 namespace igotu
 {
@@ -115,6 +116,7 @@ public:
     QList<QList<IgotuPoint> > tracks() const;
 
     QByteArray gpx(int utcOffset = 0) const;
+    static QByteArray gpx(const QList<QList<IgotuPoint> > &tracks, int utcOffset = 0);
 
     bool isValid() const;
 
@@ -138,6 +140,8 @@ private:
 };
 
 } // namespace igotu
+
+Q_DECLARE_METATYPE(QList<igotu::IgotuPoint>)
 
 #endif
 

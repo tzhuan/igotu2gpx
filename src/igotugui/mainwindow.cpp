@@ -69,6 +69,9 @@ public Q_SLOTS:
     void on_control_purgeFinished();
     void on_control_purgeFailed(const QString &message);
 
+    void trackActivated(const QList<igotu::IgotuPoint> &track);
+    void saveTracksRequested(const QList<QList<igotu::IgotuPoint> > &tracks);
+
 public:
     void startBackgroundAction(const QString &text);
     void updateBackgroundAction(unsigned value, unsigned maximum);
@@ -77,9 +80,9 @@ public:
 
     MainWindow *p;
 
-    QByteArray gpxData;
-
+    boost::scoped_ptr<IgotuPoints> lastTrackPoints;
     boost::scoped_ptr<Ui::MainWindow> ui;
+    QTabWidget *tabs;
     IgotuControl *control;
     QProgressBar *progress;
     QPointer<PreferencesDialog> preferences;
@@ -147,22 +150,8 @@ void MainWindowPrivate::on_actionReload_triggered()
 
 void MainWindowPrivate::on_actionSave_triggered()
 {
-    QString filePath = QFileDialog::getSaveFileName(p, MainWindow::tr("Save GPS data"),
-            QDateTime::currentDateTime().toString(QLatin1String
-                ("yyyy-MM-dd-hh-mm-ss")) + QLatin1String(".gpx"),
-            MainWindow::tr("GPX files (*.gpx)"));
-
-    if (filePath.isEmpty())
-        return;
-
-    QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly))
-        throw IgotuError(MainWindow::tr("Unable to create file: %1")
-                .arg(file.errorString()));
-
-    if (file.write(gpxData) != gpxData.length())
-        throw IgotuError(MainWindow::tr("Unable to save to file: %1")
-                .arg(file.errorString()));
+    if (lastTrackPoints)
+        saveTracksRequested(lastTrackPoints->tracks());
 }
 
 void MainWindowPrivate::on_actionPurge_triggered()
@@ -245,15 +234,13 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
         uint count)
 {
     try {
-        IgotuPoints igotuPoints(contents, count);
-
-        gpxData = igotuPoints.gpx(control->utcOffset());
+        lastTrackPoints.reset(new IgotuPoints(contents, count));
         ui->actionSave->setEnabled(true);
 
         QString errorMessage;
         Q_FOREACH (TrackVisualizer *visualizer, visualizers) {
             try {
-                visualizer->setTracks(igotuPoints, control->utcOffset());
+                visualizer->setTracks(*lastTrackPoints, control->utcOffset());
             } catch (const std::exception &e) {
                 errorMessage = QString::fromLocal8Bit(e.what());
             }
@@ -263,7 +250,7 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
 
         stopBackgroundAction();
     } catch (const std::exception &e) {
-        abortBackgroundAction(MainWindow::tr("Unable to save data: %1")
+        abortBackgroundAction(MainWindow::tr("Unable to obtain trackpoints from GPS tracker: %1")
                 .arg(QString::fromLocal8Bit(e.what())));
     }
 }
@@ -325,6 +312,42 @@ void MainWindowPrivate::abortBackgroundAction(const QString &text)
     p->statusBar()->showMessage(text);
 }
 
+void MainWindowPrivate::trackActivated(const QList<IgotuPoint> &track)
+{
+    qDebug("activated");
+    visualizers[0]->highlightTrack(track);
+    if (tabs)
+        tabs->setCurrentIndex(0);
+}
+
+void MainWindowPrivate::saveTracksRequested
+        (const QList<QList<igotu::IgotuPoint> > &tracks)
+{
+    try {
+        QString filePath = QFileDialog::getSaveFileName(p, MainWindow::tr("Save GPS data"),
+                QDateTime::currentDateTime().toString(QLatin1String
+                    ("yyyy-MM-dd-hh-mm-ss")) + QLatin1String(".gpx"),
+                MainWindow::tr("GPX files (*.gpx)"));
+
+        if (filePath.isEmpty())
+            return;
+
+        QFile file(filePath);
+        if (!file.open(QIODevice::WriteOnly))
+            throw IgotuError(MainWindow::tr("Unable to create file: %1")
+                    .arg(file.errorString()));
+
+        const QByteArray gpxData = IgotuPoints::gpx(tracks, control->utcOffset());
+        if (file.write(gpxData) != gpxData.length())
+            throw IgotuError(MainWindow::tr("Unable to save to file: %1")
+                    .arg(file.errorString()));
+    } catch (const std::exception &e) {
+        QMessageBox::critical(p, MainWindow::tr("File Error"),
+                MainWindow::tr("Unable to save trackpoints: %1")
+                .arg(QString::fromLocal8Bit(e.what())));
+    }
+}
+
 // MainWindow ==================================================================
 
 MainWindow::MainWindow() :
@@ -366,21 +389,30 @@ MainWindow::MainWindow() :
         Q_FOREACH (const QString &visualizer, creator->trackVisualizers())
             visualizerIds.append(qMakePair(creator, visualizer));
     if (visualizerIds.count() == 1) {
+        d->tabs = NULL;
+
         TrackVisualizer * const visualizer = visualizerIds[0].first
             ->createTrackVisualizer(visualizerIds[0].second, d->ui->centralWidget);
         d->ui->centralWidget->layout()->addWidget(visualizer);
         d->visualizers.append(visualizer);
     } else {
+        d->tabs = new QTabWidget(d->ui->centralWidget);
+        d->ui->centralWidget->layout()->addWidget(d->tabs);
+
         QMultiMap<int, TrackVisualizer*> visualizers;
         Q_FOREACH (const VisualizerId &id, visualizerIds) {
             TrackVisualizer * const visualizer = id.first->createTrackVisualizer(id.second);
             visualizers.insert(visualizer->priority(), visualizer);
         }
         d->visualizers = visualizers.values();
-        QTabWidget * const tabs = new QTabWidget(d->ui->centralWidget);
-        d->ui->centralWidget->layout()->addWidget(tabs);
         Q_FOREACH (TrackVisualizer * const visualizer, d->visualizers)
-            tabs->addTab(visualizer, visualizer->tabTitle());
+            d->tabs->addTab(visualizer, visualizer->tabTitle());
+    }
+    for (unsigned i = 0; i < unsigned(d->visualizers.size()); ++i) {
+        connect(d->visualizers[i], SIGNAL(saveTracksRequested(QList<QList<igotu::IgotuPoint>>)),
+                d.get(), SLOT(saveTracksRequested(QList<QList<igotu::IgotuPoint>>)));
+        connect(d->visualizers[i], SIGNAL(trackActivated(QList<igotu::IgotuPoint>)),
+                d.get(), SLOT(trackActivated(QList<igotu::IgotuPoint>)));
     }
 
     // Progress bar

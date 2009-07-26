@@ -21,9 +21,12 @@
 
 #include "trackvisualizer.h"
 
+#include <QAction>
 #include <QHeaderView>
 #include <QLayout>
 #include <QTreeWidget>
+
+using namespace igotu;
 
 class ListVisualizer: public TrackVisualizer
 {
@@ -34,9 +37,18 @@ public:
     virtual void setTracks(const igotu::IgotuPoints &points, int utcOffset);
     virtual QString tabTitle() const;
     virtual int priority() const;
+    virtual void highlightTrack(const QList<IgotuPoint> &track);
+
+Q_SIGNALS:
+    void saveTracksRequested(const QList<QList<igotu::IgotuPoint> > &tracks);
+    void trackActivated(const QList<igotu::IgotuPoint> &tracks);
+
+private Q_SLOTS:
+    void on_trackList_activated(const QModelIndex &index);
+    void on_saveTracksAction_activated();
 
 private:
-    QTreeWidget *tracks;
+    QTreeWidget *trackList;
 };
 
 class ListVisualizerCreator :
@@ -52,8 +64,6 @@ public:
 };
 
 Q_EXPORT_PLUGIN2(listVisualizer, ListVisualizerCreator)
-
-using namespace igotu;
 
 static QString formatCoordinates(const IgotuPoint &point)
 {
@@ -81,17 +91,25 @@ ListVisualizer::ListVisualizer(QWidget *parent) :
     QLayout * const verticalLayout = new QVBoxLayout(this);
     verticalLayout->setMargin(0);
 
-    tracks = new QTreeWidget(this);
-    tracks->setObjectName(QLatin1String("tracks"));
-    tracks->setAllColumnsShowFocus(true);
-    tracks->setRootIsDecorated(false);
-    tracks->setColumnCount(3);
-    tracks->setHeaderLabels(QStringList()
+    trackList = new QTreeWidget(this);
+    trackList->setObjectName(QLatin1String("trackList"));
+    trackList->setContextMenuPolicy(Qt::ActionsContextMenu);
+    trackList->setAllColumnsShowFocus(true);
+    trackList->setRootIsDecorated(false);
+    trackList->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    trackList->setColumnCount(3);
+    trackList->setHeaderLabels(QStringList()
             << tr("Date")
             << tr("Position")
             << tr("Number of trackpoints"));
 
-    verticalLayout->addWidget(tracks);
+    verticalLayout->addWidget(trackList);
+
+    QAction * const saveTracksAction = new QAction(tr("Save selected tracks..."), this);
+    saveTracksAction->setObjectName(QLatin1String("saveTracksAction"));
+    trackList->addAction(saveTracksAction);
+
+    QMetaObject::connectSlotsByName(this);
 }
 
 void ListVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset)
@@ -99,16 +117,19 @@ void ListVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset)
     QList<QTreeWidgetItem*> items;
     Q_FOREACH (const QList<IgotuPoint> &track, points.tracks()) {
         QString date = track.at(0).humanDateTimeString(utcOffset);
-        items.append(new QTreeWidgetItem((QTreeWidget*)NULL, QStringList()
+        QTreeWidgetItem * const item = new QTreeWidgetItem((QTreeWidget*)NULL,
+                QStringList()
                     << date
                     << formatCoordinates(track.at(0))
-                    << tr("%n point(s)", NULL, track.count())));
+                    << tr("%n point(s)", NULL, track.count()));
+        item->setData(0, Qt::UserRole, QVariant::fromValue(track));
+        items.append(item);
     }
 
-    tracks->clear();
-    tracks->insertTopLevelItems(0, items);
+    trackList->clear();
+    trackList->insertTopLevelItems(0, items);
     for (unsigned i = 0; i < 3; ++i)
-        tracks->resizeColumnToContents(i);
+        trackList->resizeColumnToContents(i);
 }
 
 QString ListVisualizer::tabTitle() const
@@ -119,6 +140,29 @@ QString ListVisualizer::tabTitle() const
 int ListVisualizer::priority() const
 {
     return 100;
+}
+
+void ListVisualizer::highlightTrack(const QList<igotu::IgotuPoint> &track)
+{
+    Q_UNUSED(track);
+    // ignored
+}
+
+void ListVisualizer::on_trackList_activated(const QModelIndex &index)
+{
+    if (!index.isValid())
+        return;
+    const QList<IgotuPoint> track = index.sibling(index.row(),
+            0).data(Qt::UserRole).value<QList<IgotuPoint> >();
+    emit trackActivated(track);
+}
+
+void ListVisualizer::on_saveTracksAction_activated()
+{
+    QList<QList<IgotuPoint> > tracks;
+    Q_FOREACH (const QModelIndex &index, trackList->selectionModel()->selectedRows())
+        tracks.append(index.data(Qt::UserRole).value<QList<IgotuPoint> >());
+    emit saveTracksRequested(tracks);
 }
 
 // ListVisualizerCreator =======================================================

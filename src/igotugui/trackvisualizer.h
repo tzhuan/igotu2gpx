@@ -25,6 +25,7 @@
 
 namespace igotu
 {
+    class IgotuPoint;
     class IgotuPoints;
 };
 
@@ -40,6 +41,12 @@ public:
     virtual QString tabTitle() const = 0;
     // lower is better
     virtual int priority() const = 0;
+    virtual void highlightTrack(const QList<igotu::IgotuPoint> &track) = 0;
+
+    // Implementations also need:
+    // Q_SIGNALS:
+    //     void saveTracksRequested(const QList<QList<igotu::IgotuPoint> > &tracks);
+    //     void trackActivated(const QList<igotu::IgotuPoint> &track);
 };
 
 class TrackVisualizerCreator

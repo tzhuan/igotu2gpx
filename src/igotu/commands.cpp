@@ -25,8 +25,6 @@
 namespace igotu
 {
 
-// TODO: some of these return codes should be localized
-
 // NmeaSwitchCommand ===========================================================
 
 NmeaSwitchCommand::NmeaSwitchCommand(DataConnection *connection, bool enable) :
@@ -94,17 +92,17 @@ QByteArray ModelCommand::sendAndReceive()
     const unsigned part2 =
         *reinterpret_cast<const uchar*>(result.data() + 2);
 
-    name = QString::fromLatin1("Unknown (%1)").arg(QString::fromAscii
+    name = igotu::IgotuCommand::tr("Unknown (%1)").arg(QString::fromAscii
             (result.toHex()));
     id = Unknown;
     if (part1 == 0xC220) {
         switch (part2) {
         case 0x14:
-            name = QLatin1String("GT-200");
+            name = igotu::IgotuCommand::tr("GT-200");
             id = Gt200;
             break;
         case 0x15:
-            name = QLatin1String("GT-120");
+            name = igotu::IgotuCommand::tr("GT-120");
             id = Gt120;
             break;
         }

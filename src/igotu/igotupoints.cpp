@@ -235,7 +235,7 @@ IgotuPoints::IgotuPoints(const QByteArray &dump, unsigned count) :
     dump(dump),
     count(count)
 {
-    if (dump.size() < 0x1000)
+    if (dump.size() < 0x1000 || 0x1000 + count * 0x20 > unsigned(dump.size()))
         throw IgotuError(tr("Dump too small"));
 }
 
@@ -362,6 +362,11 @@ QString IgotuPoints::password() const
 
 QByteArray IgotuPoints::gpx(int utcOffset) const
 {
+    return gpx(tracks(), utcOffset);
+}
+
+QByteArray IgotuPoints::gpx(const QList<QList<IgotuPoint> > &tracks, int utcOffset)
+{
     QByteArray result;
     QTextStream out(&result);
     out.setCodec("UTF-8");
@@ -376,20 +381,25 @@ QByteArray IgotuPoints::gpx(int utcOffset) const
            "creator=\"igotu2gpx\" "
            "version=\"1.1\">\n";
 
-    Q_FOREACH (const IgotuPoint &point, wayPoints())
-        out << xmlIndent(1) << "<wpt "
-            << qSetRealNumberPrecision(6)
-            << "lat=\"" << point.latitude() << "\" "
-            << "lon=\"" << point.longitude() << "\">\n"
-            << qSetRealNumberPrecision(2)
-            << xmlIndent(2) << "<ele>" << point.elevation() << "</ele>\n"
-            << xmlIndent(2) << "<time>" << point.dateTimeString(utcOffset)
-                << "</time>\n"
-            << xmlIndent(2) << "<sat>" << point.satellites().count()
-                << "</sat>\n"
-            << xmlIndent(1) << "</wpt>\n";
+    Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
+        Q_FOREACH (const IgotuPoint &point, track) {
+            if (!point.isWayPoint())
+                continue;
+            out << xmlIndent(1) << "<wpt "
+                << qSetRealNumberPrecision(6)
+                << "lat=\"" << point.latitude() << "\" "
+                << "lon=\"" << point.longitude() << "\">\n"
+                << qSetRealNumberPrecision(2)
+                << xmlIndent(2) << "<ele>" << point.elevation() << "</ele>\n"
+                << xmlIndent(2) << "<time>" << point.dateTimeString(utcOffset)
+                    << "</time>\n"
+                << xmlIndent(2) << "<sat>" << point.satellites().count()
+                    << "</sat>\n"
+                << xmlIndent(1) << "</wpt>\n";
+        }
+    }
 
-    Q_FOREACH (const QList<IgotuPoint> &track, tracks()) {
+    Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
         out << xmlIndent(1) << "<trk>\n";
         out << xmlIndent(2) << "<trkseg>\n";
         Q_FOREACH (const IgotuPoint &point, track)

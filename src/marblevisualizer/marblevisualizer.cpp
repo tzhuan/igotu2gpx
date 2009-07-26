@@ -43,7 +43,13 @@ public:
     virtual void setTracks(const igotu::IgotuPoints &points, int utcOffset);
     virtual QString tabTitle() const;
     virtual int priority() const;
+    virtual void highlightTrack(const QList<IgotuPoint> &track);
 
+Q_SIGNALS:
+    void saveTracksRequested(const QList<QList<igotu::IgotuPoint> > &tracks);
+    void trackActivated(const QList<igotu::IgotuPoint> &tracks);
+
+private:
     void initMarble();
 
 private:
@@ -182,8 +188,7 @@ void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset
     kmlFile->flush();
     tracks->addPlaceMarkFile(kmlFile->fileName());
     if (!trackPoints.isEmpty()) {
-        tracks->setCenterLongitude(trackPoints.at(0).at(0).longitude());
-        tracks->setCenterLatitude(trackPoints.at(0).at(0).latitude());
+        highlightTrack(trackPoints.at(0));
     } else if (restoreView) {
         tracks->setCenterLongitude(oldLongitude);
         tracks->setCenterLatitude(oldLatitude);
@@ -201,6 +206,12 @@ QString MarbleVisualizer::tabTitle() const
 int MarbleVisualizer::priority() const
 {
     return 0;
+}
+
+void MarbleVisualizer::highlightTrack(const QList<IgotuPoint> &track)
+{
+    tracks->setCenterLongitude(track.at(0).longitude());
+    tracks->setCenterLatitude(track.at(0).latitude());
 }
 
 // MarbleVisualizerCreator =====================================================
