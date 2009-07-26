@@ -149,9 +149,11 @@ void MarbleVisualizer::initMarble()
 
     verticalLayout->addWidget(tracks);
 
+#if MARBLE_VERSION < 0x000800
     // This is a hack to get a HttpDownloadManager instance from MarbleMap
     // because we can't instantiate it ourselves
     tracks->map()->setDownloadUrl(QUrl());
+#endif
 //    tracks->map()->setProjection(Marble::Mercator);
     tracks->setMapThemeId(QLatin1String("earth/openstreetmap/openstreetmap.dgml"));
     // TODO: disable plugins that are not used (wikipedia)
@@ -186,7 +188,11 @@ void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset
                 .arg(kmlFile->errorString()));
     kmlFile->write(pointsToKml(wayPoints, trackPoints));
     kmlFile->flush();
+#if MARBLE_VERSION < 0x000800
     tracks->addPlaceMarkFile(kmlFile->fileName());
+#else
+    tracks->addPlacemarkFile(kmlFile->fileName());
+#endif
     if (!trackPoints.isEmpty()) {
         highlightTrack(trackPoints.at(0));
     } else if (restoreView) {
