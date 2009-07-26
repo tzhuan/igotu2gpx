@@ -18,9 +18,11 @@
 
 #include "igotu/exception.h"
 #include "igotu/igotupoints.h"
+#include "igotu/paths.h"
 
 #include "trackvisualizer.h"
 
+#include <marble/MarbleDirs.h>
 #include <marble/MarbleMap.h>
 #include <marble/MarbleWidget.h>
 
@@ -29,6 +31,8 @@
 #include <QTextStream>
 #include <QUrl>
 #include <QVBoxLayout>
+
+using namespace igotu;
 
 class MarbleVisualizer: public TrackVisualizer
 {
@@ -62,9 +66,7 @@ public:
 
 Q_EXPORT_PLUGIN2(marbleVisualizer, MarbleVisualizerCreator)
 
-using namespace igotu;
-
-static QByteArray pointsToKml(const IgotuPoints &points)
+static QByteArray pointsToKml(const QList<IgotuPoint> &wayPoints, const QList<QList<IgotuPoint> > &tracks)
 {
     QByteArray result;
     QTextStream out(&result);
@@ -82,7 +84,7 @@ static QByteArray pointsToKml(const IgotuPoints &points)
            "    </LineStyle>\n"
            "</Style>\n";
 
-    Q_FOREACH (const IgotuPoint &point, points.wayPoints()) {
+    Q_FOREACH (const IgotuPoint &point, wayPoints) {
         out << "<Placemark>\n"
                "<Point>\n"
                "<coordinates>\n";
@@ -93,7 +95,7 @@ static QByteArray pointsToKml(const IgotuPoints &points)
     }
 
     out << "<Folder>\n";
-    Q_FOREACH (const QList<IgotuPoint> &track, points.tracks()) {
+    Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
         out << "<Placemark>\n"
                "<styleUrl>#line</styleUrl>\n"
                "<LineString>\n"
@@ -131,6 +133,11 @@ MarbleVisualizer::MarbleVisualizer(QWidget *parent) :
 void MarbleVisualizer::initMarble()
 {
     delete tracks;
+
+#ifdef Q_OS_MACX
+    Marble::MarbleDirs::setMarblePluginPath(Paths::macPluginDirectory() + QLatin1String("/marble"));
+    Marble::MarbleDirs::setMarbleDataPath(Paths::macDataDirectory() + QLatin1String("/marble"));
+#endif
     tracks = new Marble::MarbleWidget(this);
     tracks->setObjectName(QLatin1String("tracks"));
 
@@ -151,32 +158,39 @@ void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset
     // TODO: crashes marble, ugly hacky workaround
 //    if (kmlFile)
 //        tracks->removePlaceMarkKey(kmlFile->fileName());
-    double longitude;
-    double latitude;
-    int zoom;
+    double oldLongitude;
+    double oldLatitude;
+    int oldZoom;
     bool restoreView = false;
     if (tracks) {
-        longitude = tracks->centerLongitude();
-        latitude = tracks->centerLatitude();
-        zoom = tracks->zoom();
+        oldLongitude = tracks->centerLongitude();
+        oldLatitude = tracks->centerLatitude();
+        oldZoom = tracks->zoom();
         restoreView = true;
     }
     initMarble();
-    if (restoreView) {
-        tracks->setCenterLongitude(longitude);
-        tracks->setCenterLatitude(latitude);
-        tracks->zoomView(zoom);
-    }
+
+    const QList<IgotuPoint> wayPoints = points.wayPoints();
+    const QList<QList<IgotuPoint> > trackPoints = points.tracks();
 
     kmlFile.reset(new QTemporaryFile(QDir::tempPath() +
                 QLatin1String("/igotu2gpx_temp_XXXXXX.kml")));
     if (!kmlFile->open())
         throw IgotuError(tr("Unable to create kml file: %1")
                 .arg(kmlFile->errorString()));
-    kmlFile->write(pointsToKml(points));
+    kmlFile->write(pointsToKml(wayPoints, trackPoints));
     kmlFile->flush();
     tracks->addPlaceMarkFile(kmlFile->fileName());
-    // TODO: zoom to bounding box
+    if (!trackPoints.isEmpty()) {
+        tracks->setCenterLongitude(trackPoints.at(0).at(0).longitude());
+        tracks->setCenterLatitude(trackPoints.at(0).at(0).latitude());
+    } else if (restoreView) {
+        tracks->setCenterLongitude(oldLongitude);
+        tracks->setCenterLatitude(oldLatitude);
+    }
+    if (restoreView) {
+        tracks->zoomView(oldZoom);
+    }
 }
 
 QString MarbleVisualizer::tabTitle() const

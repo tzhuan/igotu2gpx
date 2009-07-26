@@ -13,7 +13,6 @@ SOURCES *= \
     iconstorage.cpp \
     igotugui.cpp \
     mainwindow.cpp \
-    paths.cpp \
     plugindialog.cpp \
     pluginloader.cpp \
     preferencesdialog.cpp \
@@ -22,7 +21,6 @@ SOURCES *= \
 HEADERS *= \
     iconstorage.h \
     mainwindow.h \
-    paths.h \
     plugindialog.h \
     pluginloader.h \
     preferencesdialog.h \

@@ -16,17 +16,28 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU2GPX_SRC_IGOTUGUI_PATHS_H_
-#define _IGOTU2GPX_SRC_IGOTUGUI_PATHS_H_
+#ifndef _IGOTU2GPX_SRC_IGOTU_PATHS_H_
+#define _IGOTU2GPX_SRC_IGOTU_PATHS_H_
+
+#include "global.h"
 
 #include <QStringList>
 
-class Paths
+namespace igotu
+{
+
+class IGOTU_EXPORT Paths
 {
 public:
+    // return the most likely dir, only implemented on Mac OS X
+    static QString macPluginDirectory();
+    static QString macDataDirectory();
+
     static QStringList pluginDirectories();
     static QStringList iconDirectories();
 };
+
+} // namespace igotu
 
 #endif
 

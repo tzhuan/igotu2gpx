@@ -101,10 +101,8 @@ unsigned IgotuCommandPrivate::sendCommand(const QByteArray &data)
 
 IgotuCommand::IgotuCommand(DataConnection *connection, const QByteArray
         &command, bool receiveRemainder) :
-    dataPtr(new IgotuCommandPrivate)
+    d(new IgotuCommandPrivate)
 {
-    D(IgotuCommand);
-
     d->connection = connection;
     d->command = command;
     d->receiveRemainder = receiveRemainder;
@@ -118,78 +116,56 @@ IgotuCommand::~IgotuCommand()
 
 QByteArray IgotuCommand::command() const
 {
-    D(const IgotuCommand);
-
     return d->command;
 }
 
 void IgotuCommand::setCommand(const QByteArray &command)
 {
-    D(IgotuCommand);
-
     d->command = command;
 }
 
 DataConnection *IgotuCommand::connection() const
 {
-    D(const IgotuCommand);
-
     return d->connection;
 }
 
 void IgotuCommand::setConnection(DataConnection *connection)
 {
-    D(IgotuCommand);
-
     d->connection = connection;
 }
 
 bool IgotuCommand::receiveRemainder() const
 {
-    D(const IgotuCommand);
-
     return d->receiveRemainder;
 }
 
 void IgotuCommand::setReceiveRemainder(bool value)
 {
-    D(IgotuCommand);
-
     d->receiveRemainder = value;
 }
 
 bool IgotuCommand::ignoreProtocolErrors() const
 {
-    D(const IgotuCommand);
-
     return d->ignoreProtocolErrors;
 }
 
 void IgotuCommand::setIgnoreProtocolErrors(bool value)
 {
-    D(IgotuCommand);
-
     d->ignoreProtocolErrors = value;
 }
 
 bool IgotuCommand::purgeBuffersBeforeSend() const
 {
-    D(const IgotuCommand);
-
     return d->purgeBuffersBeforeSend;
 }
 
 void IgotuCommand::setPurgeBuffersBeforeSend(bool value)
 {
-    D(IgotuCommand);
-
     d->purgeBuffersBeforeSend = value;
 }
 
 QByteArray IgotuCommand::sendAndReceive()
 {
-    D(IgotuCommand);
-
     unsigned protocolErrors = 0;
     unsigned deviceErrors = 0;
     try {

@@ -36,7 +36,8 @@
 // 3. the directory where igotu2gpx is installed(../share, ../lib)
 // 4. or the directory where igotu2gpx is located
 
-// TODO: Use Qt4.3 search paths for most of these
+namespace igotu
+{
 
 #ifdef Q_OS_WIN
 
@@ -168,6 +169,26 @@ QStringList Paths::iconDirectories()
     return uniqueDirectoryList(result);
 }
 
+QString Paths::macPluginDirectory()
+{
+    QString result;
+#if defined(Q_OS_MACX)
+    result = relativeToBaseDirectory(QStringList(QLatin1String("/PlugIns")),
+            QStringList()).at(0);
+#endif
+    return result;
+}
+
+QString Paths::macDataDirectory()
+{
+    QString result;
+#if defined(Q_OS_MACX)
+    result = relativeToBaseDirectory(QStringList(QLatin1String("/Resources")),
+            QStringList()).at(0);
+#endif
+    return result;
+}
+
 QStringList Paths::pluginDirectories()
 {
     QStringList result;
@@ -200,3 +221,5 @@ QStringList Paths::pluginDirectories()
 #endif
     return uniqueDirectoryList(result);
 }
+
+} // namespace igotu

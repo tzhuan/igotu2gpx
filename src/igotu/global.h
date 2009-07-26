@@ -53,39 +53,5 @@
     #define IGOTU_EXPORT IMPORT_DECL
 #endif
 
-#define DECLARE_PRIVATE(Class)                                              \
-        inline Class##Private* dataFunc()                                   \
-        {                                                                   \
-            return reinterpret_cast<Class##Private *> (dataPtr.get());      \
-        }                                                                   \
-        inline const Class##Private* dataFunc() const                       \
-        {                                                                   \
-            return reinterpret_cast<const Class##Private *> (dataPtr.get());\
-        }                                                                   \
-        friend class Class##Private;
-
-#define DECLARE_PUBLIC(Class)                                               \
-        inline Class* pubFunc()                                             \
-        {                                                                   \
-            return reinterpret_cast<Class *> (pubPtr);                      \
-        }                                                                   \
-        inline const Class* pubFunc() const                                 \
-        {                                                                   \
-            return reinterpret_cast<const Class *> (pubPtr);                \
-        }                                                                   \
-        friend class Class;
-
-#define DECLARE_PRIVATE_DATA(Class)                                         \
-        const boost::scoped_ptr<Class##Private> dataPtr;
-
-#define DECLARE_PRIVATE_DATA_SHARED(Class)                                  \
-        boost::shared_ptr<Class##Private> dataPtr;
-
-#define DECLARE_PUBLIC_DATA(Class)                                          \
-        Class * pubPtr;
-
-#define D(Class) Class##Private * const d = dataFunc()
-#define P(Class) Class * const p = pubFunc()
-
 #endif
 

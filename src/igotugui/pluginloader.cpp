@@ -16,15 +16,17 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
+#include "igotu/paths.h"
 #include "igotu/threadutils.h"
 
-#include "paths.h"
 #include "pluginloader.h"
 
 #include <QDir>
 #include <QMap>
 #include <QMutex>
 #include <QPluginLoader>
+
+using namespace igotu;
 
 // will be pushed to the worker thread
 class PluginLoaderWorker : public QObject
@@ -91,8 +93,7 @@ PluginLoaderWorker::PluginLoaderWorker() :
 #elif defined(Q_OS_WIN32)
     nameFilters(QLatin1String("*.dll"))
 #elif defined(Q_OS_MACX)
-    // TODO: Mac OS X lib filter is missing, .dynlib?
-    nameFilters()
+    nameFilters(QLatin1String("*.dylib"))
 #else
     nameFilters()
 #endif

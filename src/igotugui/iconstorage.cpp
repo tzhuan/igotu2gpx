@@ -16,14 +16,17 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
+#include "igotu/paths.h"
+
 #include "iconstorage.h"
-#include "paths.h"
 #include "qticonloader.h"
 
 #include <QDir>
 #include <QFile>
 #include <QMap>
 #include <QMutex>
+
+using namespace igotu;
 
 class IconStoragePrivate
 {

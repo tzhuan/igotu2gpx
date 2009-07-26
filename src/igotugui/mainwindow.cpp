@@ -19,11 +19,11 @@
 #include "igotu/exception.h"
 #include "igotu/igotucontrol.h"
 #include "igotu/igotupoints.h"
+#include "igotu/paths.h"
 #include "igotu/utils.h"
 
 #include "iconstorage.h"
 #include "mainwindow.h"
-#include "paths.h"
 #include "plugindialog.h"
 #include "pluginloader.h"
 #include "preferencesdialog.h"

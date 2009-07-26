@@ -60,10 +60,8 @@ QList<struct usb_device*> LibusbConnectionPrivate::find_devices(unsigned vendor,
 // LibusbConnection ============================================================
 
 LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId) :
-    dataPtr(new LibusbConnectionPrivate)
+    d(new LibusbConnectionPrivate)
 {
-    D(LibusbConnection);
-
     usb_init();
     if (Verbose::verbose() > 0)
         usb_set_debug(255);
@@ -116,15 +114,11 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId) :
 
 LibusbConnection::~LibusbConnection()
 {
-    D(LibusbConnection);
-
     usb_release_interface(d->handle.get(), 0);
 }
 
 void LibusbConnection::send(const QByteArray &query, bool purgeBuffers)
 {
-    D(LibusbConnection);
-
     d->receiveBuffer.clear();
 
     // Purge igotu transmit buffer
@@ -149,8 +143,6 @@ void LibusbConnection::send(const QByteArray &query, bool purgeBuffers)
 
 QByteArray LibusbConnection::receive(unsigned expected)
 {
-    D(LibusbConnection);
-
     unsigned toRead = expected;
     QByteArray data;
     unsigned emptyCount = 0;

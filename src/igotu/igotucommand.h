@@ -58,9 +58,7 @@ public:
     virtual QByteArray sendAndReceive();
 
 private:
-    DECLARE_PRIVATE(IgotuCommand)
-protected:
-    DECLARE_PRIVATE_DATA(IgotuCommand)
+    boost::scoped_ptr<IgotuCommandPrivate> d;
 };
 
 } // namespace igotu

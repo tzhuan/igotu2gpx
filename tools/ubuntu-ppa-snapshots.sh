@@ -33,7 +33,7 @@ for dist in intrepid jaunty karmic; do
 	cat debian/changelog | sed -n '/XXXTEMPXXX/,$p'
     ) | grep -v XXXTEMPXXX | sponge debian/changelog
 
-    sed -i 's/#define \(IGOTU_VERSION_STR \).*/\1'"$VERSION/" src/igotu/global.h
+    sed -i 's/\(#define \{1,\}IGOTU_VERSION_STR \).*/\1'"\"$VERSION\"/" src/igotu/global.h
 
     bzr builddeb --builder "debuild $TARBALL -S -pgnome-gpg -sgpg" || true
     bzr revert

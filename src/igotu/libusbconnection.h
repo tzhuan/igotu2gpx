@@ -41,9 +41,7 @@ public:
     virtual QByteArray receive(unsigned expected);
 
 private:
-    DECLARE_PRIVATE(LibusbConnection)
-protected:
-    DECLARE_PRIVATE_DATA(LibusbConnection)
+    boost::scoped_ptr<LibusbConnectionPrivate> d;
 };
 
 } // namespace igotu

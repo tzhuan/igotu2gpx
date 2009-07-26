@@ -20,6 +20,7 @@ PLUGINS="$CONTENTS"/PlugIns
 make
 rm -rf "$APP" "$DMG"
 mkdir -p "$FRAMEWORKS" "$RESOURCES" "$MACOS" "$PLUGINS"
+mkdir -p "$RESOURCES"/marble/maps/earth "$RESOURCES"/marble/svg "$RESOURCES"/marble/placemarks "$RESOURCES"/marble/stars "$RESOURCES"/marble/mwdbii "$RESOURCES"/marble/bitmaps "$PLUGINS"/marble
 cp "$SOURCE"/"$GUI" "$MACOS"
 cp "$SOURCE"/"$CMDLINE" "$MACOS"
 cp "$SOURCE"/libigotu.1.dylib "$FRAMEWORKS"
@@ -67,6 +68,17 @@ rm "$FRAMEWORKS"/*/*.prl
 rm -r "$FRAMEWORKS"/*/Versions/Current/Headers
 
 cp /Applications/Marble.app/Contents/MacOS/lib/libmarblewidget.0.7.1.dylib "$FRAMEWORKS"
+cp /Applications/Marble.app/Contents/Resources/plugins/*.so "$PLUGINS"/marble
+cp -r /Applications/Marble.app/Contents/Resources/data/maps/earth/openstreetmap "$RESOURCES"/marble/maps/earth
+cp /Applications/Marble.app/Contents/Resources/data/mwdbii/* "$RESOURCES"/marble/mwdbii
+cp /Applications/Marble.app/Contents/Resources/data/svg/compass.svg "$RESOURCES"/marble/svg
+cp /Applications/Marble.app/Contents/Resources/data/svg/worldmap.svg "$RESOURCES"/marble/svg
+cp /Applications/Marble.app/Contents/Resources/data/stars/* "$RESOURCES"/marble/stars
+cp /Applications/Marble.app/Contents/Resources/data/bitmaps/cursor_*.xpm "$RESOURCES"/marble/bitmaps
+cp /Applications/Marble.app/Contents/Resources/data/bitmaps/default_location.png "$RESOURCES"/marble/bitmaps
+cp /Applications/Marble.app/Contents/Resources/data/bitmaps/pole_1.png "$RESOURCES"/marble/bitmaps
+cp /Applications/Marble.app/Contents/Resources/data/placemarks/b*.cache "$RESOURCES"/marble/placemarks
+
 cp /usr/local/lib/libboost_program_options-xgcc40-mt-1_39.dylib "$FRAMEWORKS"
 cp /usr/local/lib/libusb-0.1.4.dylib "$FRAMEWORKS"
 
@@ -81,7 +93,7 @@ if [ "$1" != "debug" ]; then
     strip -x "$MACOS"/"$GUI"
 fi
 
-for i in "$FRAMEWORKS"/Qt*.framework/Versions/Current/Qt* "$PLUGINS"/*.dylib "$FRAMEWORKS"/*.dylib "$MACOS"/*; do
+for i in "$FRAMEWORKS"/Qt*.framework/Versions/Current/Qt* "$PLUGINS"/*.dylib "$PLUGINS"/marble/*.so "$FRAMEWORKS"/*.dylib "$MACOS"/*; do
     for j in $QT; do
 	install_name_tool -change Qt$j.framework/Versions/4/Qt$j @executable_path/../FrameWorks/Qt$j.framework/Versions/4/Qt$j "$i"
     done

@@ -14,7 +14,7 @@ read
 rm -f ../build-area/igotu2gpx_$VERSION.orig.tar.gz
 bzr revert
 
-sed -i 's/#define \(IGOTU_VERSION_STR \).*/\1'"$VERSION/" src/igotu/global.h
+sed -i 's/#define \{1,\}\(IGOTU_VERSION_STR \).*/\1'"\"$VERSION\"/" src/igotu/global.h
 bzr commit -m "New release."
 bzr tag igotu2gpx-$VERSION
 
@@ -48,5 +48,3 @@ echo "Really publish to launchpad?"
 read
 
 dput ppa:igotu2gpx/ppa ../build-area/igotu2gpx_$VERSION-1~*_source.changes
-
-echo "Be sure to tag this release with bzr tag igotu2gpx-$VERSION"
