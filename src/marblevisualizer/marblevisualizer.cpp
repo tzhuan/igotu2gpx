@@ -34,6 +34,10 @@
 
 using namespace igotu;
 
+#if MARBLE_VERSION >= 0x000700
+using namespace Marble;
+#endif
+
 class MarbleVisualizer: public TrackVisualizer
 {
     Q_OBJECT
@@ -54,7 +58,7 @@ private:
 
 private:
     QLayout *verticalLayout;
-    Marble::MarbleWidget *tracks;
+    MarbleWidget *tracks;
     boost::scoped_ptr<QTemporaryFile> kmlFile;
 };
 
@@ -141,10 +145,10 @@ void MarbleVisualizer::initMarble()
     delete tracks;
 
 #ifdef Q_OS_MACX
-    Marble::MarbleDirs::setMarblePluginPath(Paths::macPluginDirectory() + QLatin1String("/marble"));
-    Marble::MarbleDirs::setMarbleDataPath(Paths::macDataDirectory() + QLatin1String("/marble"));
+    MarbleDirs::setMarblePluginPath(Paths::macPluginDirectory() + QLatin1String("/marble"));
+    MarbleDirs::setMarbleDataPath(Paths::macDataDirectory() + QLatin1String("/marble"));
 #endif
-    tracks = new Marble::MarbleWidget(this);
+    tracks = new MarbleWidget(this);
     tracks->setObjectName(QLatin1String("tracks"));
 
     verticalLayout->addWidget(tracks);
@@ -154,7 +158,7 @@ void MarbleVisualizer::initMarble()
     // because we can't instantiate it ourselves
     tracks->map()->setDownloadUrl(QUrl());
 #endif
-//    tracks->map()->setProjection(Marble::Mercator);
+//    tracks->map()->setProjection(Mercator);
     tracks->setMapThemeId(QLatin1String("earth/openstreetmap/openstreetmap.dgml"));
     // TODO: disable plugins that are not used (wikipedia)
 }
@@ -166,9 +170,9 @@ void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset
     // TODO: crashes marble, ugly hacky workaround
 //    if (kmlFile)
 //        tracks->removePlaceMarkKey(kmlFile->fileName());
-    double oldLongitude;
-    double oldLatitude;
-    int oldZoom;
+    double oldLongitude = 0;
+    double oldLatitude = 0;
+    int oldZoom = 0;
     bool restoreView = false;
     if (tracks) {
         oldLongitude = tracks->centerLongitude();
