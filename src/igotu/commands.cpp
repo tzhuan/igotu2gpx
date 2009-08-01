@@ -19,6 +19,7 @@
 #include "commands.h"
 #include "dataconnection.h"
 #include "exception.h"
+#include "messages.h"
 
 #include <QtEndian>
 
@@ -151,17 +152,29 @@ QByteArray CountCommand::sendAndReceive()
     count = qFromBigEndian<quint16>(reinterpret_cast<const uchar*>
             (result.data() + 1));
 
-    // TODO: there seems to be a firmware bug that sends the last response code
-    // again (apparently only for this command); because libusb support is
+    // There seems to be a firmware bug that sends the last response code again
+    // (apparently only for this command); because libusb support is
     // synchronous, we cannot be sure that the next command purges the transmit
     // buffer before. This can go away when all data connections are async.
-    // TODO: instruct to file a bug if necessary
     bool useWorkAround = bugWorkaround &&
             !connection()->mode().testFlag(DataConnection::NonBlockingPurge);
-    if (bugWorkaround && !qgetenv("IGOTU2GPX_WORKAROUND").isEmpty())
+    bool message = false;
+    if (bugWorkaround && !useWorkAround && qgetenv("IGOTU2GPX_WORKAROUND").isEmpty()) {
+        Messages::normalMessage(igotu::IgotuCommand::tr("Using workaround"));
         useWorkAround = true;
-    if (bugWorkaround && !qgetenv("IGOTU2GPX_NOWORKAROUND").isEmpty())
+        message = true;
+    }
+    if (bugWorkaround && useWorkAround && !qgetenv("IGOTU2GPX_NOWORKAROUND").isEmpty()) {
+        Messages::normalMessage(igotu::IgotuCommand::tr("Not using workaround"));
         useWorkAround = false;
+        message = true;
+    }
+    if (message)
+        Messages::normalMessage(igotu::IgotuCommand::tr
+           ("Please file a bug at https://bugs.launchpad.net/igotu2gpx/+filebug if this\n"
+            "solves your connection problems. Please include:\n"
+            "- the tracker type and\n"
+            "- the output of igotu2gpx info"));
     if (useWorkAround)
         connection()->purge();
 

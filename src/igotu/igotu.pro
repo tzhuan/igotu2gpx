@@ -1,7 +1,5 @@
 BASEDIR = ../..
 CLEBS *= boost pch builddll
-unix:!macx:CLEBS *= libusb10
-macx:CLEBS *= libusb
 CLEBS_INSTALL *= boost-po
 TARGET = igotu
 include($$BASEDIR/clebs.pri)
@@ -13,11 +11,11 @@ SOURCES *= \
     igotucommand.cpp \
     igotucontrol.cpp \
     igotupoints.cpp \
+    messages.cpp \
     optionutils.cpp \
     paths.cpp \
     pluginloader.cpp \
     utils.cpp \
-    verbose.cpp \
     xmlutils.cpp \
 
 HEADERS *= \
@@ -28,13 +26,13 @@ HEADERS *= \
     igotucommand.h \
     igotucontrol.h \
     igotupoints.h \
+    messages.h \
     optionutils.h \
     paths.h \
     pch.h \
     pluginloader.h \
     threadutils.h \
     utils.h \
-    verbose.h \
     xmlutils.h \
 
 unix:ctags.commands  = echo !_TAG_FILE_FORMAT 2 dummy > $$BASEDIR/tags;

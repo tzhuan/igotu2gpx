@@ -204,7 +204,7 @@ void MainWindowPrivate::on_actionPreferences_triggered()
 
 void MainWindowPrivate::on_control_infoStarted()
 {
-    startBackgroundAction(MainWindow::tr("Retrieving info..."));
+    startBackgroundAction(Common::tr("Retrieving info..."));
 }
 
 void MainWindowPrivate::on_control_infoFinished(const QString &info)
@@ -215,13 +215,13 @@ void MainWindowPrivate::on_control_infoFinished(const QString &info)
 
 void MainWindowPrivate::on_control_infoFailed(const QString &message)
 {
-    abortBackgroundAction(MainWindow::tr("Unable to obtain info from GPS tracker: %1")
+    abortBackgroundAction(Common::tr("Unable to obtain info from GPS tracker: %1")
             .arg(message));
 }
 
 void MainWindowPrivate::on_control_contentsStarted()
 {
-    startBackgroundAction(MainWindow::tr("Retrieving data..."));
+    startBackgroundAction(Common::tr("Retrieving data..."));
 }
 
 void MainWindowPrivate::on_control_contentsBlocksFinished(uint num,
@@ -250,20 +250,20 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
 
         stopBackgroundAction();
     } catch (const std::exception &e) {
-        abortBackgroundAction(MainWindow::tr("Unable to obtain trackpoints from GPS tracker: %1")
+        abortBackgroundAction(Common::tr("Unable to obtain trackpoints from GPS tracker: %1")
                 .arg(QString::fromLocal8Bit(e.what())));
     }
 }
 
 void MainWindowPrivate::on_control_contentsFailed(const QString &message)
 {
-    abortBackgroundAction(MainWindow::tr("Unable to obtain trackpoints from GPS tracker: %1")
+    abortBackgroundAction(Common::tr("Unable to obtain trackpoints from GPS tracker: %1")
             .arg(message));
 }
 
 void MainWindowPrivate::on_control_purgeStarted()
 {
-    startBackgroundAction(MainWindow::tr("Purging data..."));
+    startBackgroundAction(Common::tr("Purging data..."));
 }
 
 void MainWindowPrivate::on_control_purgeBlocksFinished(uint num,
@@ -279,7 +279,7 @@ void MainWindowPrivate::on_control_purgeFinished()
 
 void MainWindowPrivate::on_control_purgeFailed(const QString &message)
 {
-    abortBackgroundAction(MainWindow::tr("Unable to purge GPS tracker: %1").arg(message));
+    abortBackgroundAction(Common::tr("Unable to purge GPS tracker: %1").arg(message));
 }
 
 void MainWindowPrivate::startBackgroundAction(const QString &text)
@@ -314,7 +314,6 @@ void MainWindowPrivate::abortBackgroundAction(const QString &text)
 
 void MainWindowPrivate::trackActivated(const QList<IgotuPoint> &track)
 {
-    qDebug("activated");
     visualizers[0]->highlightTrack(track);
     if (tabs)
         tabs->setCurrentIndex(0);
@@ -357,6 +356,10 @@ MainWindow::MainWindow() :
 
     d->ui.reset(new Ui::MainWindow);
     d->ui->setupUi(this);
+
+#if QT_VERSION >= 0x040600
+    setToolButtonStyle(Qt::ToolButtonFollowStyle);
+#endif
 
     d->ui->actionReload->setIcon
         (IconStorage::get(IconStorage::ReloadIcon));

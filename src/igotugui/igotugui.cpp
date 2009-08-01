@@ -16,8 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
+#include "igotu/messages.h"
 #include "igotu/optionutils.h"
-#include "igotu/verbose.h"
 
 #include "iconstorage.h"
 #include "mainwindow.h"
@@ -64,30 +64,33 @@ int main(int argc, char *argv[])
         po::notify(variables);
 
         if (variables.count("version")) {
-            std::cout
-                << "igotugui (igotu2gpx) " << IGOTU_VERSION_STR << "\n"
-                << "Copyright (C) 2009 Michael Hofmann\n"
-                << "License GPLv3+: GNU GPL version 3 or later "
-                   "<http://gnu.org/licenses/gpl.html>\n"
-                << "This is free software: "
-                   "you are free to change and redistribute it.\n"
-                << "There is NO WARRANTY, to the extent permitted by law.\n\n"
-                << "Written by Michael Hofmann.\n";
+            Messages::textOutput(Common::tr(
+                   "Igotu2gpx %1\n\n"
+                   "Shows the configuration and decodes the stored tracks and waypoints\n"
+                   "of a MobileAction i-gotU USB GPS travel logger.\n\n"
+                   "This program is licensed to you under the terms of the GNU General\n"
+                   "Public License. See the file LICENSE that came with this software\n"
+                   "for further details.\n\n"
+                   "Copyright (C) 2009 Michael Hofmann.\n\n"
+                   "The program is provided AS IS with NO WARRANTY OF ANY KIND,\n"
+                   "INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR\n"
+                   "A PARTICULAR PURPOSE.").arg(QLatin1String(IGOTU_VERSION_STR)));
             return 0;
         }
         if (variables.count("help")) {
-            std::cout << "Usage:\n  "
-                << qPrintable(QFileInfo(app.applicationFilePath()).fileName())
-                << " [OPTIONS...]\n\n";
+            Messages::textOutput(Common::tr("Usage:"));
+            Messages::textOutput(MainWindow::tr("%1 [OPTIONS...]")
+                .arg(QFileInfo(app.applicationFilePath()).fileName()));
             std::cout << options << "\n";
             return 1;
         }
     } catch (const std::exception &e) {
-        std::cout << "Unable to parse command line: " << e.what() << "\n";
+        Messages::errorMessage(Common::tr("Unable to parse command line: %1")
+                    .arg(QString::fromLocal8Bit(e.what())));
         return 2;
     }
 
-    Verbose::setVerbose(variables.count("verbose"));
+    Messages::setVerbose(variables.count("verbose"));
 
     MainWindow mainWindow;
     mainWindow.show();

@@ -17,7 +17,8 @@
  ******************************************************************************/
 
 #include "igotu/exception.h"
-#include "igotu/verbose.h"
+#include "igotu/messages.h"
+#include "igotu/commonmessages.h"
 
 #include "dataconnection.h"
 
@@ -69,7 +70,7 @@ Q_EXPORT_PLUGIN2(libusbConnection, LibusbConnectionCreator)
 LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId)
 {
     usb_init();
-    if (Verbose::verbose() > 0)
+    if (Messages::verbose() > 0)
         usb_set_debug(255);
     usb_find_busses();
     usb_find_devices();
@@ -84,7 +85,7 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId)
     if (devs.isEmpty())
         devs = find_devices(vendorId, 0);
     if (devs.isEmpty())
-        throw IgotuError(tr("Unable to find device %1")
+        throw IgotuError(Common::tr("Unable to find device %1")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
 
     Q_FOREACH (struct usb_device *dev, devs) {
@@ -94,15 +95,14 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId)
     }
 
     if (!handle)
-        throw IgotuError(tr("Unable to open device %1")
+        throw IgotuError(Common::tr("Unable to open device %1")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
 
 #ifdef Q_OS_LINUX
     char buf[256];
     if (usb_get_driver_np(handle.get(), 0, buf, sizeof(buf)) == 0) {
-        if (Verbose::verbose() > 0)
-            fprintf(stderr, "Interface 0 already claimed by driver '%s', "
-                    "detaching\n", buf);
+        Messages::verboseMessage(tr("Interface 0 already claimed by driver '%1', detaching")
+                .arg(QString::fromAscii(buf)));
 
         int result = usb_detach_kernel_driver_np(handle.get(), 0);
         if (result < 0)
@@ -114,7 +114,7 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId)
 #endif
 
     if (usb_claim_interface(handle.get(), 0) != 0)
-        throw IgotuError(tr("Unable to claim interface 0 on device %1")
+        throw IgotuError(Common::tr("Unable to claim interface 0 on device %1")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
 }
 
@@ -153,7 +153,7 @@ void LibusbConnection::send(const QByteArray &query)
         throw IgotuError(tr("Unable to send data to the device: %1")
                 .arg(QString::fromLocal8Bit(strerror(-result))));
     if (result != query.size())
-        throw IgotuError(tr("Unable to send data to the device: Tried "
+        throw IgotuError(Common::tr("Unable to send data to the device: Tried "
                     "to send %1 bytes, but only succeeded sending %2 bytes")
                 .arg(query.size(), result));
 }

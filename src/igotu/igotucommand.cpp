@@ -19,7 +19,7 @@
 #include "dataconnection.h"
 #include "exception.h"
 #include "igotucommand.h"
-#include "verbose.h"
+#include "messages.h"
 
 #include <QtEndian>
 
@@ -167,22 +167,19 @@ QByteArray IgotuCommand::sendAndReceive()
             } catch (const IgotuProtocolError &e) {
                 // ignore protocol errors if switched to NMEA mode
                 if (d->ignoreProtocolErrors) {
-                    if (Verbose::verbose() > 0) {
-                        fprintf(stderr, "Command: %s\n",
-                                d->command.toHex().data());
-                        fprintf(stderr, "Failed protocol (ignored): %s\n",
-                                e.what());
-                    }
+                    Messages::verboseMessage(tr("Command: %1")
+                                .arg(QString::fromAscii(d->command.toHex())));
+                    Messages::verboseMessage(tr("Failed protocol (ignored): %1")
+                                .arg(QString::fromLocal8Bit(e.what())));
                     return remainder;
                 }
                 // Assume this was caused by some spurious NMEA messages
                 ++protocolErrors;
                 if (protocolErrors <= 5) {
-                    if (Verbose::verbose() > 0) {
-                        fprintf(stderr, "Command: %s\n",
-                                d->command.toHex().data());
-                        fprintf(stderr, "Failed protocol: %s\n", e.what());
-                    }
+                    Messages::verboseMessage(tr("Command: %1")
+                                .arg(QString::fromAscii(d->command.toHex())));
+                    Messages::verboseMessage(tr("Failed protocol: %1")
+                                .arg(QString::fromLocal8Bit(e.what())));
                     continue;
                 }
                 throw;
@@ -190,28 +187,26 @@ QByteArray IgotuCommand::sendAndReceive()
                 // Device error codes mean we can try again
                 ++deviceErrors;
                 if (deviceErrors <= 3) {
-                    if (Verbose::verbose() > 0) {
-                        fprintf(stderr, "Command: %s\n",
-                                d->command.toHex().data());
-                        fprintf(stderr, "Device failure: %s\n", e.what());
-                    }
+                    Messages::verboseMessage(tr("Command: %1")
+                                .arg(QString::fromAscii(d->command.toHex())));
+                    Messages::verboseMessage(tr("Device failure: %1")
+                                .arg(QString::fromLocal8Bit(e.what())));
                     continue;
                 }
                 throw;
             }
 
-            if (Verbose::verbose() > 0) {
-                fprintf(stderr, "Command: %s\n", d->command.toHex().data());
-                fprintf(stderr, "Result size: 0x%04x\n", size);
-                fprintf(stderr, "Result data: %s\n", remainder.toHex().data());
-            }
+            Messages::verboseMessage(tr("Command: %1")
+                        .arg(QString::fromAscii(d->command.toHex())));
+            Messages::verboseMessage(tr("Result: %1")
+                        .arg(QString::fromAscii(remainder.toHex())));
             return remainder;
         }
     } catch (const std::exception &e) {
-        if (Verbose::verbose() > 0) {
-            fprintf(stderr, "Command: %s\n", d->command.toHex().data());
-            fprintf(stderr, "Failed: %s\n", e.what());
-        }
+        Messages::verboseMessage(tr("Command: %1")
+                    .arg(QString::fromAscii(d->command.toHex())));
+        Messages::verboseMessage(tr("Failed: %1")
+                    .arg(QString::fromLocal8Bit(e.what())));
         throw;
     }
 }

@@ -71,7 +71,7 @@ SerialConnection::SerialConnection(unsigned port)
                 0,
                 NULL);
     if (handle == INVALID_HANDLE_VALUE)
-        throw IgotuError(tr("Unable to open device %1").arg(device));
+        throw IgotuError(Common::tr("Unable to open device %1").arg(device));
 
     COMMTIMEOUTS Win_CommTimeouts;
     Win_CommTimeouts.ReadIntervalTimeout = 10;
@@ -96,7 +96,7 @@ void SerialConnection::send(const QByteArray &query)
     if (!WriteFile(handle, query.data(), query.size(), &result, NULL))
         throw IgotuError(tr("Unable to send data to the device"));
     if (result != unsigned(query.size()))
-        throw IgotuError(tr("Unable to send data to the device: Tried "
+        throw IgotuError(Common::tr("Unable to send data to the device: Tried "
                     "to send %1 bytes, but only succeeded sending %2 bytes")
                 .arg(query.size(), result));
 }

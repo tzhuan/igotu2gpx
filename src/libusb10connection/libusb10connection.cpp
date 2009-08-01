@@ -16,8 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
+#include "igotu/commonmessages.h"
 #include "igotu/exception.h"
-#include "igotu/verbose.h"
+#include "igotu/messages.h"
 
 #include "dataconnection.h"
 
@@ -210,7 +211,7 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId)
         throw IgotuError(tr("Unable to initialize libusb: %1").arg(result));
     context.reset(contextPtr, libusb_exit);
 
-    if (Verbose::verbose() > 0)
+    if (Messages::verbose() > 0)
         libusb_set_debug(contextPtr, 3);
 
     if (vendorId == 0)
@@ -223,7 +224,7 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId)
     if (devs.isEmpty())
         devs = find_devices(vendorId, 0);
     if (devs.isEmpty())
-        throw IgotuError(tr("Unable to find device %1")
+        throw IgotuError(Common::tr("Unable to find device %1")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
 
     Q_FOREACH (const Device &dev, devs) {
@@ -235,14 +236,12 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId)
     }
 
     if (!handle)
-        throw IgotuError(tr("Unable to open device %1")
+        throw IgotuError(Common::tr("Unable to open device %1")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
 
 #ifdef Q_OS_LINUX
     if (libusb_kernel_driver_active(handle.get(), 0) == 1) {
-        if (Verbose::verbose() > 0)
-            fprintf(stderr, "Interface 0 already claimed by kerneldriver, "
-                    "detaching\n");
+        Messages::verboseMessage(tr("Interface 0 already claimed by kernel driver, detaching"));
 
         if (int result = libusb_detach_kernel_driver(handle.get(), 0))
             throw IgotuError(tr
@@ -252,7 +251,7 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId)
 #endif
 
     if (libusb_claim_interface(handle.get(), 0) != 0)
-        throw IgotuError(tr("Unable to claim interface 0 on device %1")
+        throw IgotuError(Common::tr("Unable to claim interface 0 on device %1")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
 
     thread.reset(new WorkerThread(context.get(), handle.get()));
@@ -297,7 +296,7 @@ void Libusb10Connection::send(const QByteArray &query)
 //        throw IgotuError(tr("Unable to send data to the device: %1")
 //                .arg(QString::fromLocal8Bit(strerror(-result))));
 //    if (result != query.size())
-//        throw IgotuError(tr("Unable to send data to the device: Tried "
+//        throw IgotuError(Common::tr("Unable to send data to the device: Tried "
 //                    "to send %1 bytes, but only succeeded sending %2 bytes")
 //                .arg(query.size(), result));
 }

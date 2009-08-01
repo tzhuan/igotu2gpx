@@ -16,48 +16,33 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#include "verbose.h"
+#ifndef _IGOTU2GPX_SRC_IGOTU_MESSAGES_H_
+#define _IGOTU2GPX_SRC_IGOTU_MESSAGES_H_
 
-#include <QMutex>
+#include "global.h"
 
 namespace igotu
 {
 
-class VerbosePrivate
+class IGOTU_EXPORT Messages
 {
 public:
-    VerbosePrivate() :
-        level(0)
-    {
-    }
+    static int verbose();
+    static void setVerbose(int value);
 
-    int verbose()
-    {
-        QMutexLocker locker(&lock);
-        return level;
-    }
+    // stdout + no LF
+    static void directOutput(const QByteArray &data);
 
-    void setVerbose(int value)
-    {
-        QMutexLocker locker(&lock);
-        level = value;
-    }
+    // stdout + LF
+    static void textOutput(const QString &message);
 
-private:
-    int level;
-    QMutex lock;
+    // stderr + LF
+    static void errorMessage(const QString &message);
+    static void normalMessage(const QString &message);
+    static void verboseMessage(const QString &message);
 };
 
-Q_GLOBAL_STATIC(VerbosePrivate, verbosePrivate)
-
-int Verbose::verbose()
-{
-    return verbosePrivate()->verbose();
-}
-
-void Verbose::setVerbose(int value)
-{
-    verbosePrivate()->setVerbose(value);
-}
-
 } // namespace igotu
+
+#endif
+

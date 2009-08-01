@@ -21,6 +21,9 @@ object_script.*
 /tags-qt4
 /logs/
 
+translations/*.mo
+translations/*.ts
+
 localconfig.pri
 localconfig.*.pri
 

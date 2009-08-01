@@ -16,22 +16,23 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU2GPX_SRC_IGOTU_VERBOSE_H_
-#define _IGOTU2GPX_SRC_IGOTU_VERBOSE_H_
+#ifndef _IGOTU2GPX_SRC_IGOTU_COMMONMESSAGES_H_
+#define _IGOTU2GPX_SRC_IGOTU_COMMONMESSAGES_H_
 
-#include "global.h"
+#include <QCoreApplication>
 
 namespace igotu
 {
 
-class IGOTU_EXPORT Verbose
+// Translations are done using launchpad.net. With Qt, the class is used as
+// context in the po files, but identical strings are not merged, which results
+// in errors from "msgfmt -c". So strings that are used multiple times are moved
+// to Common::tr(). use "make podcheck" to check for them.
+class Common
 {
-public:
-    static int verbose();
-    static void setVerbose(int value);
+    Q_DECLARE_TR_FUNCTIONS(Common)
 };
 
 } // namespace igotu
 
 #endif
-

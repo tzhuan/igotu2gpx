@@ -30,3 +30,6 @@ INSTALLS *= docs
 
 todo.commands = @grep -Rn '\'TODO\|FIXME\|XXX\|\\todo\'' src/*/*.pro src/*/*.h src/*/*.cpp
 QMAKE_EXTRA_TARGETS *= todo
+
+pocheck.commands = lupdate src -ts translations/igotu2gpx.ts; lconvert translations/igotu2gpx.ts -o translations/igotu2gpx.pot -of po; msgfmt -c translations/igotu2gpx.pot -o translations/igotu2gpx.mo
+QMAKE_EXTRA_TARGETS *= pocheck

@@ -176,9 +176,8 @@ void IgotuControlPrivateWorker::connect()
             break;
         }
         if (!connection)
-            throw IgotuError(IgotuControl::tr
-                    ("Unable to connect via %1 connection")
-                    .arg(protocol.toLower()));
+            throw IgotuError(IgotuControl::tr("Unable to connect via %1")
+                    .arg(p->device));
     }
 }
 
@@ -195,18 +194,17 @@ void IgotuControlPrivateWorker::info()
 
             IdentificationCommand id(connection.get());
             id.sendAndReceive();
-            status += IgotuControl::tr("S/N: %1\n").arg(id.serialNumber());
-            status += IgotuControl::tr("Firmware version: %1\n")
-                .arg(id.firmwareVersionString());
+            status += IgotuControl::tr("S/N: %1").arg(id.serialNumber()) + QLatin1Char('\n');
+            status += IgotuControl::tr("Firmware version: %1")
+                .arg(id.firmwareVersionString()) + QLatin1Char('\n');
 
             ModelCommand model(connection.get());
             model.sendAndReceive();
             if (model.modelId() != ModelCommand::Unknown)
-                status += IgotuControl::tr("Model: %1\n").arg(model.modelName());
+                status += IgotuControl::tr("Model: %1").arg(model.modelName()) + QLatin1Char('\n');
             else
-                // TODO: file a bug instead of email
-                status += IgotuControl::tr("Model: %1, please inform mh21@piware.de\n")
-                    .arg(model.modelName());
+                status += IgotuControl::tr("Model: %1, please file a bug at http://bugs.launchpad.net/igotu2gpx/+filebug")
+                    .arg(model.modelName()) + QLatin1Char('\n');
 
             // Workaround necessary for:
             //   GT120 3.03
@@ -219,7 +217,7 @@ void IgotuControlPrivateWorker::info()
                     id.firmwareVersion() >= 0x0200);
             countCommand.sendAndReceive();
             unsigned count = countCommand.trackPointCount();
-            status += IgotuControl::tr("Number of raw trackpoints: %1\n").arg(count);
+            status += IgotuControl::tr("Number of raw trackpoints: %1").arg(count) + QLatin1Char('\n');
             contents = ReadCommand(connection.get(), 0, 0x1000)
                 .sendAndReceive();
             NmeaSwitchCommand(connection.get(), true).sendAndReceive();

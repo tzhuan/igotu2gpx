@@ -16,18 +16,17 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
+#include "igotu/commonmessages.h"
 #include "igotu/exception.h"
 #include "igotu/igotucontrol.h"
 #include "igotu/igotupoints.h"
+#include "igotu/messages.h"
 #include "igotu/utils.h"
-#include "igotu/verbose.h"
 
 #include "mainobject.h"
 
 #include <QFile>
 #include <QMetaMethod>
-
-#include <iostream>
 
 using namespace igotu;
 
@@ -59,94 +58,101 @@ public:
     bool raw;
 };
 
-static void dump(const QByteArray &data)
+static QString dump(const QByteArray &data)
 {
-    printf("Complete dump:\n");
-    for (unsigned i = 0; i < unsigned(data.size() + 15) / 16; ++i) {
+    QString result;
+    result += MainObject::tr("Complete dump:") + QLatin1Char('\n');
+    const unsigned chunks = (data.size() + 15) / 16;
+    bool firstLine = true;
+    for (unsigned i = 0; i < chunks; ++i) {
         const QByteArray chunk = data.mid(i * 16, 16);
-        printf("%04x  ", i * 16);
+        if (firstLine)
+            firstLine = false;
+        else
+            result += QLatin1Char('\n');
+        result += QString().sprintf("%04x  ", i * 16);
         for (unsigned j = 0; j < unsigned(chunk.size()); ++j) {
-            printf("%02x ", uchar(chunk[j]));
+            result += QString().sprintf("%02x ", uchar(chunk[j]));
             if (j % 4 == 3)
-                printf(" ");
+                result += QLatin1Char(' ');
         }
-        printf("\n");
     }
+    return result;
 }
 
-static void dumpDiff(const QByteArray &oldData, const QByteArray &newData)
+static QString dumpDiff(const QByteArray &oldData, const QByteArray &newData)
 {
-    printf("Difference dump:\n");
-    for (unsigned i = 0; i < unsigned(oldData.size() + 15) / 16; ++i) {
+    QString result;
+    result += MainObject::tr("Difference dump:") + QLatin1Char('\n');
+    const unsigned chunks = (oldData.size() + 15) / 16;
+    bool firstLine = true;
+    for (unsigned i = 0; i < chunks; ++i) {
         const QByteArray oldChunk = oldData.mid(i * 16, 16);
         const QByteArray newChunk = newData.mid(i * 16, 16);
         if (oldChunk == newChunk)
             continue;
-        printf("%04x Before  ", i * 16);
+        if (firstLine)
+            firstLine = false;
+        else
+            result += QLatin1Char('\n');
+        result += QString().sprintf("%04x - ", i * 16);
         for (unsigned j = 0; j < unsigned(qMin(oldChunk.size(),
                         newChunk.size())); ++j) {
             if (oldChunk[j] == newChunk[j])
-                printf("__ ");
+                result += QLatin1String("__ ");
             else
-                printf("%02x ", uchar(oldChunk[j]));
+                result += QString().sprintf("%02x ", uchar(oldChunk[j]));
             if (j % 4 == 3)
-                printf(" ");
+                result += QLatin1Char(' ');
         }
-        printf("\n");
-        printf("%04x After   ", i * 16);
+        result += QString().sprintf("\n%04x + ", i * 16);
         for (unsigned j = 0; j < unsigned(qMin(oldChunk.size(),
                         newChunk.size())); ++j) {
             if (oldChunk[j] == newChunk[j])
-                printf("__ ");
+                result += QLatin1String("__ ");
             else
-                printf("%02x ", uchar(newChunk[j]));
+                result += QString().sprintf("%02x ", uchar(newChunk[j]));
             if (j % 4 == 3)
-                printf(" ");
+                result += QLatin1Char(' ');
         }
-        printf("\n");
     }
+    return result;
 }
 
 // MainObjectPrivate ===========================================================
 
 void MainObjectPrivate::on_control_infoStarted()
 {
-    if (Verbose::verbose() >= 0)
-        fprintf(stderr, "%s\n",
-                qPrintable(MainObject::tr("Retrieving info...")));
+    Messages::normalMessage(Common::tr("Retrieving info..."));
 }
 
 void MainObjectPrivate::on_control_infoFinished(const QString &info,
         const QByteArray &contents)
 {
     if (this->contents.isEmpty()) {
-        printf("%s\n", qPrintable(info));
+        Messages::textOutput(info);
     } else {
-        dump(contents);
-        dumpDiff(this->contents, contents);
+        Messages::textOutput(dump(contents));
+        Messages::textOutput(dumpDiff(this->contents, contents));
     }
     QCoreApplication::quit();
 }
 
 void MainObjectPrivate::on_control_infoFailed(const QString &message)
 {
-    fprintf(stderr, "%s\n", qPrintable(MainObject::tr
-                ("Unable to obtain info from GPS tracker: %1").arg(message)));
+    Messages::errorMessage(Common::tr
+                ("Unable to obtain info from GPS tracker: %1").arg(message));
     QCoreApplication::quit();
 }
 
 void MainObjectPrivate::on_control_contentsStarted()
 {
-    if (Verbose::verbose() >= 0)
-        fprintf(stderr, "%s\n",
-                qPrintable(MainObject::tr("Retrieving data...")));
+    Messages::normalMessage(Common::tr("Retrieving data..."));
 }
 
 void MainObjectPrivate::on_control_contentsBlocksFinished(uint num, uint total)
 {
-    if (Verbose::verbose() >= 0 && num > 0)
-        fprintf(stderr, "%s\n", qPrintable(MainObject::tr
-                    ("Retrieved block %1/%2").arg(num).arg(total)));
+    Messages::normalMessage(MainObject::tr("Retrieved block %1/%2").arg(num).arg(total));
 }
 
 void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
@@ -154,66 +160,75 @@ void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
 {
     try {
         if (raw) {
-            std::cout << std::string(contents.data(), contents.size());
+            Messages::directOutput(contents);
         } else if (details) {
             IgotuPoints igotuPoints(contents, count);
             unsigned index = 0;
             Q_FOREACH (const IgotuPoint &igotuPoint, igotuPoints.points()) {
-                printf("Record %u\n", ++index);
+                // These shouldn't be localized, just in case somebody wants to
+                // parse them?
+                Messages::textOutput(QString::fromLatin1("Record %1").arg(++index));
                 if (igotuPoint.isWayPoint())
-                    printf("  Waypoint\n");
+                    Messages::textOutput(QString::fromLatin1("  Waypoint"));
                 if (igotuPoint.isTrackStart())
-                    printf("  Track start\n");
-                printf("  Date %s\n", qPrintable(igotuPoint.dateTimeString
-                            (control->utcOffset())));
-                printf("  Latitude %.6f\n", igotuPoint.latitude());
-                printf("  Longitude %.6f\n", igotuPoint.longitude());
-                printf("  Elevation %.1f m\n", igotuPoint.elevation());
-                printf("  Speed %.1f km/h\n", igotuPoint.speed());
-                printf("  Course %.2f degrees\n", igotuPoint.course());
-                printf("  EHPE %.2f m\n", igotuPoint.ehpe());
-                printf("  Satellites:");
+                    Messages::textOutput(QString::fromLatin1("  Track start"));
+                Messages::textOutput(QString::fromLatin1("  Date %1")
+                        .arg(igotuPoint.dateTimeString(control->utcOffset())));
+                Messages::textOutput(QString::fromLatin1("  Latitude %1")
+                        .arg(igotuPoint.latitude(), 0, 'f', 6));
+                Messages::textOutput(QString::fromLatin1("  Longitude %1")
+                        .arg(igotuPoint.longitude(), 0, 'f', 6));
+                Messages::textOutput(QString::fromLatin1("  Elevation %1 m")
+                        .arg(igotuPoint.elevation(), 0, 'f', 1));
+                Messages::textOutput(QString::fromLatin1("  Speed %1 km/h")
+                        .arg(igotuPoint.speed(), 0, 'f', 1));
+                Messages::textOutput(QString::fromLatin1("  Course %1 degrees")
+                        .arg(igotuPoint.course(), 0, 'f', 2));
+                Messages::textOutput(QString::fromLatin1("  EHPE %1 m")
+                        .arg(igotuPoint.ehpe(), 0, 'f', 2));
+                QString satellites = QLatin1String("  Satellites:");
                 Q_FOREACH (unsigned satellite, igotuPoint.satellites())
-                    printf(" %u", satellite);
-                printf("\n");
-                printf("  Flags 0x%02x\n", igotuPoint.flags());
-                printf("  Timeout %u s\n", igotuPoint.timeout());
-                printf("  MSVs_QCN %u\n", igotuPoint.msvsQcn());
-                printf("  Weight criteria 0x%02x\n",
-                        igotuPoint.weightCriteria());
-                printf("  Sleep time %u\n", igotuPoint.sleepTime());
+                    satellites += QString::fromLatin1(" %1").arg(satellite);
+                Messages::textOutput(satellites);
+                Messages::textOutput(QString::fromLatin1("  Flags 0x%1")
+                        .arg(igotuPoint.flags(), 2, 16, QLatin1Char('0')));
+                Messages::textOutput(QString::fromLatin1("  Timeout %1 s")
+                        .arg(igotuPoint.timeout()));
+                Messages::textOutput(QString::fromLatin1("  MSVs_QCN %1")
+                        .arg(igotuPoint.msvsQcn()));
+                Messages::textOutput(QString::fromLatin1("  Weight criteria 0x%1")
+                        .arg(igotuPoint.weightCriteria(), 2, 16, QLatin1Char('0')));
+                Messages::textOutput(QString::fromLatin1("  Sleep time %1")
+                        .arg(igotuPoint.sleepTime()));
             }
         } else {
             IgotuPoints igotuPoints(contents, count);
-            printf("%s", qPrintable(QString::fromUtf8
-                        (igotuPoints.gpx(control->utcOffset()))));
+            Messages::directOutput(igotuPoints.gpx(control->utcOffset()));
         }
     } catch (const std::exception &e) {
-        fprintf(stderr, "%s\n", qPrintable(MainObject::tr
+        Messages::errorMessage(MainObject::tr
                     ("Unable to save data: %1")
-                    .arg(QString::fromLocal8Bit(e.what()))));
+                    .arg(QString::fromLocal8Bit(e.what())));
     }
     QCoreApplication::quit();
 }
 
 void MainObjectPrivate::on_control_contentsFailed(const QString &message)
 {
-    fprintf(stderr, "%s\n", qPrintable(MainObject::tr
-                ("Unable to obtain trackpoints from GPS tracker: %1").arg(message)));
+    Messages::errorMessage(Common::tr
+                ("Unable to obtain trackpoints from GPS tracker: %1").arg(message));
     QCoreApplication::quit();
 }
 
 void MainObjectPrivate::on_control_purgeStarted()
 {
-    if (Verbose::verbose() >= 0)
-        fprintf(stderr, "%s\n", qPrintable(MainObject::tr("Purging data...")));
+    Messages::normalMessage(Common::tr("Purging data..."));
 }
 
 void MainObjectPrivate::on_control_purgeBlocksFinished(uint num, uint total)
 {
-    if (Verbose::verbose() >= 0 && num > 0)
-        fprintf(stderr, "%s\n", qPrintable(MainObject::tr
-                    ("Purged block %1/%2").arg(num).arg(total)));
+    Messages::normalMessage(MainObject::tr
+            ("Purged block %1/%2").arg(num).arg(total));
 }
 
 void MainObjectPrivate::on_control_purgeFinished()
@@ -223,8 +238,8 @@ void MainObjectPrivate::on_control_purgeFinished()
 
 void MainObjectPrivate::on_control_purgeFailed(const QString &message)
 {
-    fprintf(stderr, "%s\n", qPrintable(MainObject::tr
-                ("Unable to purge GPS tracker: %1").arg(message)));
+    Messages::errorMessage(Common::tr
+                ("Unable to purge GPS tracker: %1").arg(message));
     QCoreApplication::quit();
 }
 

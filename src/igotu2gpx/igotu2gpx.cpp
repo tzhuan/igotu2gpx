@@ -20,7 +20,7 @@
 #include "igotu/exception.h"
 #include "igotu/igotupoints.h"
 #include "igotu/optionutils.h"
-#include "igotu/verbose.h"
+#include "igotu/messages.h"
 
 #include "mainobject.h"
 
@@ -58,15 +58,8 @@ int main(int argc, char *argv[])
          "instead of connecting to the GPS tracker, use the specified image "
          "file (saved by \"dump --raw\")")
         ("device,d", po::value<QString>(&device),
-         "connect via the given device")
-        // TODO: automatically add command line help
-//#ifdef Q_OS_WIN32
-//        ("serial-device,s", po::value<QString>(&serial),
-//         "connect via RS232 to the serial port with the specfied number")
-//#elif defined(Q_OS_LINUX) || defined(Q_OS_MACX)
-//        ("usb-device,u", po::value<QString>(&usb),
-//         "connect via usb to the device specified by vendor:product")
-//#endif
+         "connect to the device specified (usb:vendor:product (Unix) or "
+         "serial:port (Windows)")
         ("gpx",
          "output in GPX format (this is the default)")
         ("details",
@@ -96,26 +89,30 @@ int main(int argc, char *argv[])
         po::notify(variables);
 
         if (variables.count("version")) {
-            std::cout
-                << "igotu2gpx " << IGOTU_VERSION_STR << "\n"
-                << "Copyright (C) 2009 Michael Hofmann\n"
-                << "License GPLv3+: GNU GPL version 3 or later "
-                   "<http://gnu.org/licenses/gpl.html>\n"
-                << "This is free software: "
-                   "you are free to change and redistribute it.\n"
-                << "There is NO WARRANTY, to the extent permitted by law.\n\n"
-                << "Written by Michael Hofmann.\n";
+            Messages::textOutput(Common::tr(
+                   "Igotu2gpx %1\n\n"
+                   "Shows the configuration and decodes the stored tracks and waypoints\n"
+                   "of a MobileAction i-gotU USB GPS travel logger.\n\n"
+                   "This program is licensed to you under the terms of the GNU General\n"
+                   "Public License. See the file LICENSE that came with this software\n"
+                   "for further details.\n\n"
+                   "Copyright (C) 2009 Michael Hofmann.\n\n"
+                   "The program is provided AS IS with NO WARRANTY OF ANY KIND,\n"
+                   "INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR\n"
+                   "A PARTICULAR PURPOSE.").arg(QLatin1String(IGOTU_VERSION_STR)));
             return 0;
         }
         if (variables.count("help") || action.isEmpty()) {
-            std::cout << "Usage:\n  "
-                << qPrintable(QFileInfo(app.applicationFilePath()).fileName())
-                << " info|dump|purge|diff [OPTIONS...]\n\n";
+            Messages::textOutput(Common::tr("Usage:"));
+            Messages::textOutput(MainObject::tr("%1 info|dump|purge|diff [OPTIONS...]")
+                .arg(QFileInfo(app.applicationFilePath()).fileName()));
+            Messages::normalMessage(QString());
             std::cout << options << "\n";
             return 1;
         }
     } catch (const std::exception &e) {
-        std::cout << "Unable to parse command line: " << e.what() << "\n";
+        Messages::normalMessage(Common::tr("Unable to parse command line: %1")
+                    .arg(QString::fromLocal8Bit(e.what())));
         return 2;
     }
 
@@ -123,14 +120,14 @@ int main(int argc, char *argv[])
         if (!imagePath.isEmpty() && (action != QLatin1String("diff"))) {
             QFile file(imagePath);
             if (!file.open(QIODevice::ReadOnly))
-                throw IgotuError(QCoreApplication::tr
+                throw IgotuError(MainObject::tr
                         ("Unable to read file '%1'").arg(imagePath));
             QByteArray contents = file.readAll();
             device = QLatin1String("image:") +
                 QString::fromAscii(contents.toBase64());
         }
 
-        Verbose::setVerbose(variables.count("verbose"));
+        Messages::setVerbose(variables.count("verbose"));
 
         MainObject mainObject(device, offset);
 
@@ -155,7 +152,8 @@ int main(int argc, char *argv[])
 
         return app.exec();
     } catch (const std::exception &e) {
-        printf("Error: %s\n", e.what());
+        Messages::normalMessage(MainObject::tr("Error: %1")
+                    .arg(QString::fromLocal8Bit(e.what())));
     }
 
     return 1;
