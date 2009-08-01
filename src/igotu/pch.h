@@ -32,7 +32,3 @@
 #endif
 
 // Add C includes here
-
-#if defined(Q_OS_LINUX) || defined(Q_OS_MACX)
-#include <usb.h>
-#endif

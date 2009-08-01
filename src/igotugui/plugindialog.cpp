@@ -16,10 +16,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
+#include "igotu/dataconnection.h"
+#include "igotu/pluginloader.h"
 #include "igotu/utils.h"
 
 #include "plugindialog.h"
-#include "pluginloader.h"
 #include "trackvisualizer.h"
 #include "ui_plugindialog.h"
 
@@ -36,7 +37,8 @@ class PluginDialogPrivate : public QObject
 public:
     void add(const QObject *object, const QString &what, const QString &text,
             const QString &tooltip = QString(),
-            const QString &path = QString());
+            const QString &path = QString(),
+            const QString &priority = QString());
     void scanPlugins();
 
 public Q_SLOTS:
@@ -50,7 +52,8 @@ public:
 // PluginDialogPrivate =========================================================
 
 void PluginDialogPrivate::add(const QObject *object, const QString &what,
-        const QString &text, const QString &tooltip, const QString &path)
+        const QString &text, const QString &tooltip, const QString &path,
+        const QString &priority)
 {
     QTreeWidgetItem *parent = parents.value(what);
     if (!parent) {
@@ -73,15 +76,14 @@ void PluginDialogPrivate::add(const QObject *object, const QString &what,
     QTreeWidgetItem * const item = new QTreeWidgetItem(parent, QStringList()
             << className
             << text
+            << priority
             << QFileInfo(filePath).fileName());
 
-    item->setToolTip(2, filePath);
+    item->setToolTip(3, filePath);
     if (!tooltip.isEmpty()) {
         item->setToolTip(0, tooltip);
         item->setToolTip(1, tooltip);
-    } else {
-        item->setToolTip(0, className);
-        item->setToolTip(1, text);
+        item->setToolTip(2, tooltip);
     }
 }
 
@@ -95,8 +97,15 @@ void PluginDialogPrivate::scanPlugins()
         bool added = false;
         if (const TrackVisualizerCreator * const creator =
                 qobject_cast<TrackVisualizerCreator*>(object)) {
-            Q_FOREACH (const QString &visualizer, creator->trackVisualizers())
-                add(object, PluginDialog::tr("Track visualizer"), visualizer);
+            add(object, PluginDialog::tr("Track visualizer"),
+                    creator->trackVisualizer(), QString(), QString(),
+                    QString::number(creator->visualizerPriority()));
+            added = true;
+        } else if (const DataConnectionCreator * const creator =
+                qobject_cast<DataConnectionCreator*>(object)) {
+            add(object, PluginDialog::tr("Data Connection"),
+                    creator->dataConnection(), QString(), QString(),
+                    QString::number(creator->connectionPriority()));
             added = true;
         }
         if (!added) {
@@ -115,6 +124,7 @@ void PluginDialogPrivate::scanPlugins()
     ui.treeWidget->resizeColumnToContents(0);
     ui.treeWidget->resizeColumnToContents(1);
     ui.treeWidget->resizeColumnToContents(2);
+    ui.treeWidget->resizeColumnToContents(3);
 }
 
 void PluginDialogPrivate::on_refresh_clicked()
@@ -135,10 +145,8 @@ PluginDialog::PluginDialog(QWidget *parent) :
 {
     d->ui.setupUi(this);
 
-    d->ui.treeWidget->header()->hide();
     setAttribute(Qt::WA_DeleteOnClose);
     setAttribute(Qt::WA_QuitOnClose, false);
-
 
     QPushButton *button = d->ui.buttonBox->addButton(tr("Refresh plugins"),
             QDialogButtonBox::ActionRole);

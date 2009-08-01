@@ -46,7 +46,6 @@ public:
 
     virtual void setTracks(const igotu::IgotuPoints &points, int utcOffset);
     virtual QString tabTitle() const;
-    virtual int priority() const;
     virtual void highlightTrack(const QList<IgotuPoint> &track);
 
 Q_SIGNALS:
@@ -69,9 +68,9 @@ class MarbleVisualizerCreator :
     Q_OBJECT
     Q_INTERFACES(TrackVisualizerCreator)
 public:
-    virtual QStringList trackVisualizers() const;
-    virtual TrackVisualizer *createTrackVisualizer(const QString &name,
-            QWidget *parent = NULL) const;
+    virtual QString trackVisualizer() const;
+    virtual int visualizerPriority() const;
+    virtual TrackVisualizer *createTrackVisualizer(QWidget *parent = NULL) const;
 };
 
 Q_EXPORT_PLUGIN2(marbleVisualizer, MarbleVisualizerCreator)
@@ -213,11 +212,6 @@ QString MarbleVisualizer::tabTitle() const
     return tr("Map");
 }
 
-int MarbleVisualizer::priority() const
-{
-    return 0;
-}
-
 void MarbleVisualizer::highlightTrack(const QList<IgotuPoint> &track)
 {
     tracks->setCenterLongitude(track.at(0).longitude());
@@ -226,18 +220,19 @@ void MarbleVisualizer::highlightTrack(const QList<IgotuPoint> &track)
 
 // MarbleVisualizerCreator =====================================================
 
-QStringList MarbleVisualizerCreator::trackVisualizers() const
+QString MarbleVisualizerCreator::trackVisualizer() const
 {
-    return QStringList() << QLatin1String("marble");
+    return QLatin1String("marble");
 }
 
-TrackVisualizer *MarbleVisualizerCreator::createTrackVisualizer
-    (const QString &name, QWidget *parent) const
+int MarbleVisualizerCreator::visualizerPriority() const
 {
-    if (name == QLatin1String("marble"))
-        return new MarbleVisualizer(parent);
+    return 0;
+}
 
-    return NULL;
+TrackVisualizer *MarbleVisualizerCreator::createTrackVisualizer(QWidget *parent) const
+{
+    return new MarbleVisualizer(parent);
 }
 
 #include "marblevisualizer.moc"

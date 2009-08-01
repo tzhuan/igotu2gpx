@@ -20,12 +20,12 @@
 #include "igotu/igotucontrol.h"
 #include "igotu/igotupoints.h"
 #include "igotu/paths.h"
+#include "igotu/pluginloader.h"
 #include "igotu/utils.h"
 
 #include "iconstorage.h"
 #include "mainwindow.h"
 #include "plugindialog.h"
-#include "pluginloader.h"
 #include "preferencesdialog.h"
 #include "trackvisualizer.h"
 #include "ui_igotugui.h"
@@ -382,31 +382,28 @@ MainWindow::MainWindow() :
     d->control->setDevice(PreferencesDialog::currentDevice());
     d->control->setUtcOffset(PreferencesDialog::currentUtcOffset());
 
-    typedef QPair<const TrackVisualizerCreator*, QString> VisualizerId;
-    QList<VisualizerId> visualizerIds;
-    Q_FOREACH (const TrackVisualizerCreator * const creator,
+    QMultiMap<int, TrackVisualizerCreator*> visualizerMap;
+    Q_FOREACH (TrackVisualizerCreator * const creator,
             PluginLoader().availablePlugins<TrackVisualizerCreator>())
-        Q_FOREACH (const QString &visualizer, creator->trackVisualizers())
-            visualizerIds.append(qMakePair(creator, visualizer));
-    if (visualizerIds.count() == 1) {
+        visualizerMap.insert(creator->visualizerPriority(), creator);
+    const QList<TrackVisualizerCreator*> creators = visualizerMap.values();
+    if (creators.count() == 1) {
         d->tabs = NULL;
 
-        TrackVisualizer * const visualizer = visualizerIds[0].first
-            ->createTrackVisualizer(visualizerIds[0].second, d->ui->centralWidget);
-        d->ui->centralWidget->layout()->addWidget(visualizer);
+        TrackVisualizer * const visualizer =
+            creators[0]->createTrackVisualizer(d->ui->centralWidget);
         d->visualizers.append(visualizer);
+        d->ui->centralWidget->layout()->addWidget(visualizer);
     } else {
         d->tabs = new QTabWidget(d->ui->centralWidget);
         d->ui->centralWidget->layout()->addWidget(d->tabs);
 
-        QMultiMap<int, TrackVisualizer*> visualizers;
-        Q_FOREACH (const VisualizerId &id, visualizerIds) {
-            TrackVisualizer * const visualizer = id.first->createTrackVisualizer(id.second);
-            visualizers.insert(visualizer->priority(), visualizer);
+        Q_FOREACH (TrackVisualizerCreator * const creator, creators) {
+            TrackVisualizer * const visualizer =
+                creator->createTrackVisualizer();
+            d->visualizers.append(visualizer); d->tabs->addTab(visualizer,
+                    visualizer->tabTitle());
         }
-        d->visualizers = visualizers.values();
-        Q_FOREACH (TrackVisualizer * const visualizer, d->visualizers)
-            d->tabs->addTab(visualizer, visualizer->tabTitle());
     }
     for (unsigned i = 0; i < unsigned(d->visualizers.size()); ++i) {
         connect(d->visualizers[i], SIGNAL(saveTracksRequested(QList<QList<igotu::IgotuPoint>>)),

@@ -36,7 +36,6 @@ public:
 
     virtual void setTracks(const igotu::IgotuPoints &points, int utcOffset);
     virtual QString tabTitle() const;
-    virtual int priority() const;
     virtual void highlightTrack(const QList<IgotuPoint> &track);
 
 Q_SIGNALS:
@@ -58,9 +57,9 @@ class ListVisualizerCreator :
     Q_OBJECT
     Q_INTERFACES(TrackVisualizerCreator)
 public:
-    virtual QStringList trackVisualizers() const;
-    virtual TrackVisualizer *createTrackVisualizer(const QString &name,
-            QWidget *parent = NULL) const;
+    virtual QString trackVisualizer() const;
+    virtual int visualizerPriority() const;
+    virtual TrackVisualizer *createTrackVisualizer(QWidget *parent = NULL) const;
 };
 
 Q_EXPORT_PLUGIN2(listVisualizer, ListVisualizerCreator)
@@ -137,11 +136,6 @@ QString ListVisualizer::tabTitle() const
     return tr("List");
 }
 
-int ListVisualizer::priority() const
-{
-    return 100;
-}
-
 void ListVisualizer::highlightTrack(const QList<igotu::IgotuPoint> &track)
 {
     Q_UNUSED(track);
@@ -167,18 +161,19 @@ void ListVisualizer::on_saveTracksAction_activated()
 
 // ListVisualizerCreator =======================================================
 
-QStringList ListVisualizerCreator::trackVisualizers() const
+QString ListVisualizerCreator::trackVisualizer() const
 {
-    return QStringList() << QLatin1String("list");
+    return QLatin1String("list");
 }
 
-TrackVisualizer *ListVisualizerCreator::createTrackVisualizer
-    (const QString &name, QWidget *parent) const
+int ListVisualizerCreator::visualizerPriority() const
 {
-    if (name == QLatin1String("list"))
-        return new ListVisualizer(parent);
+    return 100;
+}
 
-    return NULL;
+TrackVisualizer *ListVisualizerCreator::createTrackVisualizer(QWidget *parent) const
+{
+    return new ListVisualizer(parent);
 }
 
 #include "listvisualizer.moc"

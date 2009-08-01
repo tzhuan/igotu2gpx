@@ -28,7 +28,8 @@ namespace igotu
 // NmeaSwitchCommand ===========================================================
 
 NmeaSwitchCommand::NmeaSwitchCommand(DataConnection *connection, bool enable) :
-    IgotuCommand(connection)
+    IgotuCommand(connection),
+    enable(enable)
 {
     QByteArray command("\x93\x01\x01\0\0\0\0\0\0\0\0\0\0\0\0", 15);
     command[3] = enable ? '\x00' : '\x03';
@@ -36,8 +37,13 @@ NmeaSwitchCommand::NmeaSwitchCommand(DataConnection *connection, bool enable) :
 
     if (enable)
         setIgnoreProtocolErrors(true);
-    else
-        setPurgeBuffersBeforeSend(true);
+}
+
+QByteArray NmeaSwitchCommand::sendAndReceive()
+{
+    if (!enable)
+        connection()->purge();
+    return IgotuCommand::sendAndReceive();
 }
 
 // IdentificationCommand =======================================================
@@ -57,9 +63,8 @@ QByteArray IdentificationCommand::sendAndReceive()
         throw IgotuError(igotu::IgotuCommand::tr("Response too short"));
     id = qFromLittleEndian<quint32>(reinterpret_cast<const uchar*>
             (result.data()));
-    version = QString().sprintf("%u.%02u",
-            *reinterpret_cast<const uchar*>(result.data() + 4),
-            *reinterpret_cast<const uchar*>(result.data() + 5));
+    version = qFromBigEndian<quint16>(reinterpret_cast<const uchar*>
+            (result.data() + 4));
     return result;
 }
 
@@ -68,9 +73,14 @@ unsigned IdentificationCommand::serialNumber() const
     return id;
 }
 
-QString IdentificationCommand::firmwareVersion() const
+unsigned IdentificationCommand::firmwareVersion() const
 {
     return version;
+}
+
+QString IdentificationCommand::firmwareVersionString() const
+{
+    return QString().sprintf("%u.%02u", version >> 8, version & 0xff);
 }
 
 // ModelCommand ================================================================
@@ -124,9 +134,9 @@ QString ModelCommand::modelName() const
 // CountCommand ================================================================
 
 CountCommand::CountCommand(DataConnection *connection,
-        bool gt120BugWorkaround) :
+        bool bugWorkaround) :
     IgotuCommand(connection),
-    gt120BugWorkaround(gt120BugWorkaround)
+    bugWorkaround(bugWorkaround)
 {
     QByteArray command("\x93\x0b\x03\x00\x1d\0\0\0\0\0\0\0\0\0\0", 15);
     setCommand(command);
@@ -144,9 +154,16 @@ QByteArray CountCommand::sendAndReceive()
     // TODO: there seems to be a firmware bug that sends the last response code
     // again (apparently only for this command); because libusb support is
     // synchronous, we cannot be sure that the next command purges the transmit
-    // buffer before.
-    if (gt120BugWorkaround)
-        connection()->send(QByteArray(), true);
+    // buffer before. This can go away when all data connections are async.
+    // TODO: instruct to file a bug if necessary
+    bool useWorkAround = bugWorkaround &&
+            !connection()->mode().testFlag(DataConnection::NonBlockingPurge);
+    if (bugWorkaround && !qgetenv("IGOTU2GPX_WORKAROUND").isEmpty())
+        useWorkAround = true;
+    if (bugWorkaround && !qgetenv("IGOTU2GPX_NOWORKAROUND").isEmpty())
+        useWorkAround = false;
+    if (useWorkAround)
+        connection()->purge();
 
     return result;
 }

@@ -16,39 +16,61 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#include "exception.h"
-#include "win32serialconnection.h"
+#include "igotu/exception.h"
+
+#include "dataconnection.h"
 
 #include <windows.h>
 
-namespace igotu
-{
+#include <QCoreApplication>
 
-class Win32SerialConnectionPrivate
+using namespace igotu;
+
+class SerialConnection : public DataConnection
 {
+    Q_DECLARE_TR_FUNCTIONS(SerialConnection)
 public:
+    SerialConnection(unsigned port);
+    ~SerialConnection();
+
+    virtual void send(const QByteArray &query);
+    virtual QByteArray receive(unsigned expected);
+    virtual void purge();
+    virtual Mode mode() const;
+
+private:
     QByteArray receiveBuffer;
     HANDLE handle;
 };
 
-// Win32SerialConnectionPrivate ================================================
-
-// Win32SerialConnection =======================================================
-
-Win32SerialConnection::Win32SerialConnection(unsigned port) :
-    dataPtr(new Win32SerialConnectionPrivate)
+class SerialConnectionCreator :
+    public QObject,
+    public DataConnectionCreator
 {
-    D(Win32SerialConnection);
+    Q_OBJECT
+    Q_INTERFACES(igotu::DataConnectionCreator)
+public:
+    virtual QString dataConnection() const;
+    virtual int connectionPriority() const;
+    virtual QString defaultConnectionId() const;
+    virtual DataConnection *createDataConnection(const QString &id) const;
+};
 
+Q_EXPORT_PLUGIN2(serialConnection, SerialConnectionCreator)
+
+// SerialConnection ============================================================
+
+SerialConnection::SerialConnection(unsigned port)
+{
     QString device = QString::fromLatin1("COM%1").arg(port);
-    d->handle = CreateFileA(device.toAscii(),
+    handle = CreateFileA(device.toAscii(),
                 GENERIC_READ | GENERIC_WRITE,
                 0,
                 NULL,
                 OPEN_EXISTING,
                 0,
                 NULL);
-    if (d->handle == INVALID_HANDLE_VALUE)
+    if (handle == INVALID_HANDLE_VALUE)
         throw IgotuError(tr("Unable to open device %1").arg(device));
 
     COMMTIMEOUTS Win_CommTimeouts;
@@ -57,32 +79,21 @@ Win32SerialConnection::Win32SerialConnection(unsigned port) :
     Win_CommTimeouts.ReadTotalTimeoutConstant = 200;
     Win_CommTimeouts.WriteTotalTimeoutMultiplier = 2;
     Win_CommTimeouts.WriteTotalTimeoutConstant = 1000;
-    SetCommTimeouts(d->handle, &Win_CommTimeouts);
+    SetCommTimeouts(handle, &Win_CommTimeouts);
 }
 
-Win32SerialConnection::~Win32SerialConnection()
+SerialConnection::~SerialConnection()
 {
-    D(Win32SerialConnection);
-
-    CloseHandle(d->handle);
+    CloseHandle(handle);
 }
 
-void Win32SerialConnection::send(const QByteArray &query, bool purgeBuffers)
+void SerialConnection::send(const QByteArray &query)
 {
-    D(Win32SerialConnection);
-
     DWORD result;
 
-    d->receiveBuffer.clear();
+    receiveBuffer.clear();
 
-    if (purgeBuffers) {
-        // TODO: use the purge command to purge the connection, maybe this is
-        // also enough to get rid of NMEA messages
-        char dummy[0x10];
-        ReadFile(d->handle, dummy, sizeof(dummy), &result, NULL);
-    }
-
-    if (!WriteFile(d->handle, query.data(), query.size(), &result, NULL))
+    if (!WriteFile(handle, query.data(), query.size(), &result, NULL))
         throw IgotuError(tr("Unable to send data to the device"));
     if (result != unsigned(query.size()))
         throw IgotuError(tr("Unable to send data to the device: Tried "
@@ -90,29 +101,59 @@ void Win32SerialConnection::send(const QByteArray &query, bool purgeBuffers)
                 .arg(query.size(), result));
 }
 
-QByteArray Win32SerialConnection::receive(unsigned expected)
+QByteArray SerialConnection::receive(unsigned expected)
 {
-    D(Win32SerialConnection);
-
     unsigned toRead = expected;
     QByteArray data;
     unsigned emptyCount = 0;
     while (emptyCount < 3) {
-        unsigned toRemove = qMin(unsigned(d->receiveBuffer.size()), toRead);
-        data += d->receiveBuffer.left(toRemove);
-        d->receiveBuffer.remove(0, toRemove);
+        unsigned toRemove = qMin(unsigned(receiveBuffer.size()), toRead);
+        data += receiveBuffer.left(toRemove);
+        receiveBuffer.remove(0, toRemove);
         toRead -= toRemove;
         if (toRead == 0)
             break;
         QByteArray data(toRead, 0);
         DWORD result;
-        if (!ReadFile(d->handle, data.data(), data.size(), &result, NULL))
+        if (!ReadFile(handle, data.data(), data.size(), &result, NULL))
             throw IgotuError(tr("Unable to read data from the device"));
         if (result == 0)
             ++emptyCount;
-        d->receiveBuffer += data.left(result);
+        receiveBuffer += data.left(result);
     }
     return data;
 }
-} // namespace igotu
 
+void SerialConnection::purge()
+{
+    PurgeComm(handle, PURGE_RXCLEAR | PURGE_TXCLEAR);
+}
+
+DataConnection::Mode SerialConnection::mode() const
+{
+    return NonBlockingPurge;
+}
+
+// SerialConnectionCreator =====================================================
+
+QString SerialConnectionCreator::dataConnection() const
+{
+    return QLatin1String("serial");
+}
+
+int SerialConnectionCreator::connectionPriority() const
+{
+    return 0;
+}
+
+QString SerialConnectionCreator::defaultConnectionId() const
+{
+    return QLatin1String("3");
+}
+
+DataConnection *SerialConnectionCreator::createDataConnection(const QString &id) const
+{
+    return new SerialConnection(id.toUInt());
+}
+
+#include "serialconnection.moc"

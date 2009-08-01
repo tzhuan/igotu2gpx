@@ -33,19 +33,12 @@
 
 #include <iostream>
 
-#if defined(Q_OS_LINUX) || defined(Q_OS_MACX)
-#include "igotu/libusbconnection.h"
-#endif
-#ifdef Q_OS_WIN32
-#include "igotu/win32serialconnection.h"
-#endif
-
 using namespace igotu;
 
 namespace po = boost::program_options;
 
 po::variables_map variables;
-QString imagePath, usb, serial;
+QString imagePath, device;
 
 int main(int argc, char *argv[])
 {
@@ -53,7 +46,7 @@ int main(int argc, char *argv[])
 
     // Command line parsing (uses C++ output)
 
-    QString rawPath, action;
+    QString action;
     int offset = 0;
 
     po::options_description options("Options");
@@ -64,19 +57,23 @@ int main(int argc, char *argv[])
         ("image,i", po::value<QString>(&imagePath),
          "instead of connecting to the GPS tracker, use the specified image "
          "file (saved by \"dump --raw\")")
-#ifdef Q_OS_WIN32
-        ("serial-device,s", po::value<QString>(&serial),
-         "connect via RS232 to the serial port with the specfied number")
-#elif defined(Q_OS_LINUX) || defined(Q_OS_MACX)
-        ("usb-device,u", po::value<QString>(&usb),
-         "connect via usb to the device specified by vendor:product")
-#endif
+        ("device,d", po::value<QString>(&device),
+         "connect via the given device")
+        // TODO: automatically add command line help
+//#ifdef Q_OS_WIN32
+//        ("serial-device,s", po::value<QString>(&serial),
+//         "connect via RS232 to the serial port with the specfied number")
+//#elif defined(Q_OS_LINUX) || defined(Q_OS_MACX)
+//        ("usb-device,u", po::value<QString>(&usb),
+//         "connect via usb to the device specified by vendor:product")
+//#endif
         ("gpx",
          "output in GPX format (this is the default)")
         ("details",
          "output a detailed representation of the track")
-        ("raw", po::value<QString>(&rawPath),
-         "output the raw flash contents of the GPS tracker")
+        ("raw",
+         "output the raw binary flash contents of the GPS tracker "
+         "(be sure to redirect output to a file)")
 
         ("verbose,v",
          "increase the amount of informative messages")
@@ -123,12 +120,7 @@ int main(int argc, char *argv[])
     }
 
     try {
-        QString device;
-        if (!serial.isEmpty()) {
-            device = QLatin1String("serial:") + serial;
-        } else if (!usb.isEmpty()) {
-            device = QLatin1String("usb:") + usb;
-        } else if (!imagePath.isEmpty() && (action != QLatin1String("diff"))) {
+        if (!imagePath.isEmpty() && (action != QLatin1String("diff"))) {
             QFile file(imagePath);
             if (!file.open(QIODevice::ReadOnly))
                 throw IgotuError(QCoreApplication::tr
@@ -153,7 +145,7 @@ int main(int argc, char *argv[])
                         .arg(imagePath));
             mainObject.info(file.readAll().left(0x1000));
         } else if (action == QLatin1String("dump")) {
-            mainObject.save(variables.count("details"), rawPath);
+            mainObject.save(variables.count("details"), variables.count("raw"));
         } else if (action == QLatin1String("purge")) {
             mainObject.purge();
         } else {

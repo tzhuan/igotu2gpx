@@ -23,17 +23,22 @@
      </property>
      <column>
       <property name="text" >
-       <string>1</string>
+       <string>Name</string>
       </property>
      </column>
      <column>
       <property name="text" >
-       <string>2</string>
+       <string>Id</string>
       </property>
      </column>
      <column>
       <property name="text" >
-       <string>3</string>
+       <string>Priority</string>
+      </property>
+     </column>
+     <column>
+      <property name="text" >
+       <string>Path</string>
       </property>
      </column>
     </widget>

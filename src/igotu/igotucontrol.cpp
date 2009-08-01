@@ -21,18 +21,12 @@
 #include "exception.h"
 #include "igotucontrol.h"
 #include "igotupoints.h"
+#include "pluginloader.h"
 #include "threadutils.h"
 
 #include <QDir>
 #include <QSemaphore>
 #include <QStringList>
-
-#if defined(Q_OS_LINUX) || defined(Q_OS_MACX)
-#include "libusbconnection.h"
-#endif
-#ifdef Q_OS_WIN32
-#include "win32serialconnection.h"
-#endif
 
 namespace igotu
 {
@@ -88,6 +82,8 @@ public:
     // return false again
     bool cancelRequested();
 
+    static QList<DataConnectionCreator*> creators();
+
 Q_SIGNALS:
     void info();
     void contents();
@@ -142,6 +138,19 @@ void IgotuControlPrivate::requestCancel()
     cancel = true;
 }
 
+QList<DataConnectionCreator*> IgotuControlPrivate::creators()
+{
+    static QList<DataConnectionCreator*> result;
+    if (result.isEmpty()) {
+        QMultiMap<int, DataConnectionCreator*> creatorMap;
+        Q_FOREACH (DataConnectionCreator * const creator,
+                PluginLoader().availablePlugins<DataConnectionCreator>())
+            creatorMap.insert(creator->connectionPriority(), creator);
+        result = creatorMap.values();
+    }
+    return result;
+}
+
 // IgotuControlPrivateWorker ===================================================
 
 IgotuControlPrivateWorker::IgotuControlPrivateWorker(IgotuControlPrivate *pub) :
@@ -157,20 +166,19 @@ void IgotuControlPrivateWorker::connect()
     const QString protocol = p->device.section(QLatin1Char(':'), 0, 0)
         .toLower();
     const QString name = p->device.section(QLatin1Char(':'), 1);
-    if (protocol == QLatin1String ("image")) {
+    if (protocol == QLatin1String("image")) {
         image = QByteArray::fromBase64(name.toAscii());
-#ifdef Q_OS_WIN32
-    } else if (protocol == QLatin1String("serial")) {
-        connection.reset(new Win32SerialConnection(name.toUInt()));
-#elif defined(Q_OS_LINUX) || defined(Q_OS_MACX)
-    } else if (protocol == QLatin1String("usb")) {
-        connection.reset(new LibusbConnection(name.section(QLatin1Char(':'), 0,
-                        0).toUInt(NULL, 16), name.section(QLatin1Char(':'), 1,
-                            1).toUInt(NULL, 16)));
-#endif
     } else {
-        throw IgotuError(IgotuControl::tr("Unable to connect via %1 connection")
-                .arg(protocol.toLower()));
+        Q_FOREACH (DataConnectionCreator *creator, p->creators()) {
+            if (creator->dataConnection() != protocol)
+                continue;
+            connection.reset(creator->createDataConnection(name));
+            break;
+        }
+        if (!connection)
+            throw IgotuError(IgotuControl::tr
+                    ("Unable to connect via %1 connection")
+                    .arg(protocol.toLower()));
     }
 }
 
@@ -188,18 +196,27 @@ void IgotuControlPrivateWorker::info()
             IdentificationCommand id(connection.get());
             id.sendAndReceive();
             status += IgotuControl::tr("S/N: %1\n").arg(id.serialNumber());
-            status += IgotuControl::tr("Firmware version: %1\n").arg(id.firmwareVersion());
+            status += IgotuControl::tr("Firmware version: %1\n")
+                .arg(id.firmwareVersionString());
 
             ModelCommand model(connection.get());
             model.sendAndReceive();
             if (model.modelId() != ModelCommand::Unknown)
                 status += IgotuControl::tr("Model: %1\n").arg(model.modelName());
             else
+                // TODO: file a bug instead of email
                 status += IgotuControl::tr("Model: %1, please inform mh21@piware.de\n")
                     .arg(model.modelName());
 
+            // Workaround necessary for:
+            //   GT120 3.03
+            //   GT100 2.24
+            // Not necessary for:
+            //   GT100 1.39
+            // Can be forced with env variables:
+            //   IGOTU2GPX_WORKAROUND and IGOTU2GPX_NOWORKAROUND
             CountCommand countCommand(connection.get(),
-                    model.modelId() == ModelCommand::Gt120);
+                    id.firmwareVersion() >= 0x0200);
             countCommand.sendAndReceive();
             unsigned count = countCommand.trackPointCount();
             status += IgotuControl::tr("Number of raw trackpoints: %1\n").arg(count);
@@ -551,12 +568,12 @@ QString IgotuControl::device() const
 
 QString IgotuControl::defaultDevice()
 {
-#ifdef Q_OS_WIN32
-    return QLatin1String("serial:3");
-#elif defined(Q_OS_LINUX) || defined(Q_OS_MACX)
-    return QLatin1String("usb:0df7:0900");
-#endif
-    return QLatin1String("unknown");
+    const DataConnectionCreator * const creator =
+        IgotuControlPrivate::creators().at(0);
+    if (!creator)
+        return QString();
+    return creator->dataConnection() + QLatin1Char(':') +
+        creator->defaultConnectionId();
 }
 
 void IgotuControl::setUtcOffset(int utcOffset)

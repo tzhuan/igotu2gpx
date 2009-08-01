@@ -37,13 +37,8 @@ internal flash memory.
 show general info (info), dump the trackpoints (dump), purge all tracks from
 the GPS tracker (purge) or show the config changes (diff)
 .TP
-\fB\-u\fR, \fB\-\-usb\-device\fR \fIvendor:product\fR
-connect via usb to the device specified by vendor:product (this is the default
-on Linux)
-.\".TP
-.\"\fB\-s\fR, \fB\-\-serial\-device\fR \fIport\fR
-.\"connect via RS232 to the serial port with the specfied number (this is the
-.\"default on Windows)
+\fB\-u\fR, \fB\-\-device\fR \fIprotocol:id\fR
+connect to the device specified (usb:vendor:product (Unix) or serial:port (Windows)
 .TP
 \fB\-i\fR, \fB\-\-image\fR \fIfile\fR
 instead of connecting to the gps tracker, use the specified image file (saved
@@ -55,8 +50,9 @@ dump in GPX format (this is the default)
 \fB\-\-details\fR
 dump a detailed representation of the track
 .TP
-\fB\-\-raw\fR \fIfile\fR
-dump the raw flash contents of the gps tracker
+\fB\-\-raw\fR
+dump the raw binary flash contents of the gps tracker (be sure to redirect
+output to a file)
 .TP
 \fB\-\-utc\-offset\fR \fIseconds\fR
 time zone offset from UTC in seconds for the GPX export
@@ -88,14 +84,14 @@ Remove all trackpoints from the GPS tracker:
 Dump the complete flash memory of a GPS tracker to a file, and use it later
 to display a detailed listing of all trackpoints:
 .nf
-    igotu2gpx dump --raw flashimage.raw
+    igotu2gpx dump --raw > flashimage.raw
     igotu2gpx info --details --image flashimage.raw
 .fi
 .PP
 Dump the configuration of a GPS tracker to a file, and use it later
 to display the changes made by @trip PC:
 .nf
-    igotu2gpx dump --raw flashimage.raw
+    igotu2gpx dump --raw > flashimage.raw
     # configuration changes in @trip PC ...
     igotu2gpx diff --image flashimage.raw
 .fi

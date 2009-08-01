@@ -16,17 +16,17 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#include "igotu/paths.h"
-#include "igotu/threadutils.h"
-
+#include "paths.h"
 #include "pluginloader.h"
+#include "threadutils.h"
 
 #include <QDir>
 #include <QMap>
 #include <QMutex>
 #include <QPluginLoader>
 
-using namespace igotu;
+namespace igotu
+{
 
 // will be pushed to the worker thread
 class PluginLoaderWorker : public QObject
@@ -258,5 +258,7 @@ void PluginLoader::reloadPlugins()
 {
     return pluginLoaderPrivate()->worker.reloadPlugins();
 }
+
+} // namespace igotu
 
 #include "pluginloader.moc"

@@ -39,7 +39,6 @@ public:
     QByteArray command;
     bool receiveRemainder;
     bool ignoreProtocolErrors;
-    bool purgeBuffersBeforeSend;
 };
 
 // IgotuCommandPrivate =========================================================
@@ -81,10 +80,9 @@ unsigned IgotuCommandPrivate::sendCommand(const QByteArray &data)
             command.data() + command.size() - 2, 0);
     int responseSize = 0;
     for (unsigned i = 0; i < pieces; ++i) {
-        // TODO: check whether it is ok to purge the buffers before *all*
-        // commands on Mac OS X
-        connection->send(command.mid(i * 8, 8), i == 0 &&
-                purgeBuffersBeforeSend);
+        if (connection->mode().testFlag(DataConnection::NonBlockingPurge))
+            connection->purge();
+        connection->send(command.mid(i * 8, 8));
         responseSize = receiveResponseSize();
         if (responseSize < 0)
             throw IgotuDeviceError(IgotuCommand::tr("Device responded with error code: %1")
@@ -107,7 +105,6 @@ IgotuCommand::IgotuCommand(DataConnection *connection, const QByteArray
     d->command = command;
     d->receiveRemainder = receiveRemainder;
     d->ignoreProtocolErrors = false;
-    d->purgeBuffersBeforeSend = false;
 }
 
 IgotuCommand::~IgotuCommand()
@@ -152,16 +149,6 @@ bool IgotuCommand::ignoreProtocolErrors() const
 void IgotuCommand::setIgnoreProtocolErrors(bool value)
 {
     d->ignoreProtocolErrors = value;
-}
-
-bool IgotuCommand::purgeBuffersBeforeSend() const
-{
-    return d->purgeBuffersBeforeSend;
-}
-
-void IgotuCommand::setPurgeBuffersBeforeSend(bool value)
-{
-    d->purgeBuffersBeforeSend = value;
 }
 
 QByteArray IgotuCommand::sendAndReceive()

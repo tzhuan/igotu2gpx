@@ -21,18 +21,47 @@
 
 #include "global.h"
 
+#include <QtPlugin>
+
 namespace igotu
 {
 
-class IGOTU_EXPORT DataConnection
+class DataConnection
 {
 public:
-    virtual ~DataConnection();
+    virtual ~DataConnection()
+    {
+    }
 
-    virtual void send(const QByteArray &query, bool purgeBuffers) = 0;
+    virtual void send(const QByteArray &query) = 0;
     virtual QByteArray receive(unsigned expected) = 0;
+    virtual void purge() = 0;
+
+    enum Flag {
+        NonBlockingPurge = 0x01,
+    };
+    Q_DECLARE_FLAGS(Mode, Flag)
+    virtual Mode mode() const = 0;
+};
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(DataConnection::Mode)
+
+class DataConnectionCreator
+{
+public:
+    virtual ~DataConnectionCreator()
+    {
+    }
+
+    virtual QString dataConnection() const = 0;
+    // lower is better
+    virtual int connectionPriority() const = 0;
+    virtual QString defaultConnectionId() const = 0;
+    virtual DataConnection *createDataConnection(const QString &id) const = 0;
 };
 
 } // namespace igotu
+
+Q_DECLARE_INTERFACE(igotu::DataConnectionCreator, "de.mh21.igotu2gpx.dataconnection/1.0")
 
 #endif

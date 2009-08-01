@@ -16,13 +16,18 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU2GPX_SRC_IGOTUGUI_PLUGINLOADER_H_
-#define _IGOTU2GPX_SRC_IGOTUGUI_PLUGINLOADER_H_
+#ifndef _IGOTU2GPX_SRC_IGOTU_PLUGINLOADER_H_
+#define _IGOTU2GPX_SRC_IGOTU_PLUGINLOADER_H_
+
+#include "global.h"
 
 #include <QMap>
 #include <QObject>
 
-class PluginLoader : public QObject
+namespace igotu
+{
+
+class IGOTU_EXPORT PluginLoader : public QObject
 {
     Q_OBJECT
 public:
@@ -53,6 +58,8 @@ QList<T*> PluginLoader::availablePlugins()
 
     return result;
 };
+
+} // namespace igotu
 
 #endif
 

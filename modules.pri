@@ -2,3 +2,6 @@
 # available, disable modules in CLEBS_DISABLED
 
 clebsModule(marblevisualizer,libmarble)
+clebsModule(libusbconnection,libusb)
+clebsModule(libusb10connection,libusb10)
+win32:clebsModule(serialconnection)

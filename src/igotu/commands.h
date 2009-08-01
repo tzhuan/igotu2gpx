@@ -28,6 +28,11 @@ class IGOTU_EXPORT NmeaSwitchCommand : public IgotuCommand
 {
 public:
     NmeaSwitchCommand(DataConnection *connection, bool enable);
+
+    virtual QByteArray sendAndReceive();
+
+private:
+    bool enable;
 };
 
 class IGOTU_EXPORT IdentificationCommand : public IgotuCommand
@@ -38,11 +43,12 @@ public:
     virtual QByteArray sendAndReceive();
 
     unsigned serialNumber() const;
-    QString firmwareVersion() const;
+    unsigned firmwareVersion() const; // 0xAAII AA major II minor
+    QString firmwareVersionString() const;
 
 private:
     unsigned id;
-    QString version;
+    unsigned version;
 };
 
 class IGOTU_EXPORT ModelCommand : public IgotuCommand
@@ -78,7 +84,7 @@ public:
 
 private:
     unsigned count;
-    bool gt120BugWorkaround;
+    bool bugWorkaround;
 };
 
 class IGOTU_EXPORT ReadCommand : public IgotuCommand

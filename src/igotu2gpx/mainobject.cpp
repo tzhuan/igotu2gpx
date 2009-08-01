@@ -27,6 +27,8 @@
 #include <QFile>
 #include <QMetaMethod>
 
+#include <iostream>
+
 using namespace igotu;
 
 class MainObjectPrivate : public QObject
@@ -54,7 +56,7 @@ public:
     IgotuControl *control;
     QByteArray contents;
     bool details;
-    QString raw;
+    bool raw;
 };
 
 static void dump(const QByteArray &data)
@@ -151,12 +153,8 @@ void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
         uint count)
 {
     try {
-        if (!raw.isEmpty()) {
-            QFile file(raw);
-            if (!file.open(QIODevice::WriteOnly))
-                throw IgotuError(MainObject::tr("Unable to write to "
-                            "file '%1'").arg(raw));
-            file.write(contents);
+        if (raw) {
+            std::cout << std::string(contents.data(), contents.size());
         } else if (details) {
             IgotuPoints igotuPoints(contents, count);
             unsigned index = 0;
@@ -259,7 +257,7 @@ void MainObject::info(const QByteArray &contents)
     d->control->info();
 }
 
-void MainObject::save(bool details, const QString &raw)
+void MainObject::save(bool details, bool raw)
 {
     d->details = details;
     d->raw = raw;

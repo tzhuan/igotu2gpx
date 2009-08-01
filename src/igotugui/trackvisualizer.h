@@ -39,8 +39,6 @@ public:
 
     virtual void setTracks(const igotu::IgotuPoints &points, int utcOffset) = 0;
     virtual QString tabTitle() const = 0;
-    // lower is better
-    virtual int priority() const = 0;
     virtual void highlightTrack(const QList<igotu::IgotuPoint> &track) = 0;
 
     // Implementations also need:
@@ -56,9 +54,10 @@ public:
     {
     }
 
-    virtual QStringList trackVisualizers() const = 0;
-    virtual TrackVisualizer *createTrackVisualizer(const QString &name,
-            QWidget *parent = NULL) const = 0;
+    virtual QString trackVisualizer() const = 0;
+    // lower is better
+    virtual int visualizerPriority() const = 0;
+    virtual TrackVisualizer *createTrackVisualizer(QWidget *parent = NULL) const = 0;
 };
 
 Q_DECLARE_INTERFACE(TrackVisualizerCreator, "de.mh21.igotu2gpx.trackvisualizer/1.0")

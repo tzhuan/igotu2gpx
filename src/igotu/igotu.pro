@@ -1,6 +1,7 @@
 BASEDIR = ../..
 CLEBS *= boost pch builddll
-unix|macx:CLEBS *= libusb
+unix:!macx:CLEBS *= libusb10
+macx:CLEBS *= libusb
 CLEBS_INSTALL *= boost-po
 TARGET = igotu
 include($$BASEDIR/clebs.pri)
@@ -9,18 +10,15 @@ DEFINES *= IGOTU_MAKEDLL
 
 SOURCES *= \
     commands.cpp \
-    dataconnection.cpp \
     igotucommand.cpp \
     igotucontrol.cpp \
     igotupoints.cpp \
     optionutils.cpp \
     paths.cpp \
+    pluginloader.cpp \
     utils.cpp \
     verbose.cpp \
     xmlutils.cpp \
-
-unix|macx:SOURCES *= libusbconnection.cpp
-win32:SOURCES *= win32serialconnection.cpp
 
 HEADERS *= \
     commands.h \
@@ -33,13 +31,11 @@ HEADERS *= \
     optionutils.h \
     paths.h \
     pch.h \
+    pluginloader.h \
     threadutils.h \
     utils.h \
     verbose.h \
     xmlutils.h \
-
-unix|macx:HEADERS *= libusbconnection.h
-win32:HEADERS *= win32serialconnection.h
 
 unix:ctags.commands  = echo !_TAG_FILE_FORMAT 2 dummy > $$BASEDIR/tags;
 unix:ctags.commands += echo !_TAG_FILE_SORTED 1 dummy >> $$BASEDIR/tags;
@@ -58,7 +54,7 @@ win32 {
     } else {
         installfiles *= QtCore4.dll QtGui4.dll QtXml4.dll QtNetwork4.dll QtSvg4.dll
     }
-			    
+                            
     # native bin path for mingwm10.dll
     # all lib paths (will also work for cross-compiles)
     installpaths *= $$[QT_INSTALL_BINS] $${QMAKE_LIBDIR_QT} /usr/lib/gcc/i586-mingw32msvc/4.2.1-sjlj

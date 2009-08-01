@@ -14,7 +14,6 @@ SOURCES *= \
     igotugui.cpp \
     mainwindow.cpp \
     plugindialog.cpp \
-    pluginloader.cpp \
     preferencesdialog.cpp \
     qticonloader.cpp \
 
@@ -22,7 +21,6 @@ HEADERS *= \
     iconstorage.h \
     mainwindow.h \
     plugindialog.h \
-    pluginloader.h \
     preferencesdialog.h \
     qticonloader.h \
 
