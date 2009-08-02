@@ -26,8 +26,10 @@ namespace igotu
 
 // Translations are done using launchpad.net. With Qt, the class is used as
 // context in the po files, but identical strings are not merged, which results
-// in errors from "msgfmt -c". So strings that are used multiple times are moved
-// to Common::tr(). use "make podcheck" to check for them.
+// in errors from "msgfmt -c". Msguniq can't be used as the resulting po files
+// can't be converted back correctly to .ts with lconvert. So strings that are
+// used multiple times are moved to Common::tr(). use "make podcheck" to check
+// for them.
 class Common
 {
     Q_DECLARE_TR_FUNCTIONS(Common)

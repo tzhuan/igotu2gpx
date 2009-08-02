@@ -41,6 +41,10 @@ public:
     bool ignoreProtocolErrors;
 };
 
+// Put translations in the right context
+//
+// TRANSLATOR igotu::IgotuCommand
+
 // IgotuCommandPrivate =========================================================
 
 int IgotuCommandPrivate::receiveResponseSize()

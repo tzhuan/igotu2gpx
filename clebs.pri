@@ -176,6 +176,7 @@ unix {
     isEmpty(APPDIR):APPDIR = $$PREFIXDIR/share/applications
     isEmpty(ICONDIR):ICONDIR = $$PREFIXDIR/share/icons/hicolor
     isEmpty(MANDIR):MANDIR = $$PREFIXDIR/share/man
+    isEmpty(TRANSLATIONDIR):TRANSLATIONDIR = $$PREFIXDIR/share/locale
     isEmpty(BINDIR):BINDIR = $$PREFIXDIR/bin
     isEmpty(LIBDIR):LIBDIR = $$PREFIXDIR/lib
     isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIXDIR/lib/igotu2gpx
@@ -187,6 +188,7 @@ win32 {
     isEmpty(DOCDIR):DOCDIR = $$PREFIXDIR/doc
     isEmpty(ICONDIR):ICONDIR = $$PREFIXDIR/icons
     isEmpty(MANDIR):MANDIR = $$PREFIXDIR/man
+    isEmpty(TRANSLATIONDIR):TRANSLATIONDIR = $$PREFIXDIR/locale
     isEmpty(BINDIR):BINDIR = $$PREFIXDIR/bin
     isEmpty(LIBDIR):LIBDIR = $$PREFIXDIR/bin
     isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIXDIR/lib

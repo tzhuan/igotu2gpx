@@ -35,6 +35,7 @@ public:
 
     static QStringList pluginDirectories();
     static QStringList iconDirectories();
+    static QStringList translationDirectories();
 };
 
 } // namespace igotu

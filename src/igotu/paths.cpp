@@ -169,6 +169,45 @@ QStringList Paths::iconDirectories()
     return uniqueDirectoryList(result);
 }
 
+QStringList Paths::translationDirectories()
+{
+    QStringList result;
+#if defined(Q_OS_LINUX)
+    result << directoriesFromEnvironment("XDG_DATA_HOME",
+            QDir::homePath() + QLatin1String("/.local/share"),
+            QLatin1String("/locale"));
+    result << relativeToBaseDirectory
+           (QStringList() << QLatin1String("/share/locale"),
+            QStringList() << QLatin1String("/translations"));
+    result << directoriesFromEnvironment("XDG_DATA_DIRS",
+            QLatin1String("/usr/local/share:/usr/share"),
+            QLatin1String("/locale"));
+#elif defined(Q_OS_MACX)
+    // TODO: for the MacOS X native case, user config is missing
+    result << directoriesFromEnvironment("XDG_DATA_HOME",
+            QDir::homePath() + QLatin1String("/.local/share"),
+            QLatin1String("/locale"));
+    result << relativeToBaseDirectory
+           (QStringList() << QLatin1String("/share/locale")
+                          << QLatin1String("/Resources/locale"),
+            QStringList() << QLatin1String("/translations"));
+    result << directoriesFromEnvironment("XDG_DATA_DIRS",
+            QLatin1String("/usr/local/share:/usr/share"),
+            QLatin1String("/locale"));
+#elif defined(Q_OS_WIN)
+    result <<  windowsConfigPath(CSIDL_APPDATA) + DIRECTORY +
+            QLatin1String("/locale");
+    result << windowsConfigPath(CSIDL_COMMON_APPDATA) + DIRECTORY +
+            QLatin1String("/locale");
+    result << relativeToBaseDirectory
+           (QStringList() << QLatin1String("/locale"),
+            QStringList() << QLatin1String("/tranlations"));
+#else
+#error No idea where to find translation directories on this platform
+#endif
+    return uniqueDirectoryList(result);
+}
+
 QString Paths::macPluginDirectory()
 {
     QString result;

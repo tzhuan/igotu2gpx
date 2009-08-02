@@ -16,8 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
+#include "igotu/commonmessages.h"
 #include "igotu/messages.h"
 #include "igotu/optionutils.h"
+#include "igotu/paths.h"
 
 #include "iconstorage.h"
 #include "mainwindow.h"
@@ -26,13 +28,19 @@
 
 #include <QApplication>
 #include <QFileInfo>
+#include <QLibraryInfo>
 #include <QLocale>
+#include <QTranslator>
 
 #include <iostream>
 
 using namespace igotu;
 
 namespace po = boost::program_options;
+
+// Put translations in the right context
+//
+// TRANSLATOR igotu::Common
 
 int main(int argc, char *argv[])
 {
@@ -44,6 +52,24 @@ int main(int argc, char *argv[])
 #if defined(Q_OS_MACX) && QT_VERSION >= 0x040400
     app.setAttribute(Qt::AA_DontShowIconsInMenus);
 #endif
+
+    QTranslator qtTranslator;
+    qtTranslator.load(QLatin1String("qt_" )+ QLocale::system().name(),
+            QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+    app.installTranslator(&qtTranslator);
+
+    // TODO: add marble translations
+
+    QList<boost::shared_ptr<QTranslator> > translators;
+    QListIterator<QString> path(Paths::translationDirectories());
+    for (path.toBack(); path.hasPrevious();) {
+        boost::shared_ptr<QTranslator> translator(new QTranslator);
+        if (!translator->load(QLatin1String("igotu2gpx_") +
+                    QLocale::system().name(), path.previous()))
+            continue;
+        translators.append(translator);
+        app.installTranslator(translator.get());
+    }
 
     // Command line parsing (uses C++ output)
 

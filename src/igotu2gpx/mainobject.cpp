@@ -119,6 +119,10 @@ static QString dumpDiff(const QByteArray &oldData, const QByteArray &newData)
     return result;
 }
 
+// Put translations in the right context
+//
+// TRANSLATOR igotu::Common
+
 // MainObjectPrivate ===========================================================
 
 void MainObjectPrivate::on_control_infoStarted()

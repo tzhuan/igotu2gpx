@@ -31,5 +31,22 @@ INSTALLS *= docs
 todo.commands = @grep -Rn '\'TODO\|FIXME\|XXX\|\\todo\'' src/*/*.pro src/*/*.h src/*/*.cpp
 QMAKE_EXTRA_TARGETS *= todo
 
-pocheck.commands = lupdate src -ts translations/igotu2gpx.ts; lconvert translations/igotu2gpx.ts -o translations/igotu2gpx.pot -of po; msgfmt -c translations/igotu2gpx.pot -o translations/igotu2gpx.mo
-QMAKE_EXTRA_TARGETS *= pocheck
+po.commands = lupdate src -ts translations/igotu2gpx.ts; lconvert translations/igotu2gpx.ts -o translations/igotu2gpx.pot -of po; msgfmt -c translations/igotu2gpx.pot -o translations/igotu2gpx.mo
+QMAKE_EXTRA_TARGETS *= po
+
+pofiles = $$files(translations/*.po)
+for(pofile, pofiles) {
+    tsfile = $$replace(pofile, '_(.*)\.po$', '_\1.ts')
+    qmfiles *= $$replace(tsfile, '\.ts$', '.qm')
+    poconvertcommand += lconvert $$pofile -o $$tsfile -of ts;
+    # Untranslated entries are not marked with fuzzy in the launchpad exports,
+    # fiddle a bit with the xml output
+    poconvertcommand += perl -0pi -e \'s!(<translation)(>\\s*(?:<numerusform></numerusform>\\s*)*</translation>)!\\1 type=\"unfinished\"\\2!g\' $$tsfile;
+}
+porelease.commands = $$poconvertcommand lrelease translations/igotu2gpx_*.ts
+QMAKE_EXTRA_TARGETS *= porelease
+
+locale.files = $$qmfiles
+locale.path = $$TRANSLATIONDIR
+locale.CONFIG *= no_check_exist
+INSTALLS *= locale

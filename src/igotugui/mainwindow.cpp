@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
+#include "igotu/commonmessages.h"
 #include "igotu/exception.h"
 #include "igotu/igotucontrol.h"
 #include "igotu/igotupoints.h"
@@ -89,6 +90,10 @@ public:
     PluginLoader *pluginLoader;
     QList<TrackVisualizer*> visualizers;
 };
+
+// Put translations in the right context
+//
+// TRANSLATOR igotu::Common
 
 // MainWindowPrivate ===========================================================
 

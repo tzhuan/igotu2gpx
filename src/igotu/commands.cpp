@@ -26,6 +26,10 @@
 namespace igotu
 {
 
+// Put translations in the right context
+//
+// TRANSLATOR igotu::IgotuCommand
+
 // NmeaSwitchCommand ===========================================================
 
 NmeaSwitchCommand::NmeaSwitchCommand(DataConnection *connection, bool enable) :
@@ -61,7 +65,7 @@ QByteArray IdentificationCommand::sendAndReceive()
     // TODO: what are the other 4 bytes?
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (result.size() < 6)
-        throw IgotuError(igotu::IgotuCommand::tr("Response too short"));
+        throw IgotuError(IgotuCommand::tr("Response too short"));
     id = qFromLittleEndian<quint32>(reinterpret_cast<const uchar*>
             (result.data()));
     version = qFromBigEndian<quint16>(reinterpret_cast<const uchar*>
@@ -97,23 +101,23 @@ QByteArray ModelCommand::sendAndReceive()
 {
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (result.size() < 3)
-        throw IgotuError(igotu::IgotuCommand::tr("Response too short"));
+        throw IgotuError(IgotuCommand::tr("Response too short"));
     const unsigned part1 = qFromBigEndian<quint16>
         (reinterpret_cast<const uchar*>(result.data()));
     const unsigned part2 =
         *reinterpret_cast<const uchar*>(result.data() + 2);
 
-    name = igotu::IgotuCommand::tr("Unknown (%1)").arg(QString::fromAscii
+    name = IgotuCommand::tr("Unknown (%1)").arg(QString::fromAscii
             (result.toHex()));
     id = Unknown;
     if (part1 == 0xC220) {
         switch (part2) {
         case 0x14:
-            name = igotu::IgotuCommand::tr("GT-200");
+            name = IgotuCommand::tr("GT-200");
             id = Gt200;
             break;
         case 0x15:
-            name = igotu::IgotuCommand::tr("GT-120");
+            name = IgotuCommand::tr("GT-120");
             id = Gt120;
             break;
         }
@@ -148,7 +152,7 @@ QByteArray CountCommand::sendAndReceive()
     // TODO: what is the first byte?
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (result.size() < 3)
-        throw IgotuError(igotu::IgotuCommand::tr("Response too short"));
+        throw IgotuError(IgotuCommand::tr("Response too short"));
     count = qFromBigEndian<quint16>(reinterpret_cast<const uchar*>
             (result.data() + 1));
 
@@ -160,17 +164,17 @@ QByteArray CountCommand::sendAndReceive()
             !connection()->mode().testFlag(DataConnection::NonBlockingPurge);
     bool message = false;
     if (bugWorkaround && !useWorkAround && qgetenv("IGOTU2GPX_WORKAROUND").isEmpty()) {
-        Messages::normalMessage(igotu::IgotuCommand::tr("Using workaround"));
+        Messages::normalMessage(IgotuCommand::tr("Using workaround"));
         useWorkAround = true;
         message = true;
     }
     if (bugWorkaround && useWorkAround && !qgetenv("IGOTU2GPX_NOWORKAROUND").isEmpty()) {
-        Messages::normalMessage(igotu::IgotuCommand::tr("Not using workaround"));
+        Messages::normalMessage(IgotuCommand::tr("Not using workaround"));
         useWorkAround = false;
         message = true;
     }
     if (message)
-        Messages::normalMessage(igotu::IgotuCommand::tr
+        Messages::normalMessage(IgotuCommand::tr
            ("Please file a bug at https://bugs.launchpad.net/igotu2gpx/+filebug if this\n"
             "solves your connection problems. Please include:\n"
             "- the tracker type and\n"
@@ -206,7 +210,7 @@ QByteArray ReadCommand::sendAndReceive()
 {
     result = IgotuCommand::sendAndReceive();
     if (unsigned(result.size()) < size)
-        throw IgotuError(igotu::IgotuCommand::tr("Wrong response length"));
+        throw IgotuError(IgotuCommand::tr("Wrong response length"));
     return result;
 }
 
@@ -255,7 +259,7 @@ QByteArray UnknownWriteCommand1::sendAndReceive()
 {
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (!result.isEmpty())
-        throw IgotuError(igotu::IgotuCommand::tr("Response too long"));
+        throw IgotuError(IgotuCommand::tr("Response too long"));
     return result;
 }
 
@@ -276,7 +280,7 @@ QByteArray UnknownWriteCommand2::sendAndReceive()
 {
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (unsigned(result.size()) != size)
-        throw IgotuError(igotu::IgotuCommand::tr("Wrong response length"));
+        throw IgotuError(IgotuCommand::tr("Wrong response length"));
     return result;
 }
 
@@ -295,7 +299,7 @@ QByteArray UnknownPurgeCommand1::sendAndReceive()
 {
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (!result.isEmpty())
-        throw IgotuError(igotu::IgotuCommand::tr("Response too long"));
+        throw IgotuError(IgotuCommand::tr("Response too long"));
     return result;
 }
 
@@ -312,7 +316,7 @@ QByteArray UnknownPurgeCommand2::sendAndReceive()
 {
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (!result.isEmpty())
-        throw IgotuError(igotu::IgotuCommand::tr("Response too long"));
+        throw IgotuError(IgotuCommand::tr("Response too long"));
     return result;
 }
 

@@ -58,6 +58,10 @@ public:
 
 Q_EXPORT_PLUGIN2(serialConnection, SerialConnectionCreator)
 
+// Put translations in the right context
+//
+// TRANSLATOR igotu::Common
+
 // SerialConnection ============================================================
 
 SerialConnection::SerialConnection(unsigned port)

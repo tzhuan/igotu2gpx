@@ -17,10 +17,12 @@
  ******************************************************************************/
 
 #include "igotu/commands.h"
+#include "igotu/commonmessages.h"
 #include "igotu/exception.h"
 #include "igotu/igotupoints.h"
-#include "igotu/optionutils.h"
 #include "igotu/messages.h"
+#include "igotu/optionutils.h"
+#include "igotu/paths.h"
 
 #include "mainobject.h"
 
@@ -29,7 +31,10 @@
 
 #include <QFile>
 #include <QFileInfo>
+#include <QLibraryInfo>
+#include <QLocale>
 #include <QSet>
+#include <QTranslator>
 
 #include <iostream>
 
@@ -40,11 +45,31 @@ namespace po = boost::program_options;
 po::variables_map variables;
 QString imagePath, device;
 
+// Put translations in the right context
+//
+// TRANSLATOR igotu::Common
+
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
 
-    // Command line parsing (uses C++ output)
+    QTranslator qtTranslator;
+    qtTranslator.load(QLatin1String("qt_" )+ QLocale::system().name(),
+            QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+    app.installTranslator(&qtTranslator);
+
+    QList<boost::shared_ptr<QTranslator> > translators;
+    QListIterator<QString> path(Paths::translationDirectories());
+    for (path.toBack(); path.hasPrevious();) {
+        boost::shared_ptr<QTranslator> translator(new QTranslator);
+        if (!translator->load(QLatin1String("igotu2gpx_") +
+                    QLocale::system().name(), path.previous()))
+            continue;
+        translators.append(translator);
+        app.installTranslator(translator.get());
+    }
+
+    // TODO Command line parsing needs localization
 
     QString action;
     int offset = 0;

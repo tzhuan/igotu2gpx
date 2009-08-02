@@ -120,7 +120,7 @@ void ListVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset)
                 QStringList()
                     << date
                     << formatCoordinates(track.at(0))
-                    << tr("%n point(s)", NULL, track.count()));
+                    << tr("%n point(s)", "", track.count()));
         item->setData(0, Qt::UserRole, QVariant::fromValue(track));
         items.append(item);
     }
@@ -133,7 +133,7 @@ void ListVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset)
 
 QString ListVisualizer::tabTitle() const
 {
-    return tr("List");
+    return tr("Track list");
 }
 
 void ListVisualizer::highlightTrack(const QList<igotu::IgotuPoint> &track)

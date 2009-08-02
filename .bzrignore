@@ -23,6 +23,7 @@ object_script.*
 
 translations/*.mo
 translations/*.ts
+translations/*.qm
 
 localconfig.pri
 localconfig.*.pri

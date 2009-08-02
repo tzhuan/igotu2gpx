@@ -101,6 +101,10 @@ public:
     int utcOffset;
 };
 
+// Put translations in the right context
+//
+// TRANSLATOR igotu::IgotuControl
+
 // IgotuControlPrivate =========================================================
 
 IgotuControlPrivate::IgotuControlPrivate() :

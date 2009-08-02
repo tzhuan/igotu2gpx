@@ -65,6 +65,10 @@ public:
 
 Q_EXPORT_PLUGIN2(libusbConnection, LibusbConnectionCreator)
 
+// Put translations in the right context
+//
+// TRANSLATOR igotu::Common
+
 // LibusbConnection ============================================================
 
 LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId)

@@ -108,6 +108,10 @@ public:
 
 Q_EXPORT_PLUGIN2(libusb10Connection, Libusb10ConnectionCreator)
 
+// Put translations in the right context
+//
+// TRANSLATOR igotu::Common
+
 // WorkerThread ================================================================
 
 WorkerThread::WorkerThread(libusb_context *context,
