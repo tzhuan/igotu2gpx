@@ -221,7 +221,7 @@ void IgotuControlPrivateWorker::info()
                     id.firmwareVersion() >= 0x0200);
             countCommand.sendAndReceive();
             unsigned count = countCommand.trackPointCount();
-            status += IgotuControl::tr("Number of raw trackpoints: %1").arg(count) + QLatin1Char('\n');
+            status += IgotuControl::tr("Number of unfiltered trackpoints: %1").arg(count) + QLatin1Char('\n');
             contents = ReadCommand(connection.get(), 0, 0x1000)
                 .sendAndReceive();
             NmeaSwitchCommand(connection.get(), true).sendAndReceive();

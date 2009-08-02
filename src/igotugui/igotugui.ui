@@ -26,12 +26,12 @@
      <x>0</x>
      <y>0</y>
      <width>819</width>
-     <height>22</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>Tracker</string>
+     <string>&amp;GPS-Tracker</string>
     </property>
     <addaction name="actionReload"/>
     <addaction name="actionPurge"/>
@@ -44,7 +44,7 @@
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>Help</string>
+     <string>&amp;Help</string>
     </property>
     <addaction name="actionDebug"/>
     <addaction name="actionAboutPlugins"/>
@@ -54,9 +54,6 @@
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QToolBar" name="toolBar">
-   <property name="windowTitle">
-    <string>toolBar</string>
-   </property>
    <property name="movable">
     <bool>false</bool>
    </property>
@@ -80,7 +77,7 @@
     <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
    </property>
    <property name="windowTitle">
-    <string>Tracker information</string>
+    <string>Configuration</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
@@ -98,7 +95,7 @@
   </widget>
   <action name="actionQuit">
    <property name="text">
-    <string>Quit</string>
+    <string>&amp;Quit</string>
    </property>
   </action>
   <action name="actionAbout">
@@ -116,10 +113,13 @@
   </action>
   <action name="actionReload">
    <property name="text">
-    <string>Reload</string>
+    <string>&amp;Download Tracks</string>
+   </property>
+   <property name="iconText">
+    <string>Download</string>
    </property>
    <property name="toolTip">
-    <string>Connect to the GPS tracker and transfer all GPS tracks</string>
+    <string>Connect to the GPS tracker and download tracks</string>
    </property>
   </action>
   <action name="actionSave">
@@ -127,23 +127,35 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Save...</string>
+    <string>&amp;Save All Tracks...</string>
+   </property>
+   <property name="iconText">
+    <string>Save</string>
    </property>
    <property name="toolTip">
-    <string>Save the GPS tracks</string>
+    <string>Save All GPS Tracks</string>
    </property>
   </action>
   <action name="actionPurge">
    <property name="text">
-    <string>Purge...</string>
+    <string>&amp;Clear Memory...</string>
+   </property>
+   <property name="iconText">
+    <string>Clear</string>
+   </property>
+   <property name="toolTip">
+    <string>Clear the memory of the GPS tracker</string>
    </property>
   </action>
   <action name="actionCancel">
    <property name="text">
+    <string>&amp;Cancel Transfer</string>
+   </property>
+   <property name="iconText">
     <string>Cancel</string>
    </property>
    <property name="toolTip">
-    <string>Cancel any connection with the GPS tracker</string>
+    <string>Cancel the current transfer from the GPS tracker</string>
    </property>
   </action>
   <action name="actionAboutPlugins">
@@ -156,9 +168,6 @@
   </action>
   <action name="actionDebug">
    <property name="text">
-    <string>Debug information</string>
-   </property>
-   <property name="toolTip">
     <string>Debug Information</string>
    </property>
   </action>
