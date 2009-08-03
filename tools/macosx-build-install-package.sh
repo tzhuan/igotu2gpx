@@ -25,6 +25,7 @@ cp "$SOURCE"/"$GUI" "$MACOS"
 cp "$SOURCE"/"$CMDLINE" "$MACOS"
 cp "$SOURCE"/libigotu.1.dylib "$FRAMEWORKS"
 cp "$SOURCE"/lib*visualizer.dylib "$PLUGINS"
+cp "$SOURCE"/lib*connection.dylib "$PLUGINS"
 cp data/mac/igotugui.icns "$RESOURCES"/igotu2gpx.icns
 cp -R data/icons "$RESOURCES"
 cp -R contrib/tango/icons "$RESOURCES"

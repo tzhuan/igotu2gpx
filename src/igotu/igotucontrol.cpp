@@ -45,6 +45,7 @@ public Q_SLOTS:
 
 private:
     void connect();
+    void cleanup();
 
 Q_SIGNALS:
     void infoStarted();
@@ -185,6 +186,14 @@ void IgotuControlPrivateWorker::connect()
     }
 }
 
+void IgotuControlPrivateWorker::cleanup()
+{
+    connection.reset();
+    image.clear();
+
+    p->semaphore.release();
+}
+
 void IgotuControlPrivateWorker::info()
 {
     emit infoStarted();
@@ -321,14 +330,12 @@ void IgotuControlPrivateWorker::info()
                         igotuPoints.password()) + QLatin1Char('\n');
         }
 
+        cleanup();
         emit infoFinished(status, contents);
     } catch (const std::exception &e) {
+        cleanup();
         emit infoFailed(QString::fromLocal8Bit(e.what()));
     }
-    connection.reset();
-    image.clear();
-
-    p->semaphore.release();
 }
 
 void IgotuControlPrivateWorker::contents()
@@ -370,14 +377,12 @@ void IgotuControlPrivateWorker::contents()
             count = (data.size() - 0x1000) / 0x20;
         }
 
+        cleanup();
         emit contentsFinished(data, count);
     } catch (const std::exception &e) {
+        cleanup();
         emit contentsFailed(QString::fromLocal8Bit(e.what()));
     }
-    connection.reset();
-    image.clear();
-
-    p->semaphore.release();
 }
 
 void IgotuControlPrivateWorker::purge()
@@ -486,14 +491,12 @@ void IgotuControlPrivateWorker::purge()
 
         NmeaSwitchCommand(connection.get(), true).sendAndReceive();
 
+        cleanup();
         emit purgeFinished();
     } catch (const std::exception &e) {
+        cleanup();
         emit purgeFailed(QString::fromLocal8Bit(e.what()));
     }
-    connection.reset();
-    image.clear();
-
-    p->semaphore.release();
 }
 
 void IgotuControlPrivateWorker::notify(QObject *object,
