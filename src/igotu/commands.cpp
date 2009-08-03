@@ -163,7 +163,7 @@ QByteArray CountCommand::sendAndReceive()
     bool useWorkAround = bugWorkaround &&
             !connection()->mode().testFlag(DataConnection::NonBlockingPurge);
     bool message = false;
-    if (bugWorkaround && !useWorkAround && qgetenv("IGOTU2GPX_WORKAROUND").isEmpty()) {
+    if (bugWorkaround && !useWorkAround && !qgetenv("IGOTU2GPX_WORKAROUND").isEmpty()) {
         Messages::normalMessage(IgotuCommand::tr("Using workaround"));
         useWorkAround = true;
         message = true;
