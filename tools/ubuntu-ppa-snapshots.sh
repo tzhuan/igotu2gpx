@@ -7,11 +7,13 @@ VERSION=`echo $LASTVERSION | sed 's/^\([0-9]*\.[0-9]*\).*$/\1.90/'`
 DATE=`date "+%Y%m%d%H%M"`
 FULLVERSION=$VERSION+bzr$DATE
 
+[ -z "`bzr status`" ] || {
+    echo "Uncommitted changes, aborting" >&2
+    exit 1
+}
+
 echo "last version: $LASTVERSION"
 echo "new version: $VERSION (temporary)"
-echo
-echo "No uncommitted changes?"
-read
 
 rm -f ../build-area/igotu2gpx_$FULLVERSION.orig.tar.gz
 bzr revert

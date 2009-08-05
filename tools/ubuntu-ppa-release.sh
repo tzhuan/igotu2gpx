@@ -5,11 +5,13 @@
 LASTVERSION=`sed -n 's/igotu2gpx (\([^-~]*\).*/\1/p;T;q' debian/changelog`
 VERSION=`echo $LASTVERSION | perl -ne '($ma,$mi,$pa) = /^(\d*)\.(\d*)(?:\.(\d*))?/; $pa ||= 0; $pa += 1; print "$ma.$mi.$pa"'`
 
+[ -z "`bzr status`" ] || {
+    echo "Uncommitted changes, aborting" >&2
+    exit 1
+}
+
 echo "last version: $LASTVERSION"
 echo "new version: $VERSION"
-echo
-echo "No uncommitted changes?"
-read
 
 rm -f ../build-area/igotu2gpx_$VERSION.orig.tar.gz
 bzr revert
