@@ -83,7 +83,6 @@ public:
 
     boost::scoped_ptr<IgotuPoints> lastTrackPoints;
     boost::scoped_ptr<Ui::MainWindow> ui;
-    QTabWidget *tabs;
     IgotuControl *control;
     QProgressBar *progress;
     QPointer<PreferencesDialog> preferences;
@@ -320,17 +319,17 @@ void MainWindowPrivate::abortBackgroundAction(const QString &text)
 void MainWindowPrivate::trackActivated(const QList<IgotuPoint> &track)
 {
     visualizers[0]->highlightTrack(track);
-    if (tabs)
-        tabs->setCurrentIndex(0);
 }
 
 void MainWindowPrivate::saveTracksRequested
         (const QList<QList<igotu::IgotuPoint> > &tracks)
 {
     try {
+        const QDateTime date = tracks.count() == 1 ?
+            tracks[0].at(0).dateTime() : QDateTime::currentDateTime();
         QString filePath = QFileDialog::getSaveFileName(p, MainWindow::tr("Save GPS data"),
-                QDateTime::currentDateTime().toString(QLatin1String
-                    ("yyyy-MM-dd-hh-mm-ss")) + QLatin1String(".gpx"),
+                date.toString(QLatin1String("yyyy-MM-dd-hh-mm-ss")) +
+                QLatin1String(".gpx"),
                 MainWindow::tr("GPX files (*.gpx)"));
 
         if (filePath.isEmpty())
@@ -390,27 +389,40 @@ MainWindow::MainWindow() :
     d->control->setDevice(PreferencesDialog::currentDevice());
     d->control->setUtcOffset(PreferencesDialog::currentUtcOffset());
 
-    QMultiMap<int, TrackVisualizerCreator*> visualizerMap;
+    QMultiMap<int, TrackVisualizerCreator*> mainVisualizerMap;
+    QMultiMap<int, TrackVisualizerCreator*> dockVisualizerMap;
     Q_FOREACH (TrackVisualizerCreator * const creator,
-            PluginLoader().availablePlugins<TrackVisualizerCreator>())
-        visualizerMap.insert(creator->visualizerPriority(), creator);
-    const QList<TrackVisualizerCreator*> creators = visualizerMap.values();
-    if (creators.count() == 1) {
-        d->tabs = NULL;
-
+            PluginLoader().availablePlugins<TrackVisualizerCreator>()) {
+        if (creator->supportedVisualizerAppearances()
+                .testFlag(TrackVisualizerCreator::MainWindowAppearance))
+            mainVisualizerMap.insert(creator->visualizerPriority(), creator);
+        if (creator->supportedVisualizerAppearances()
+                .testFlag(TrackVisualizerCreator::DockWidgetAppearance))
+            dockVisualizerMap.insert(creator->visualizerPriority(), creator);
+    }
+    QList<TrackVisualizerCreator*> mainCreators = mainVisualizerMap.values();
+    QList<TrackVisualizerCreator*> dockCreators = dockVisualizerMap.values();
+    if (mainCreators.isEmpty() && !dockCreators.isEmpty())
+        mainCreators.append(dockCreators.takeFirst());
+    if (!mainCreators.isEmpty()) {
         TrackVisualizer * const visualizer =
-            creators[0]->createTrackVisualizer(d->ui->centralWidget);
+            mainCreators[0]->createTrackVisualizer(TrackVisualizerCreator::MainWindowAppearance,
+                    d->ui->centralWidget);
         d->visualizers.append(visualizer);
         d->ui->centralWidget->layout()->addWidget(visualizer);
-    } else {
-        d->tabs = new QTabWidget(d->ui->centralWidget);
-        d->ui->centralWidget->layout()->addWidget(d->tabs);
 
-        Q_FOREACH (TrackVisualizerCreator * const creator, creators) {
-            TrackVisualizer * const visualizer =
-                creator->createTrackVisualizer();
-            d->visualizers.append(visualizer); d->tabs->addTab(visualizer,
-                    visualizer->tabTitle());
+        while (!dockCreators.isEmpty() && mainCreators[0] == dockCreators[0])
+            dockCreators.removeFirst();
+        if (!dockCreators.isEmpty()) {
+            QDockWidget *dockWidget = new QDockWidget(this);
+            dockWidget->setFeatures(QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable);
+            dockWidget->setAllowedAreas(Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea);
+            TrackVisualizer * const dockVisualizer =
+                dockCreators[0]->createTrackVisualizer(TrackVisualizerCreator::DockWidgetAppearance,
+                        d->ui->centralWidget);
+            dockWidget->setWidget(dockVisualizer);
+            d->visualizers.append(dockVisualizer);
+            addDockWidget(Qt::LeftDockWidgetArea, dockWidget);
         }
     }
     for (unsigned i = 0; i < unsigned(d->visualizers.size()); ++i) {

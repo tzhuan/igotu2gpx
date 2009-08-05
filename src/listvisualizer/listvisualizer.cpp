@@ -32,7 +32,8 @@ class ListVisualizer: public TrackVisualizer
 {
     Q_OBJECT
 public:
-    ListVisualizer(QWidget *parent = NULL);
+    ListVisualizer(TrackVisualizerCreator::AppearanceMode mode,
+            QWidget *parent = NULL);
 
     virtual void setTracks(const igotu::IgotuPoints &points, int utcOffset);
     virtual QString tabTitle() const;
@@ -48,6 +49,7 @@ private Q_SLOTS:
 
 private:
     QTreeWidget *trackList;
+    TrackVisualizerCreator::AppearanceMode mode;
 };
 
 class ListVisualizerCreator :
@@ -59,7 +61,9 @@ class ListVisualizerCreator :
 public:
     virtual QString trackVisualizer() const;
     virtual int visualizerPriority() const;
-    virtual TrackVisualizer *createTrackVisualizer(QWidget *parent = NULL) const;
+    AppearanceModes supportedVisualizerAppearances() const;
+    virtual TrackVisualizer *createTrackVisualizer(AppearanceMode mode,
+            QWidget *parent = NULL) const;
 };
 
 Q_EXPORT_PLUGIN2(listVisualizer, ListVisualizerCreator)
@@ -84,8 +88,10 @@ static QString formatCoordinates(const IgotuPoint &point)
 
 // ListVisualizer ==============================================================
 
-ListVisualizer::ListVisualizer(QWidget *parent) :
-    TrackVisualizer(parent)
+ListVisualizer::ListVisualizer(TrackVisualizerCreator::AppearanceMode mode,
+        QWidget *parent) :
+    TrackVisualizer(parent),
+    mode(mode)
 {
     QLayout * const verticalLayout = new QVBoxLayout(this);
     verticalLayout->setMargin(0);
@@ -96,11 +102,18 @@ ListVisualizer::ListVisualizer(QWidget *parent) :
     trackList->setAllColumnsShowFocus(true);
     trackList->setRootIsDecorated(false);
     trackList->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    trackList->setColumnCount(3);
-    trackList->setHeaderLabels(QStringList()
-            << tr("Date")
-            << tr("Position")
-            << tr("Number of trackpoints"));
+    if (mode == TrackVisualizerCreator::DockWidgetAppearance) {
+        trackList->setColumnCount(2);
+        trackList->setHeaderLabels(QStringList()
+                << tr("Date")
+                << tr("Number"));
+    } else {
+        trackList->setColumnCount(3);
+        trackList->setHeaderLabels(QStringList()
+                << tr("Date")
+                << tr("Position")
+                << tr("Number of trackpoints"));
+    }
 
     verticalLayout->addWidget(trackList);
 
@@ -114,13 +127,20 @@ ListVisualizer::ListVisualizer(QWidget *parent) :
 void ListVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset)
 {
     QList<QTreeWidgetItem*> items;
-    Q_FOREACH (const QList<IgotuPoint> &track, points.tracks()) {
+    const QList<QList<IgotuPoint> > tracks =  points.tracks();
+    Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
         QString date = track.at(0).humanDateTimeString(utcOffset);
+        QStringList data;
+        data << date;
+        // TODO: change to length in time/space
+        if (mode == TrackVisualizerCreator::MainWindowAppearance) {
+            data << formatCoordinates(track.at(0));
+            data << tr("%n point(s)", "", track.count());
+        } else {
+            data << QString::number(track.count());
+        }
         QTreeWidgetItem * const item = new QTreeWidgetItem((QTreeWidget*)NULL,
-                QStringList()
-                    << date
-                    << formatCoordinates(track.at(0))
-                    << tr("%n point(s)", "", track.count()));
+                data);
         item->setData(0, Qt::UserRole, QVariant::fromValue(track));
         items.append(item);
     }
@@ -129,6 +149,8 @@ void ListVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset)
     trackList->insertTopLevelItems(0, items);
     for (unsigned i = 0; i < 3; ++i)
         trackList->resizeColumnToContents(i);
+
+    highlightTrack(tracks.at(0));
 }
 
 QString ListVisualizer::tabTitle() const
@@ -138,8 +160,19 @@ QString ListVisualizer::tabTitle() const
 
 void ListVisualizer::highlightTrack(const QList<igotu::IgotuPoint> &track)
 {
-    Q_UNUSED(track);
-    // ignored
+    if (track.isEmpty())
+        return;
+
+    IgotuPoint firstPoint = track[0];
+    for (unsigned i = 0; i < unsigned(trackList->topLevelItemCount()); ++i) {
+        const QList<IgotuPoint> track = trackList->topLevelItem(i)->data(0,
+                Qt::UserRole).value<QList<IgotuPoint> >();
+        if (track.at(0).dateTime() == firstPoint.dateTime()) {
+            trackList->selectionModel()->select(trackList->model()->index(i, 0),
+                    QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+            break;
+        }
+    }
 }
 
 void ListVisualizer::on_trackList_activated(const QModelIndex &index)
@@ -171,9 +204,15 @@ int ListVisualizerCreator::visualizerPriority() const
     return 100;
 }
 
-TrackVisualizer *ListVisualizerCreator::createTrackVisualizer(QWidget *parent) const
+TrackVisualizerCreator::AppearanceModes ListVisualizerCreator::supportedVisualizerAppearances() const
 {
-    return new ListVisualizer(parent);
+    return MainWindowAppearance | DockWidgetAppearance;
+}
+
+TrackVisualizer *ListVisualizerCreator::createTrackVisualizer
+        (AppearanceMode mode, QWidget *parent) const
+{
+    return new ListVisualizer(mode, parent);
 }
 
 #include "listvisualizer.moc"

@@ -162,7 +162,7 @@ QString IgotuPoint::humanDateTimeString(int utcOffset) const
 {
     const QDateTime date = dateTime().addSecs(utcOffset);
 
-    QString result = date.toString(QLatin1String("yyyy-MM-dd hh:mm:ss"));
+    QString result = date.toString(QLatin1String("yyyy-MM-dd hh:mm"));
     if (utcOffset != 0)
         result += QString::fromLatin1("%1%2:%3")
             .arg(utcOffset < 0 ? QLatin1Char('-') : QLatin1Char('+'))

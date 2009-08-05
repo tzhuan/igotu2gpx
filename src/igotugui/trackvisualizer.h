@@ -54,11 +54,21 @@ public:
     {
     }
 
+    enum AppearanceMode {
+        DockWidgetAppearance = 0x01,
+        MainWindowAppearance = 0x02,
+    };
+    Q_DECLARE_FLAGS(AppearanceModes, AppearanceMode)
+
     virtual QString trackVisualizer() const = 0;
     // lower is better
     virtual int visualizerPriority() const = 0;
-    virtual TrackVisualizer *createTrackVisualizer(QWidget *parent = NULL) const = 0;
+    virtual AppearanceModes supportedVisualizerAppearances() const = 0;
+
+    virtual TrackVisualizer *createTrackVisualizer(AppearanceMode mode, QWidget *parent = NULL) const = 0;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(TrackVisualizerCreator::AppearanceModes)
 
 Q_DECLARE_INTERFACE(TrackVisualizerCreator, "de.mh21.igotu2gpx.trackvisualizer/1.0")
 

@@ -72,7 +72,8 @@ class MarbleVisualizerCreator :
 public:
     virtual QString trackVisualizer() const;
     virtual int visualizerPriority() const;
-    virtual TrackVisualizer *createTrackVisualizer(QWidget *parent = NULL) const;
+    virtual AppearanceModes supportedVisualizerAppearances() const;
+    virtual TrackVisualizer *createTrackVisualizer(AppearanceMode mode, QWidget *parent = NULL) const;
 };
 
 Q_EXPORT_PLUGIN2(marbleVisualizer, MarbleVisualizerCreator)
@@ -248,8 +249,16 @@ int MarbleVisualizerCreator::visualizerPriority() const
     return 0;
 }
 
-TrackVisualizer *MarbleVisualizerCreator::createTrackVisualizer(QWidget *parent) const
+TrackVisualizerCreator::AppearanceModes MarbleVisualizerCreator::supportedVisualizerAppearances() const
 {
+    return MainWindowAppearance;
+}
+
+TrackVisualizer *MarbleVisualizerCreator::createTrackVisualizer
+        (AppearanceMode mode, QWidget *parent) const
+{
+    Q_UNUSED(mode);
+
     return new MarbleVisualizer(parent);
 }
 
