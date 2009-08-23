@@ -44,6 +44,8 @@ bool IgotuPoint::isValid() const
     // This test is used by @trip PC
     if (latitude() == 0 && longitude() == 0)
         return false;
+    if (!dateTime().isValid())
+        return false;
     return (uchar(record[0]) & 0x20) == 0;
 }
 
