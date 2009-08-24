@@ -16,7 +16,6 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#include "exception.h"
 #include "igotupoints.h"
 #include "xmlutils.h"
 
@@ -31,8 +30,10 @@ namespace igotu
 IgotuPoint::IgotuPoint(const QByteArray &record) :
     record(record)
 {
-    if (record.size() != 32)
-        throw IgotuError(tr("Invalid record size"));
+    if (record.size() < 32) {
+        this->record += QByteArray(32 - record.size(), 0xff);
+        qWarning("Invalid record size");
+    }
 }
 
 IgotuPoint::~IgotuPoint()
@@ -183,8 +184,10 @@ QByteArray IgotuPoint::hex() const
 ScheduleTableEntry::ScheduleTableEntry(const QByteArray &entry) :
     entry(entry)
 {
-    if (entry.size() != 64)
-        throw IgotuError(tr("Invalid entry size"));
+    if (entry.size() < 64) {
+        this->entry += QByteArray(64 - entry.size(), 0xff);
+        qWarning("Invalid entry size");
+    }
 }
 
 ScheduleTableEntry::~ScheduleTableEntry()
@@ -237,8 +240,10 @@ IgotuPoints::IgotuPoints(const QByteArray &dump, unsigned count) :
     dump(dump),
     count(count)
 {
-    if (dump.size() < 0x1000 || 0x1000 + count * 0x20 > unsigned(dump.size()))
-        throw IgotuError(tr("Dump too small"));
+    if (0x1000 + count * 0x20 > unsigned(dump.size())) {
+        this->dump += QByteArray(0x1000 + count * 0x20 - dump.size(), 0xff);
+        qWarning("Invalid dump size");
+    }
 }
 
 IgotuPoints::~IgotuPoints()
