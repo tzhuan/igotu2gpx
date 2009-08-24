@@ -74,14 +74,14 @@ requests welcome!'''
                         rcNames[patch - 91])
             return ('%s of igotu2gpx %s' % (versionDescription, finalVersion))
         else:
-            return 'Igot2gpx %s' % milestone
+            return 'igot2gpx %s.%s.%s' % (major, minor, patch)
 
     def repository(self, milestone):
-        (major, minor, patch) = milestone.split('.')
+        (major, minor, patch) = self.splitVersion(milestone)
         if patch >= 90:
-            return 'https://launchpad.net/~igotu2gpx/+archive'
-        else:
             return 'https://launchpad.net/~igotu2gpx/+archive/rc-archive'
+        else:
+            return 'https://launchpad.net/~igotu2gpx/+archive/ppa'
 
     def firstLine(self, milestone):
         return ('%s has been released.' %
