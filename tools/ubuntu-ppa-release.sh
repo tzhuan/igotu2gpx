@@ -29,13 +29,13 @@ vi "$MSGFILE"
 
 TARBALL=-sa
 for dist in intrepid jaunty karmic; do
-    dch -v $VERSION-1~${dist}1 -D $dist "XXXTEMPXXX"
+    dch -v $VERSION-1~${dist}1 -D $dist "YYYTEMPYYY"
     (
-	cat debian/changelog | sed -n '0,/XXXTEMPXXX/p'
+	cat debian/changelog | sed -n '0,/YYYTEMPYYY/p'
 	echo "  * Released $dist deb package."
 	cat "$MSGFILE"
-	cat debian/changelog | sed -n '/XXXTEMPXXX/,$p'
-    ) | grep -v XXXTEMPXXX | sponge debian/changelog
+	cat debian/changelog | sed -n '/YYYTEMPYYY/,$p'
+    ) | grep -v YYYTEMPYYY | sponge debian/changelog
 
     bzr builddeb --builder "debuild $TARBALL -S -pgnome-gpg -sgpg" || true
     bzr revert

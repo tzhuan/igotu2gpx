@@ -23,14 +23,23 @@
 
 #include <QMessageBox>
 
+class QUrl;
+
 class UpdateNotificationPrivate;
 
-class UpdateNotification : public QMessageBox
+class UpdateNotification : public QObject
 {
     Q_OBJECT
+    friend class UpdateNotificationPrivate;
 public:
-    UpdateNotification(QWidget *parent = NULL);
+    UpdateNotification(QObject *parent = NULL);
     ~UpdateNotification();
+
+    void scheduleNewCheck();
+    void ignoreVersion();
+
+Q_SIGNALS:
+    void newVersionAvailable(const QString &name, const QUrl &url);
 
 protected:
     boost::scoped_ptr<UpdateNotificationPrivate> d;

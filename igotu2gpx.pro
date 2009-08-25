@@ -28,7 +28,7 @@ docs.files = LICENSE HACKING
 docs.path = $$DOCDIR
 INSTALLS *= docs
 
-todo.commands = @grep -Rn '\'TODO\|FIXME\|XXX\|\\todo\'' src/*/*.pro src/*/*.h src/*/*.cpp
+todo.commands = @grep -Rn '\'TODO\|FIXME\|XXX\|\\todo\'' src/*/*.pro src/*/*.h src/*/*.cpp tools/*
 QMAKE_EXTRA_TARGETS *= todo
 
 po.commands = lupdate src -ts translations/igotu2gpx.ts; lconvert translations/igotu2gpx.ts -o translations/igotu2gpx.pot -of po; msgfmt -c translations/igotu2gpx.pot -o translations/igotu2gpx.mo

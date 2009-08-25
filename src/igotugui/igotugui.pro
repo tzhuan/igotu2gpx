@@ -3,7 +3,7 @@ CLEBS *= libigotu boost-po
 TARGET = igotugui
 include($$BASEDIR/clebs.pri)
 
-QT *= gui
+QT *= gui network
 
 win32:LIBS *= -lshell32
 

@@ -30,7 +30,9 @@
 #include "preferencesdialog.h"
 #include "trackvisualizer.h"
 #include "ui_igotugui.h"
+#include "updatenotification.h"
 
+#include <QDesktopServices>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QPointer>
@@ -70,6 +72,8 @@ public Q_SLOTS:
     void on_control_purgeFinished();
     void on_control_purgeFailed(const QString &message);
 
+    void on_update_newVersionAvailable(const QString &name, const QUrl &url);
+
     void trackActivated(const QList<igotu::IgotuPoint> &track);
     void saveTracksRequested(const QList<QList<igotu::IgotuPoint> > &tracks);
 
@@ -84,6 +88,7 @@ public:
     boost::scoped_ptr<IgotuPoints> lastTrackPoints;
     boost::scoped_ptr<Ui::MainWindow> ui;
     IgotuControl *control;
+    UpdateNotification *update;
     QProgressBar *progress;
     QPointer<PreferencesDialog> preferences;
     PluginLoader *pluginLoader;
@@ -174,7 +179,9 @@ void MainWindowPrivate::on_actionPurge_triggered()
         purgeButton->setIcon(IconStorage::get(IconStorage::PurgeIcon));
     messageBox->setDefaultButton(purgeButton);
     // necessary so MacOS X gives us a sheet
+#if defined(Q_OS_MACX)
     messageBox->setWindowModality(Qt::WindowModal);
+#endif
     messageBox->exec();
 
     if (messageBox->clickedButton() == purgeButton)
@@ -204,6 +211,40 @@ void MainWindowPrivate::on_actionPreferences_triggered()
         // TODO: needs also a raise?
         preferences->activateWindow();
     }
+}
+
+void MainWindowPrivate::on_update_newVersionAvailable(const QString &name, const QUrl &url)
+{
+    QPointer<QMessageBox> messageBox(new QMessageBox(QMessageBox::Information,
+                MainWindow::tr("New Version Available"), MainWindow::tr
+                ("You can download and install a newer version of igotu2gpx: %1")
+                .arg(name), QMessageBox::NoButton, p));
+    QPushButton * const laterButton = messageBox->addButton
+        (MainWindow::tr("Later"), QMessageBox::RejectRole);
+    QPushButton * const neverButton = messageBox->addButton
+        (MainWindow::tr("Never"), QMessageBox::RejectRole);
+    QPushButton * const getButton = messageBox->addButton
+        (MainWindow::tr("Go to Download Page"), QMessageBox::AcceptRole);
+    messageBox->setEscapeButton(laterButton);
+    messageBox->setDefaultButton(getButton);
+    // necessary so MacOS X gives us a sheet
+#if defined(Q_OS_MACX)
+    messageBox->setWindowModality(Qt::WindowModal);
+#endif
+    messageBox->exec();
+
+    const QAbstractButton * const clickedButton = messageBox->clickedButton();
+    if (clickedButton == getButton) {
+        update->scheduleNewCheck();
+        QDesktopServices::openUrl(url);
+    } else if (clickedButton == neverButton) {
+        update->scheduleNewCheck();
+        update->ignoreVersion();
+    } else if (clickedButton == laterButton) {
+        update->scheduleNewCheck();
+    }
+
+    delete messageBox;
 }
 
 void MainWindowPrivate::on_control_infoStarted()
@@ -380,6 +421,9 @@ MainWindow::MainWindow() :
 
     d->control = new IgotuControl(this);
     d->control->setObjectName(QLatin1String("control"));
+
+    d->update = new UpdateNotification(this);
+    d->update->setObjectName(QLatin1String("update"));
 
     d->pluginLoader = new PluginLoader(this);
     d->pluginLoader->setObjectName(QLatin1String("pluginLoader"));

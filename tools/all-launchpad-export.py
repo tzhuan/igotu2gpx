@@ -51,7 +51,11 @@ class ReleaseExport:
                         'sixth']
                 versionDescription = ('the %s release candidate' %
                         rcNames[patch - 91])
-            return ('%s of igotu2gpx %s' % (versionDescription, finalVersion))
+            versionDescription = '%s of igotu2gpx %s' % (versionDescription, finalVersion)
+            if patch == 90:
+                details = self.splitVersion(milestone)
+                versionDescription = '%s (%s)' % (versionDescription,
+                        details[2])
         else:
             return 'igot2gpx %s.%s.%s' % (major, minor, patch)
 
@@ -61,6 +65,10 @@ class ReleaseExport:
             return 'https://launchpad.net/~igotu2gpx/+archive/rc-archive'
         else:
             return 'https://launchpad.net/~igotu2gpx/+archive/ppa'
+
+    def url(self, milestone):
+        return('https://launchpad.net/igotu2gpx/%s/%s' %
+                (self.seriesFromMilestone(milestone), milestone))
 
     def login(self):
         cachedir = os.path.expanduser('~/.cache/launchpadlib')
@@ -89,10 +97,12 @@ class ReleaseExport:
             except:
                 # ignore 0.2.2rc1
                 continue
+            # TODO make sure this is a ascii file, use ini escape sequences
             print '[' + releaseVersion + ']'
             print 'version=' + self.versionName(releaseVersion)
-            print 'name=' + self.versionDescription(releaseVersion)
+            print 'name=' + self.versionDescription(releaseVersion).capitalize()
             print 'series=' + self.seriesFromMilestone(releaseVersion)
+            print 'url=' + self.url(releaseVersion)
             print 'repository=' + self.repository(releaseVersion)
             if patch >= 90:
                 print 'status=devel'

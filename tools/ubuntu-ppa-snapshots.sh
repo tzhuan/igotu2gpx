@@ -13,7 +13,7 @@ FULLVERSION=$VERSION+bzr$DATE
 }
 
 echo "last version: $LASTVERSION"
-echo "new version: $VERSION (temporary)"
+echo "new version: $FULLVERSION (temporary)"
 
 rm -f ../build-area/igotu2gpx_$FULLVERSION.orig.tar.gz
 bzr revert
@@ -27,15 +27,15 @@ vi "$MSGFILE"
 
 TARBALL=-sa
 for dist in intrepid jaunty karmic; do
-    dch -v $VERSION+bzr$DATE-1~${dist}1 -D $dist "XXXTEMPXXX"
+    dch -v $FULLVERSION-1~${dist}1 -D $dist "YYYTEMPYYY"
     (
-	cat debian/changelog | sed -n '0,/XXXTEMPXXX/p'
+	cat debian/changelog | sed -n '0,/YYYTEMPYYY/p'
 	echo "  * Released $dist bzr snapshot."
 	cat "$MSGFILE"
-	cat debian/changelog | sed -n '/XXXTEMPXXX/,$p'
-    ) | grep -v XXXTEMPXXX | sponge debian/changelog
+	cat debian/changelog | sed -n '/YYYTEMPYYY/,$p'
+    ) | grep -v YYYTEMPYYY | sponge debian/changelog
 
-    sed -i 's/\(#define \{1,\}IGOTU_VERSION_STR \).*/\1'"\"$VERSION\"/" src/igotu/global.h
+    sed -i 's/\(#define \{1,\}IGOTU_VERSION_STR \).*/\1'"\"$FULLVERSION\"/" src/igotu/global.h
 
     bzr builddeb --builder "debuild $TARBALL -S -pgnome-gpg -sgpg" || true
     bzr revert
@@ -48,4 +48,4 @@ trap - EXIT
 echo "Really publish to launchpad?"
 read
 
-dput ppa:igotu2gpx/rc-archive ../build-area/igotu2gpx_$VERSION+bzr$DATE-1~*_source.changes
+dput ppa:igotu2gpx/rc-archive ../build-area/igotu2gpx_$FULLVERSION-1~*_source.changes
