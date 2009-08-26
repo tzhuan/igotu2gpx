@@ -21,6 +21,7 @@
 
 #include "global.h"
 
+class QMetaObject;
 class QObject;
 
 namespace igotu
@@ -28,6 +29,12 @@ namespace igotu
 
 IGOTU_EXPORT void connectSlotsByNameToPrivate(QObject *publicObject, QObject
         *privateObject);
+
+IGOTU_EXPORT int enumKeyToValue(const QMetaObject &metaObject, const char *type,
+        const char *key);
+
+IGOTU_EXPORT const char *enumValueToKey(const QMetaObject &metaObject, const
+        char *type, int value);
 
 } // namespace igotu
 

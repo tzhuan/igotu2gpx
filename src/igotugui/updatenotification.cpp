@@ -40,6 +40,7 @@ public Q_SLOTS:
 public:
     UpdateNotification *p;
     QHttp *http;
+    UpdateNotification::Type type;
 };
 
 // UpdateNotificationPrivate ===================================================
@@ -96,8 +97,10 @@ void UpdateNotificationPrivate::on_http_done(bool error)
             settings.contains(QLatin1String("status"))) {
             const QString version =
                 settings.value(QLatin1String("version")).toString();
-            // TODO check for devel/stable in status
-            if (newerVersion(newestVersion, version))
+            if (newerVersion(newestVersion, version) &&
+                    (type == UpdateNotification::DevelopmentSnapshots ||
+                     settings.value(QLatin1String("status")).toString() ==
+                     QLatin1String("stable")))
                 newestVersion = version;
         }
         settings.endGroup();
@@ -109,9 +112,11 @@ void UpdateNotificationPrivate::on_http_done(bool error)
     // TODO: check for ignored versions
 
     settings.beginGroup(newestVersion);
-    // only accept http and https TODO
-    emit p->newVersionAvailable(settings.value(QLatin1String("name")).toString(),
-                QUrl(settings.value(QLatin1String("url")).toString()));
+    QUrl url = QUrl(settings.value(QLatin1String("url")).toString());
+    if (url.scheme() == QLatin1String("http") ||
+        url.scheme() == QLatin1String("https"))
+        emit p->newVersionAvailable
+            (settings.value(QLatin1String("name")).toString(), url);
 }
 
 // UpdateNotification ==========================================================
@@ -122,10 +127,22 @@ UpdateNotification::UpdateNotification(QObject *parent) :
 {
     d->p = this;
 
+    setUpdateNotification(defaultUpdateNotification());
+
     d->http = new QHttp(this);
     d->http->setObjectName(QLatin1String("http"));
 
     connectSlotsByNameToPrivate(this, d.get());
+}
+
+UpdateNotification::~UpdateNotification()
+{
+}
+
+void UpdateNotification::runScheduledCheck()
+{
+    if (d->type == NotifyNever)
+        return;
 
     // TODO: check update interval
 
@@ -135,10 +152,6 @@ UpdateNotification::UpdateNotification(QObject *parent) :
     d->http->get(QString::fromAscii(QUrl(d->releaseUrl()).toEncoded()));
 }
 
-UpdateNotification::~UpdateNotification()
-{
-}
-
 void UpdateNotification::scheduleNewCheck()
 {
     // TODO: schedule new check (+7 days)
@@ -146,7 +159,22 @@ void UpdateNotification::scheduleNewCheck()
 
 void UpdateNotification::ignoreVersion()
 {
-    // TODO: mark the current version as ignored
+    // TODO: mark the proposed version as ignored
+}
+
+UpdateNotification::Type UpdateNotification::defaultUpdateNotification()
+{
+    // TODO: Linux installed to /usr/bin should not ask for updates
+    const QStringList parts = QString::fromLatin1(IGOTU_VERSION_STR).split(QLatin1Char('.'));
+    const QStringList patchParts = parts.value(2).split(QLatin1Char('+'));
+    if (patchParts.value(0).toUInt() >= 90)
+        return DevelopmentSnapshots;
+    return StableReleases;
+}
+
+void UpdateNotification::setUpdateNotification(Type type)
+{
+    d->type = type;
 }
 
 #include "updatenotification.moc"

@@ -76,4 +76,31 @@ void connectSlotsByNameToPrivate(QObject *publicObject, QObject *privateObject)
         }
     }
 }
+
+int enumKeyToValue(const QMetaObject &metaObject,
+        const char *type, const char *key)
+{
+    const int metaEnumIndex = metaObject.indexOfEnumerator(type);
+    if (metaEnumIndex < 0)
+        return 0;
+    const QMetaEnum metaEnum = metaObject.enumerator(metaEnumIndex);
+    const int enumValue = metaEnum.keyToValue(key);
+    if (enumValue < 0)
+        return 0;
+    return enumValue;
+}
+
+const char *enumValueToKey(const QMetaObject &metaObject,
+        const char *type, int value)
+{
+    const int metaEnumIndex = metaObject.indexOfEnumerator(type);
+    if (metaEnumIndex < 0)
+        return "";
+    const QMetaEnum metaEnum = metaObject.enumerator(metaEnumIndex);
+    const char * const key = metaEnum.valueToKey(value);
+    if (!key)
+        return metaEnum.key(0);
+    return key;
+}
+
 } // namespace igotu

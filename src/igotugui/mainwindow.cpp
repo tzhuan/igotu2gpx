@@ -205,6 +205,8 @@ void MainWindowPrivate::on_actionPreferences_triggered()
                 control, SLOT(setDevice(QString)));
         QObject::connect(preferences, SIGNAL(utcOffsetChanged(int)),
                 control, SLOT(setUtcOffset(int)));
+        QObject::connect(preferences, SIGNAL(updateNotificationChanged(UpdateNotification::Type)),
+                update, SLOT(setUpdateNotification(UpdateNotification::Type)));
 
         preferences->show();
     } else {
@@ -432,6 +434,7 @@ MainWindow::MainWindow() :
 
     d->control->setDevice(PreferencesDialog::currentDevice());
     d->control->setUtcOffset(PreferencesDialog::currentUtcOffset());
+    d->update->setUpdateNotification(PreferencesDialog::currentUpdateNotification());
 
     QMultiMap<int, TrackVisualizerCreator*> mainVisualizerMap;
     QMultiMap<int, TrackVisualizerCreator*> dockVisualizerMap;
@@ -486,6 +489,7 @@ MainWindow::MainWindow() :
     d->progress->hide();
     statusBar()->addPermanentWidget(d->progress);
 
+    QTimer::singleShot(0, d->update, SLOT(runScheduledCheck()));
     QTimer::singleShot(0, d->ui->actionReload, SLOT(trigger()));
 }
 

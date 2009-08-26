@@ -30,13 +30,26 @@ class UpdateNotificationPrivate;
 class UpdateNotification : public QObject
 {
     Q_OBJECT
+    Q_ENUMS(Type)
     friend class UpdateNotificationPrivate;
 public:
     UpdateNotification(QObject *parent = NULL);
     ~UpdateNotification();
 
+    enum Type {
+        NotifyNever,
+        StableReleases,
+        DevelopmentSnapshots
+    };
+
     void scheduleNewCheck();
     void ignoreVersion();
+
+    static Type defaultUpdateNotification();
+    void setUpdateNotification(Type type);
+
+public Q_SLOTS:
+    void runScheduledCheck();
 
 Q_SIGNALS:
     void newVersionAvailable(const QString &name, const QUrl &url);

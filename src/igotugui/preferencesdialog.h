@@ -19,6 +19,8 @@
 #ifndef _IGOTU2GPX_SRC_IGOTUGUI_PREFERENCESDIALOG_H_
 #define _IGOTU2GPX_SRC_IGOTUGUI_PREFERENCESDIALOG_H_
 
+#include "updatenotification.h"
+
 #include <boost/scoped_ptr.hpp>
 
 #include <QDialog>
@@ -37,6 +39,7 @@ public:
 
     static QString currentDevice();
     static int currentUtcOffset();
+    static UpdateNotification::Type currentUpdateNotification();
 
 protected:
     boost::scoped_ptr<PreferencesDialogPrivate> d;
@@ -44,6 +47,7 @@ protected:
 Q_SIGNALS:
     void deviceChanged(const QString &device);
     void utcOffsetChanged(int seconds);
+    void updateNotificationChanged(UpdateNotification::Type type);
 };
 
 #endif
