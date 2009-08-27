@@ -29,6 +29,7 @@ using namespace igotu;
 #define UPDATE_PREF QLatin1String("Preferences/updateNotification")
 #define DEVICE_PREF QLatin1String("Preferences/device")
 #define OFFSET_PREF QLatin1String("Preferences/utcOffset")
+
 class PreferencesDialogPrivate : public QObject
 {
     Q_OBJECT
@@ -169,12 +170,14 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
         const int timeZone = timeZones[i];
         const int seconds = (timeZone / 100) * 3600 + (timeZone % 100) * 60;
         if (timeZone == 0)
-            d->ui->utcOffset->addItem(trUtf8("GMT\xc2\xb1%1:%2")
+            //: Use unicode character U+00B1 PLUS-MINUS SIGN
+            d->ui->utcOffset->addItem(trUtf8("GMT±%1:%2")
                     .arg(0, 2, 10, QLatin1Char('0'))
                     .arg(0, 2, 10, QLatin1Char('0')),
                     seconds);
         else if (timeZone < 0)
-            d->ui->utcOffset->addItem(trUtf8("GMT\xe2\x88\x92%1:%2")
+            //: Use unicode character U+2212 MINUS SIGN
+            d->ui->utcOffset->addItem(trUtf8("GMT−%1:%2")
                     .arg(-timeZone / 100, 2, 10, QLatin1Char('0'))
                     .arg(-timeZone % 100, 2, 10, QLatin1Char('0')),
                     seconds);
@@ -185,7 +188,8 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
                     seconds);
     }
 
-    d->ui->update->addItem(tr("Never"), UpdateNotification::NotifyNever);
+    d->ui->update->addItem(tr("Never", "no update notification"),
+            UpdateNotification::NotifyNever);
     d->ui->update->addItem(tr("Stable releases"),
             UpdateNotification::StableReleases);
     d->ui->update->addItem(tr("Development snapshots"),

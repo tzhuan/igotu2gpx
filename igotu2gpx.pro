@@ -31,12 +31,14 @@ INSTALLS *= docs
 todo.commands = @grep -Rn '\'TODO\|FIXME\|XXX\|\\todo\'' src/*/*.pro src/*/*.h src/*/*.cpp tools/*
 QMAKE_EXTRA_TARGETS *= todo
 
-po.commands = lupdate src -ts translations/igotu2gpx.ts; lconvert translations/igotu2gpx.ts -o translations/igotu2gpx.pot -of po; msgfmt -c translations/igotu2gpx.pot -o translations/igotu2gpx.mo
+po.commands = lupdate src -ts translations/igotu2gpx.ts; \
+    lconvert translations/igotu2gpx.ts -o translations/igotu2gpx.pot -of po; \
+    msgfmt -c translations/igotu2gpx.pot -o translations/igotu2gpx.mo
 QMAKE_EXTRA_TARGETS *= po
 
 pofiles = $$files(translations/*.po)
 for(pofile, pofiles) {
-    tsfile = $$replace(pofile, '_(.*)\.po$', '_\1.ts')
+    tsfile = $$replace(pofile, '(.*)\.po$', 'igotu2gpx_\1.ts')
     qmfiles *= $$replace(tsfile, '\.ts$', '.qm')
     poconvertcommand += lconvert $$pofile -o $$tsfile -of ts;
     # Untranslated entries are not marked with fuzzy in the launchpad exports,
