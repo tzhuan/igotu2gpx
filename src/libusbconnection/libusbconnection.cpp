@@ -105,7 +105,8 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId)
 #ifdef Q_OS_LINUX
     char buf[256];
     if (usb_get_driver_np(handle.get(), 0, buf, sizeof(buf)) == 0) {
-        Messages::verboseMessage(tr("Interface 0 already claimed by driver '%1', detaching")
+        Messages::verboseMessage(tr
+                ("Interface 0 already claimed by driver '%1', detaching")
                 .arg(QString::fromAscii(buf)));
 
         int result = usb_detach_kernel_driver_np(handle.get(), 0);
@@ -222,7 +223,8 @@ QString LibusbConnectionCreator::defaultConnectionId() const
     return QLatin1String("0df7:0900");
 }
 
-DataConnection *LibusbConnectionCreator::createDataConnection(const QString &id) const
+DataConnection *LibusbConnectionCreator::createDataConnection
+        (const QString &id) const
 {
     return new LibusbConnection
         (id.section(QLatin1Char(':'), 0, 0).toUInt(NULL, 16),

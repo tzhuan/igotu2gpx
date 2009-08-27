@@ -20,6 +20,8 @@
 
 #include "updatenotification.h"
 
+#include <QCoreApplication>
+#include <QDateTime>
 #include <QHttp>
 #include <QSettings>
 #include <QTemporaryFile>
@@ -32,7 +34,11 @@ class UpdateNotificationPrivate : public QObject
     Q_OBJECT
 public:
     QString releaseUrl() const;
-    bool newerVersion(const QString &oldVersion, const QString &newVersion);
+    QDateTime lastCheck() const;
+    QString ignoredVersion() const;
+    bool newerVersion(const QString &oldVersion, const QString &newVersion) const;
+
+    void setLastCheck();
 
 public Q_SLOTS:
     void on_http_done(bool error);
@@ -43,17 +49,38 @@ public:
     UpdateNotification::Type type;
 };
 
+#define NOTIFY_URL QLatin1String("Updates/releaseUrl")
+#define NOTIFY_LAST QLatin1String("Updates/lastCheck")
+#define NOTIFY_IGNORE QLatin1String("Updates/ignoreVersion")
+
 // UpdateNotificationPrivate ===================================================
 
 QString UpdateNotificationPrivate::releaseUrl() const
 {
-    return QSettings().contains(QLatin1String("releaseUrl")) ?
-        QSettings().value(QLatin1String("releaseUrl")).toString() :
-        QLatin1String("http://mh21.de/igotu2gpx/releases.txt");
+    return QSettings().value(NOTIFY_URL,
+            QLatin1String("http://mh21.de/igotu2gpx/releases.txt")).toString();
+
+}
+
+QDateTime UpdateNotificationPrivate::lastCheck() const
+{
+    return QDateTime::fromString(QSettings().value(NOTIFY_LAST).toString(),
+            Qt::ISODate);
+}
+
+void UpdateNotificationPrivate::setLastCheck()
+{
+    QSettings().setValue(NOTIFY_LAST,
+            QDateTime::currentDateTime().toString(Qt::ISODate));
+}
+
+QString UpdateNotificationPrivate::ignoredVersion() const
+{
+    return QSettings().value(NOTIFY_IGNORE).toString();
 }
 
 bool UpdateNotificationPrivate::newerVersion(const QString &oldVersion,
-        const QString &newVersion)
+        const QString &newVersion) const
 {
     QStringList oldParts = oldVersion.split(QLatin1Char('.'));
     QStringList newParts = newVersion.split(QLatin1Char('.'));
@@ -73,14 +100,14 @@ bool UpdateNotificationPrivate::newerVersion(const QString &oldVersion,
 void UpdateNotificationPrivate::on_http_done(bool error)
 {
     if (error) {
-        qDebug("Unable to retrieve update information: %s",
+        qWarning("Unable to retrieve update information: %s",
                 qPrintable(http->errorString()));
         return;
     }
 
     QTemporaryFile iniFile;
     if (!iniFile.open()) {
-        qDebug("Unable to create temporary update file: %s",
+        qWarning("Unable to create temporary update file: %s",
                 qPrintable(iniFile.errorString()));
         return;
     }
@@ -106,17 +133,21 @@ void UpdateNotificationPrivate::on_http_done(bool error)
         settings.endGroup();
     }
 
-    if (newestVersion == QLatin1String(IGOTU_VERSION_STR))
+    settings.beginGroup(newestVersion);
+    const QUrl url = QUrl(settings.value(QLatin1String("url")).toString());
+
+    setLastCheck();
+
+    if (newestVersion == QLatin1String(IGOTU_VERSION_STR) ||
+        newestVersion == ignoredVersion())
         return;
 
-    // TODO: check for ignored versions
+    if (url.scheme() != QLatin1String("http") &&
+        url.scheme() != QLatin1String("https"))
+        return;
 
-    settings.beginGroup(newestVersion);
-    QUrl url = QUrl(settings.value(QLatin1String("url")).toString());
-    if (url.scheme() == QLatin1String("http") ||
-        url.scheme() == QLatin1String("https"))
-        emit p->newVersionAvailable
-            (settings.value(QLatin1String("name")).toString(), url);
+    emit p->newVersionAvailable(newestVersion,
+            settings.value(QLatin1String("name")).toString(), url);
 }
 
 // UpdateNotification ==========================================================
@@ -144,28 +175,34 @@ void UpdateNotification::runScheduledCheck()
     if (d->type == NotifyNever)
         return;
 
-    // TODO: check update interval
+    QDateTime lastCheck(d->lastCheck());
+    if (lastCheck.isValid() &&
+        lastCheck.secsTo(QDateTime::currentDateTime()) < 7 * 24 * 60 * 60)
+        return;
 
     const QUrl url = d->releaseUrl();
     d->http->setHost(url.host(), url.scheme() == QLatin1String("https") ?
-            QHttp::ConnectionModeHttps : QHttp::ConnectionModeHttp, url.port(0));
+            QHttp::ConnectionModeHttps : QHttp::ConnectionModeHttp,
+            url.port(0));
     d->http->get(QString::fromAscii(QUrl(d->releaseUrl()).toEncoded()));
 }
 
-void UpdateNotification::scheduleNewCheck()
+void UpdateNotification::setIgnoredVersion(const QString &version)
 {
-    // TODO: schedule new check (+7 days)
-}
-
-void UpdateNotification::ignoreVersion()
-{
-    // TODO: mark the proposed version as ignored
+    if (!version.isEmpty())
+        QSettings().setValue(NOTIFY_IGNORE, version);
+    else
+        QSettings().remove(NOTIFY_IGNORE);
 }
 
 UpdateNotification::Type UpdateNotification::defaultUpdateNotification()
 {
-    // TODO: Linux installed to /usr/bin should not ask for updates
-    const QStringList parts = QString::fromLatin1(IGOTU_VERSION_STR).split(QLatin1Char('.'));
+#ifdef Q_OS_LINUX
+    if (QCoreApplication::applicationDirPath() == QLatin1String("/usr/bin"))
+        return NotifyNever;
+#endif
+    const QStringList parts = QString::fromLatin1(IGOTU_VERSION_STR)
+        .split(QLatin1Char('.'));
     const QStringList patchParts = parts.value(2).split(QLatin1Char('+'));
     if (patchParts.value(0).toUInt() >= 90)
         return DevelopmentSnapshots;

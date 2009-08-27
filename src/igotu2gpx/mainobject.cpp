@@ -156,7 +156,8 @@ void MainObjectPrivate::on_control_contentsStarted()
 
 void MainObjectPrivate::on_control_contentsBlocksFinished(uint num, uint total)
 {
-    Messages::normalMessage(MainObject::tr("Retrieved block %1/%2").arg(num).arg(total));
+    Messages::normalMessage(MainObject::tr("Retrieved block %1/%2")
+            .arg(num).arg(total));
 }
 
 void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
@@ -171,7 +172,8 @@ void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
             Q_FOREACH (const IgotuPoint &igotuPoint, igotuPoints.points()) {
                 // These shouldn't be localized, just in case somebody wants to
                 // parse them?
-                Messages::textOutput(QString::fromLatin1("Record %1").arg(++index));
+                Messages::textOutput(QString::fromLatin1("Record %1")
+                        .arg(++index));
                 if (igotuPoint.isWayPoint())
                     Messages::textOutput(QString::fromLatin1("  Waypoint"));
                 if (igotuPoint.isTrackStart())
@@ -200,8 +202,9 @@ void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
                         .arg(igotuPoint.timeout()));
                 Messages::textOutput(QString::fromLatin1("  MSVs_QCN %1")
                         .arg(igotuPoint.msvsQcn()));
-                Messages::textOutput(QString::fromLatin1("  Weight criteria 0x%1")
-                        .arg(igotuPoint.weightCriteria(), 2, 16, QLatin1Char('0')));
+                Messages::textOutput(QString::fromLatin1
+                        ("  Weight criteria 0x%1").arg
+                        (igotuPoint.weightCriteria(), 2, 16, QLatin1Char('0')));
                 Messages::textOutput(QString::fromLatin1("  Sleep time %1")
                         .arg(igotuPoint.sleepTime()));
             }
@@ -219,8 +222,8 @@ void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
 
 void MainObjectPrivate::on_control_contentsFailed(const QString &message)
 {
-    Messages::errorMessage(Common::tr
-                ("Unable to obtain trackpoints from GPS tracker: %1").arg(message));
+    Messages::errorMessage(Common::tr("Unable to obtain trackpoints from "
+                "GPS tracker: %1").arg(message));
     QCoreApplication::quit();
 }
 

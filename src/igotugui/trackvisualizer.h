@@ -43,8 +43,8 @@ public:
 
     // Implementations also need:
     // Q_SIGNALS:
-    //     void saveTracksRequested(const QList<QList<igotu::IgotuPoint> > &tracks);
-    //     void trackActivated(const QList<igotu::IgotuPoint> &track);
+    // void saveTracksRequested(const QList<QList<igotu::IgotuPoint> > &tracks);
+    // void trackActivated(const QList<igotu::IgotuPoint> &track);
 };
 
 class TrackVisualizerCreator
@@ -65,11 +65,13 @@ public:
     virtual int visualizerPriority() const = 0;
     virtual AppearanceModes supportedVisualizerAppearances() const = 0;
 
-    virtual TrackVisualizer *createTrackVisualizer(AppearanceMode mode, QWidget *parent = NULL) const = 0;
+    virtual TrackVisualizer *createTrackVisualizer(AppearanceMode mode,
+            QWidget *parent = NULL) const = 0;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(TrackVisualizerCreator::AppearanceModes)
 
-Q_DECLARE_INTERFACE(TrackVisualizerCreator, "de.mh21.igotu2gpx.trackvisualizer/1.0")
+Q_DECLARE_INTERFACE(TrackVisualizerCreator,
+        "de.mh21.igotu2gpx.trackvisualizer/1.0")
 
 #endif

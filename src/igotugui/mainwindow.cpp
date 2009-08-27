@@ -72,7 +72,8 @@ public Q_SLOTS:
     void on_control_purgeFinished();
     void on_control_purgeFailed(const QString &message);
 
-    void on_update_newVersionAvailable(const QString &name, const QUrl &url);
+    void on_update_newVersionAvailable(const QString &version,
+            const QString &name, const QUrl &url);
 
     void trackActivated(const QList<igotu::IgotuPoint> &track);
     void saveTracksRequested(const QList<QList<igotu::IgotuPoint> > &tracks);
@@ -205,8 +206,10 @@ void MainWindowPrivate::on_actionPreferences_triggered()
                 control, SLOT(setDevice(QString)));
         QObject::connect(preferences, SIGNAL(utcOffsetChanged(int)),
                 control, SLOT(setUtcOffset(int)));
-        QObject::connect(preferences, SIGNAL(updateNotificationChanged(UpdateNotification::Type)),
-                update, SLOT(setUpdateNotification(UpdateNotification::Type)));
+        QObject::connect(preferences,
+                SIGNAL(updateNotificationChanged(UpdateNotification::Type)),
+                update,
+                SLOT(setUpdateNotification(UpdateNotification::Type)));
 
         preferences->show();
     } else {
@@ -215,11 +218,13 @@ void MainWindowPrivate::on_actionPreferences_triggered()
     }
 }
 
-void MainWindowPrivate::on_update_newVersionAvailable(const QString &name, const QUrl &url)
+void MainWindowPrivate::on_update_newVersionAvailable(const QString &version,
+        const QString &name, const QUrl &url)
 {
     QPointer<QMessageBox> messageBox(new QMessageBox(QMessageBox::Information,
                 MainWindow::tr("New Version Available"), MainWindow::tr
-                ("You can download and install a newer version of igotu2gpx: %1")
+                ("You can download and install a newer version of "
+                    "igotu2gpx: %1")
                 .arg(name), QMessageBox::NoButton, p));
     QPushButton * const laterButton = messageBox->addButton
         (MainWindow::tr("Later"), QMessageBox::RejectRole);
@@ -237,13 +242,9 @@ void MainWindowPrivate::on_update_newVersionAvailable(const QString &name, const
 
     const QAbstractButton * const clickedButton = messageBox->clickedButton();
     if (clickedButton == getButton) {
-        update->scheduleNewCheck();
         QDesktopServices::openUrl(url);
     } else if (clickedButton == neverButton) {
-        update->scheduleNewCheck();
-        update->ignoreVersion();
-    } else if (clickedButton == laterButton) {
-        update->scheduleNewCheck();
+        update->setIgnoredVersion(version);
     }
 
     delete messageBox;
@@ -262,8 +263,8 @@ void MainWindowPrivate::on_control_infoFinished(const QString &info)
 
 void MainWindowPrivate::on_control_infoFailed(const QString &message)
 {
-    abortBackgroundAction(Common::tr("Unable to obtain info from GPS tracker: %1")
-            .arg(message));
+    abortBackgroundAction(Common::tr
+            ("Unable to obtain info from GPS tracker: %1").arg(message));
 }
 
 void MainWindowPrivate::on_control_contentsStarted()
@@ -297,14 +298,16 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
 
         stopBackgroundAction();
     } catch (const std::exception &e) {
-        abortBackgroundAction(Common::tr("Unable to obtain trackpoints from GPS tracker: %1")
+        abortBackgroundAction(Common::tr
+                ("Unable to obtain trackpoints from GPS tracker: %1")
                 .arg(QString::fromLocal8Bit(e.what())));
     }
 }
 
 void MainWindowPrivate::on_control_contentsFailed(const QString &message)
 {
-    abortBackgroundAction(Common::tr("Unable to obtain trackpoints from GPS tracker: %1")
+    abortBackgroundAction(Common::tr
+            ("Unable to obtain trackpoints from GPS tracker: %1")
             .arg(message));
 }
 
@@ -326,7 +329,8 @@ void MainWindowPrivate::on_control_purgeFinished()
 
 void MainWindowPrivate::on_control_purgeFailed(const QString &message)
 {
-    abortBackgroundAction(Common::tr("Unable to purge GPS tracker: %1").arg(message));
+    abortBackgroundAction(Common::tr
+            ("Unable to purge GPS tracker: %1").arg(message));
 }
 
 void MainWindowPrivate::startBackgroundAction(const QString &text)
@@ -370,7 +374,8 @@ void MainWindowPrivate::saveTracksRequested
     try {
         const QDateTime date = tracks.count() == 1 ?
             tracks[0].at(0).dateTime() : QDateTime::currentDateTime();
-        QString filePath = QFileDialog::getSaveFileName(p, MainWindow::tr("Save GPS data"),
+        QString filePath = QFileDialog::getSaveFileName(p,
+                MainWindow::tr("Save GPS data"),
                 date.toString(QLatin1String("yyyy-MM-dd-hh-mm-ss")) +
                 QLatin1String(".gpx"),
                 MainWindow::tr("GPX files (*.gpx)"));
@@ -383,7 +388,8 @@ void MainWindowPrivate::saveTracksRequested
             throw IgotuError(MainWindow::tr("Unable to create file: %1")
                     .arg(file.errorString()));
 
-        const QByteArray gpxData = IgotuPoints::gpx(tracks, control->utcOffset());
+        const QByteArray gpxData = IgotuPoints::gpx(tracks,
+                control->utcOffset());
         if (file.write(gpxData) != gpxData.length())
             throw IgotuError(MainWindow::tr("Unable to save to file: %1")
                     .arg(file.errorString()));
@@ -434,7 +440,8 @@ MainWindow::MainWindow() :
 
     d->control->setDevice(PreferencesDialog::currentDevice());
     d->control->setUtcOffset(PreferencesDialog::currentUtcOffset());
-    d->update->setUpdateNotification(PreferencesDialog::currentUpdateNotification());
+    d->update->setUpdateNotification
+        (PreferencesDialog::currentUpdateNotification());
 
     QMultiMap<int, TrackVisualizerCreator*> mainVisualizerMap;
     QMultiMap<int, TrackVisualizerCreator*> dockVisualizerMap;
@@ -453,8 +460,9 @@ MainWindow::MainWindow() :
         mainCreators.append(dockCreators.takeFirst());
     if (!mainCreators.isEmpty()) {
         TrackVisualizer * const visualizer =
-            mainCreators[0]->createTrackVisualizer(TrackVisualizerCreator::MainWindowAppearance,
-                    d->ui->centralWidget);
+            mainCreators[0]->createTrackVisualizer
+            (TrackVisualizerCreator::MainWindowAppearance,
+             d->ui->centralWidget);
         d->visualizers.append(visualizer);
         d->ui->centralWidget->layout()->addWidget(visualizer);
 
@@ -462,21 +470,28 @@ MainWindow::MainWindow() :
             dockCreators.removeFirst();
         if (!dockCreators.isEmpty()) {
             QDockWidget *dockWidget = new QDockWidget(this);
-            dockWidget->setFeatures(QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable);
-            dockWidget->setAllowedAreas(Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea);
+            dockWidget->setFeatures(QDockWidget::DockWidgetFloatable |
+                    QDockWidget::DockWidgetMovable);
+            dockWidget->setAllowedAreas(Qt::LeftDockWidgetArea |
+                    Qt::RightDockWidgetArea);
             TrackVisualizer * const dockVisualizer =
-                dockCreators[0]->createTrackVisualizer(TrackVisualizerCreator::DockWidgetAppearance,
-                        d->ui->centralWidget);
+                dockCreators[0]->createTrackVisualizer
+                (TrackVisualizerCreator::DockWidgetAppearance,
+                 d->ui->centralWidget);
             dockWidget->setWidget(dockVisualizer);
             d->visualizers.append(dockVisualizer);
             addDockWidget(Qt::LeftDockWidgetArea, dockWidget);
         }
     }
     for (unsigned i = 0; i < unsigned(d->visualizers.size()); ++i) {
-        connect(d->visualizers[i], SIGNAL(saveTracksRequested(QList<QList<igotu::IgotuPoint>>)),
-                d.get(), SLOT(saveTracksRequested(QList<QList<igotu::IgotuPoint>>)));
-        connect(d->visualizers[i], SIGNAL(trackActivated(QList<igotu::IgotuPoint>)),
-                d.get(), SLOT(trackActivated(QList<igotu::IgotuPoint>)));
+        connect(d->visualizers[i],
+                SIGNAL(saveTracksRequested(QList<QList<igotu::IgotuPoint>>)),
+                d.get(),
+                SLOT(saveTracksRequested(QList<QList<igotu::IgotuPoint>>)));
+        connect(d->visualizers[i],
+                SIGNAL(trackActivated(QList<igotu::IgotuPoint>)),
+                d.get(),
+                SLOT(trackActivated(QList<igotu::IgotuPoint>)));
     }
 
     // Progress bar

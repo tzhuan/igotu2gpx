@@ -116,7 +116,8 @@ public:
     QList<QList<IgotuPoint> > tracks() const;
 
     QByteArray gpx(int utcOffset = 0) const;
-    static QByteArray gpx(const QList<QList<IgotuPoint> > &tracks, int utcOffset = 0);
+    static QByteArray gpx(const QList<QList<IgotuPoint> > &tracks,
+            int utcOffset = 0);
 
     bool isValid() const;
 

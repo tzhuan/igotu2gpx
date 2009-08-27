@@ -42,17 +42,17 @@ public:
         DevelopmentSnapshots
     };
 
-    void scheduleNewCheck();
-    void ignoreVersion();
+    void setIgnoredVersion(const QString &version);
 
     static Type defaultUpdateNotification();
-    void setUpdateNotification(Type type);
 
 public Q_SLOTS:
+    void setUpdateNotification(UpdateNotification::Type type);
     void runScheduledCheck();
 
 Q_SIGNALS:
-    void newVersionAvailable(const QString &name, const QUrl &url);
+    void newVersionAvailable(const QString &newerVersion, const QString &name,
+            const QUrl &url);
 
 protected:
     boost::scoped_ptr<UpdateNotificationPrivate> d;

@@ -176,7 +176,8 @@ void WorkerThread::scheduleReadTransfer()
 
 void WorkerThread::handleReadTransfer(libusb_transfer *transfer)
 {
-    WorkerThread * const This = reinterpret_cast<WorkerThread*>(transfer->user_data);
+    WorkerThread * const This =
+        reinterpret_cast<WorkerThread*>(transfer->user_data);
     const QByteArray data = This->readBuffer.left(transfer->actual_length);
     This->scheduleReadTransfer();
     // TODO: somebody needs to handle error conditions here
@@ -201,7 +202,8 @@ void WorkerThread::scheduleWriteTransfer(const QByteArray &data)
 
 void WorkerThread::handleWriteTransfer(libusb_transfer *transfer)
 {
-    WorkerThread * const This = reinterpret_cast<WorkerThread*>(transfer->user_data);
+    WorkerThread * const This =
+        reinterpret_cast<WorkerThread*>(transfer->user_data);
     // TODO handle errors
     This->writeCompleted.wakeOne();
 }
@@ -245,7 +247,8 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId)
 
 #ifdef Q_OS_LINUX
     if (libusb_kernel_driver_active(handle.get(), 0) == 1) {
-        Messages::verboseMessage(tr("Interface 0 already claimed by kernel driver, detaching"));
+        Messages::verboseMessage(tr
+                ("Interface 0 already claimed by kernel driver, detaching"));
 
         if (int result = libusb_detach_kernel_driver(handle.get(), 0))
             throw IgotuError(tr
@@ -274,7 +277,8 @@ Libusb10Connection::DeviceList Libusb10Connection::find_devices
     libusb_device **list;
     ssize_t count = libusb_get_device_list(context.get(), &list);
     if (count < 0)
-        throw IgotuError(Libusb10Connection::tr("Unable to enumerate usb devices: %1").arg(count));
+        throw IgotuError(Libusb10Connection::tr
+                ("Unable to enumerate usb devices: %1").arg(count));
 
     for (ssize_t i = 0; i < count; ++i) {
         libusb_device *device = list[i];
@@ -283,7 +287,8 @@ Libusb10Connection::DeviceList Libusb10Connection::find_devices
             continue;
         if (descriptor.idVendor == vendor
             && (product == 0 || descriptor.idProduct == product))
-            result.append(Device(libusb_ref_device(device), libusb_unref_device));
+            result.append(Device(libusb_ref_device(device),
+                        libusb_unref_device));
     }
 
     libusb_free_device_list(list, 1);
@@ -300,8 +305,8 @@ void Libusb10Connection::send(const QByteArray &query)
 //        throw IgotuError(tr("Unable to send data to the device: %1")
 //                .arg(QString::fromLocal8Bit(strerror(-result))));
 //    if (result != query.size())
-//        throw IgotuError(Common::tr("Unable to send data to the device: Tried "
-//                    "to send %1 bytes, but only succeeded sending %2 bytes")
+//        throw IgotuError(Common::tr("Unable to send data to the device: Tried"
+//                    " to send %1 bytes, but only succeeded sending %2 bytes")
 //                .arg(query.size(), result));
 }
 
@@ -352,7 +357,8 @@ QString Libusb10ConnectionCreator::defaultConnectionId() const
     return QLatin1String("0df7:0900");
 }
 
-DataConnection *Libusb10ConnectionCreator::createDataConnection(const QString &id) const
+DataConnection *Libusb10ConnectionCreator::createDataConnection
+        (const QString &id) const
 {
     return new Libusb10Connection
         (id.section(QLatin1Char(':'), 0, 0).toUInt(NULL, 16),

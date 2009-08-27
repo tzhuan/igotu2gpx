@@ -73,7 +73,8 @@ public:
     virtual QString trackVisualizer() const;
     virtual int visualizerPriority() const;
     virtual AppearanceModes supportedVisualizerAppearances() const;
-    virtual TrackVisualizer *createTrackVisualizer(AppearanceMode mode, QWidget *parent = NULL) const;
+    virtual TrackVisualizer *createTrackVisualizer(AppearanceMode mode,
+            QWidget *parent = NULL) const;
 };
 
 Q_EXPORT_PLUGIN2(marbleVisualizer, MarbleVisualizerCreator)
@@ -95,8 +96,10 @@ void MarbleVisualizer::initMarble()
     delete tracks;
 
 #ifdef Q_OS_MACX
-    MarbleDirs::setMarblePluginPath(Paths::macPluginDirectory() + QLatin1String("/marble"));
-    MarbleDirs::setMarbleDataPath(Paths::macDataDirectory() + QLatin1String("/marble"));
+    MarbleDirs::setMarblePluginPath(Paths::macPluginDirectory() +
+            QLatin1String("/marble"));
+    MarbleDirs::setMarbleDataPath(Paths::macDataDirectory() +
+            QLatin1String("/marble"));
 #endif
     tracks = new MarbleWidget(this);
     tracks->setObjectName(QLatin1String("tracks"));
@@ -109,11 +112,13 @@ void MarbleVisualizer::initMarble()
     tracks->map()->setDownloadUrl(QUrl());
 #endif
 //    tracks->map()->setProjection(Mercator);
-    tracks->setMapThemeId(QLatin1String("earth/openstreetmap/openstreetmap.dgml"));
+    tracks->setMapThemeId(QLatin1String
+            ("earth/openstreetmap/openstreetmap.dgml"));
     // TODO: disable plugins that are not used (wikipedia)
 }
 
-void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset)
+void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points,
+        int utcOffset)
 {
     Q_UNUSED(utcOffset);
 
@@ -169,7 +174,8 @@ void MarbleVisualizer::highlightTrack(const QList<IgotuPoint> &track)
     tracks->setCenterLatitude(track.at(0).latitude());
 }
 
-QByteArray MarbleVisualizer::pointsToKml(const QList<IgotuPoint> &wayPoints, const QList<QList<IgotuPoint> > &tracks)
+QByteArray MarbleVisualizer::pointsToKml(const QList<IgotuPoint> &wayPoints,
+        const QList<QList<IgotuPoint> > &tracks)
 {
     QByteArray result;
     QTextStream out(&result);
@@ -190,7 +196,9 @@ QByteArray MarbleVisualizer::pointsToKml(const QList<IgotuPoint> &wayPoints, con
     unsigned wayPointCounter = 1;
     Q_FOREACH (const IgotuPoint &point, wayPoints) {
         out << "<Placemark>\n"
-               "<name>" << tr("Waypoint %1").arg(wayPointCounter++) << "</name>\n"
+               "<name>"
+            << tr("Waypoint %1").arg(wayPointCounter++)
+            << "</name>\n"
                "<Point>\n"
                "<coordinates>\n";
         out << point.longitude() << ',' << point.latitude() << '\n';
@@ -249,7 +257,8 @@ int MarbleVisualizerCreator::visualizerPriority() const
     return 0;
 }
 
-TrackVisualizerCreator::AppearanceModes MarbleVisualizerCreator::supportedVisualizerAppearances() const
+TrackVisualizerCreator::AppearanceModes
+MarbleVisualizerCreator::supportedVisualizerAppearances() const
 {
     return MainWindowAppearance;
 }

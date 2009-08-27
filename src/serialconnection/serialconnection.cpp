@@ -155,7 +155,8 @@ QString SerialConnectionCreator::defaultConnectionId() const
     return QLatin1String("3");
 }
 
-DataConnection *SerialConnectionCreator::createDataConnection(const QString &id) const
+DataConnection *SerialConnectionCreator::createDataConnection
+        (const QString &id) const
 {
     return new SerialConnection(id.toUInt());
 }

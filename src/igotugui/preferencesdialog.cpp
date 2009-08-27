@@ -26,6 +26,9 @@
 
 using namespace igotu;
 
+#define UPDATE_PREF QLatin1String("Preferences/updateNotification")
+#define DEVICE_PREF QLatin1String("Preferences/device")
+#define OFFSET_PREF QLatin1String("Preferences/utcOffset")
 class PreferencesDialogPrivate : public QObject
 {
     Q_OBJECT
@@ -34,6 +37,17 @@ public Q_SLOTS:
     void on_device_textEdited(const QString &text);
     void on_utcOffset_currentIndexChanged(int index);
     void on_update_currentIndexChanged(int index);
+
+public:
+    static QString currentDevice();
+    static int currentUtcOffset();
+    static UpdateNotification::Type currentUpdateNotification();
+    void syncDialogToPreferences();
+
+private:
+    void setCurrentDevice(const QString &device);
+    void setCurrentUtcOffset(int offset);
+    void setCurrentUpdateNotification(UpdateNotification::Type type);
 
 public:
     PreferencesDialog *p;
@@ -46,50 +60,92 @@ public:
 void PreferencesDialogPrivate::on_buttonBox_clicked(QAbstractButton *button)
 {
     if (ui->buttonBox->buttonRole(button) == QDialogButtonBox::ResetRole) {
-        QSettings().remove(QLatin1String("device"));
-        const QString defaultDevice = IgotuControl::defaultDevice();
-        ui->device->setText(defaultDevice);
-        emit p->deviceChanged(defaultDevice);
-
-        QSettings().remove(QLatin1String("utcOffset"));
-        const int defaultUtcOffset = IgotuControl::defaultUtcOffset();
-        ui->utcOffset->setCurrentIndex
-            (ui->utcOffset->findData(defaultUtcOffset));
-        emit p->utcOffsetChanged(defaultUtcOffset);
+        QSettings().remove(QLatin1String("Preferences"));
+        setCurrentDevice(IgotuControl::defaultDevice());
+        setCurrentUtcOffset(IgotuControl::defaultUtcOffset());
+        setCurrentUpdateNotification
+            (UpdateNotification::defaultUpdateNotification());
+        syncDialogToPreferences();
     }
 }
 
 void PreferencesDialogPrivate::on_device_textEdited(const QString &text)
 {
-    if (text != IgotuControl::defaultDevice())
-        QSettings().setValue(QLatin1String("device"), text);
-    else
-        QSettings().remove(QLatin1String("device"));
-    emit p->deviceChanged(text);
+    setCurrentDevice(text);
 }
 
 void PreferencesDialogPrivate::on_utcOffset_currentIndexChanged(int index)
 {
     const int seconds = index < -1 ? 0 : ui->utcOffset->itemData(index).toInt();
-
-    if (seconds != IgotuControl::defaultUtcOffset())
-        QSettings().setValue(QLatin1String("utcOffset"), seconds);
-    else
-        QSettings().remove(QLatin1String("utcOffset"));
-    emit p->utcOffsetChanged(seconds);
+    setCurrentUtcOffset(seconds);
 }
 
 void PreferencesDialogPrivate::on_update_currentIndexChanged(int index)
 {
     const int type = index < -1 ? 0 : ui->update->itemData(index).toInt();
+    setCurrentUpdateNotification(UpdateNotification::Type(type));
+}
 
-    if (type != UpdateNotification::defaultUpdateNotification())
-        QSettings().setValue(QLatin1String("updateNotification"),
-                QLatin1String(enumValueToKey(UpdateNotification::staticMetaObject,
-                        "Type", type)));
+void PreferencesDialogPrivate::setCurrentDevice(const QString &device)
+{
+    if (device != IgotuControl::defaultDevice())
+        QSettings().setValue(DEVICE_PREF, device);
     else
-        QSettings().remove(QLatin1String("updateNotification"));
-    emit p->updateNotificationChanged(UpdateNotification::Type(type));
+        QSettings().remove(DEVICE_PREF);
+    emit p->deviceChanged(device);
+}
+
+QString PreferencesDialogPrivate::currentDevice()
+{
+    return QSettings().value(DEVICE_PREF,
+            IgotuControl::defaultDevice()).toString();
+}
+
+void PreferencesDialogPrivate::setCurrentUtcOffset(int offset)
+{
+    if (offset != IgotuControl::defaultUtcOffset())
+        QSettings().setValue(OFFSET_PREF, offset);
+    else
+        QSettings().remove(OFFSET_PREF);
+    emit p->utcOffsetChanged(offset);
+}
+
+int PreferencesDialogPrivate::currentUtcOffset()
+{
+    return QSettings().value(OFFSET_PREF,
+            IgotuControl::defaultUtcOffset()).toInt();
+}
+
+void PreferencesDialogPrivate::setCurrentUpdateNotification
+        (UpdateNotification::Type type)
+{
+    // Always save this value, do not use the default value as it can change
+    // between devel and stable versions
+    QSettings().setValue(UPDATE_PREF, QLatin1String(enumValueToKey
+                (UpdateNotification::staticMetaObject, "Type", type)));
+    emit p->updateNotificationChanged(type);
+}
+
+UpdateNotification::Type PreferencesDialogPrivate::currentUpdateNotification()
+{
+    // Store default value as it can change between devel and stable versions
+    if (!QSettings().contains(UPDATE_PREF))
+        QSettings().setValue(UPDATE_PREF, QLatin1String(enumValueToKey
+                    (UpdateNotification::staticMetaObject, "Type",
+                     UpdateNotification::defaultUpdateNotification())));
+
+    return UpdateNotification::Type(enumKeyToValue
+            (UpdateNotification::staticMetaObject, "Type",
+             QSettings().value(UPDATE_PREF).toString().toAscii()));
+}
+
+void PreferencesDialogPrivate::syncDialogToPreferences()
+{
+    ui->utcOffset->setCurrentIndex
+        (ui->utcOffset->findData(currentUtcOffset()));
+    ui->device->setText(currentDevice());
+    ui->update->setCurrentIndex(ui->update->findData
+            (currentUpdateNotification()));
 }
 
 // PreferencesDialog ===========================================================
@@ -130,13 +186,12 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
     }
 
     d->ui->update->addItem(tr("Never"), UpdateNotification::NotifyNever);
-    d->ui->update->addItem(tr("Stable releases"), UpdateNotification::StableReleases);
-    d->ui->update->addItem(tr("Development snapshots"), UpdateNotification::DevelopmentSnapshots);
+    d->ui->update->addItem(tr("Stable releases"),
+            UpdateNotification::StableReleases);
+    d->ui->update->addItem(tr("Development snapshots"),
+            UpdateNotification::DevelopmentSnapshots);
 
-    d->ui->utcOffset->setCurrentIndex
-        (d->ui->utcOffset->findData(currentUtcOffset()));
-    d->ui->device->setText(currentDevice());
-    d->ui->update->setCurrentIndex(d->ui->update->findData(currentUpdateNotification()));
+    d->syncDialogToPreferences();
 
     connectSlotsByNameToPrivate(this, d.get());
 }
@@ -147,24 +202,17 @@ PreferencesDialog::~PreferencesDialog()
 
 QString PreferencesDialog::currentDevice()
 {
-    return QSettings().contains(QLatin1String("device")) ?
-        QSettings().value(QLatin1String("device")).toString() :
-        IgotuControl::defaultDevice();
+    return PreferencesDialogPrivate::currentDevice();
 }
 
 int PreferencesDialog::currentUtcOffset()
 {
-    return QSettings().contains(QLatin1String("utcOffset")) ?
-        QSettings().value(QLatin1String("utcOffset")).toInt() :
-        IgotuControl::defaultUtcOffset();
+    return PreferencesDialogPrivate::currentUtcOffset();
 }
 
 UpdateNotification::Type PreferencesDialog::currentUpdateNotification()
 {
-    return QSettings().contains(QLatin1String("updateNotification")) ?
-        UpdateNotification::Type(enumKeyToValue(UpdateNotification::staticMetaObject, "Type",
-                QSettings().value(QLatin1String("updateNotification")).toString().toAscii()))
-        : UpdateNotification::defaultUpdateNotification();
+    return PreferencesDialogPrivate::currentUpdateNotification();
 }
 
 #include "preferencesdialog.moc"

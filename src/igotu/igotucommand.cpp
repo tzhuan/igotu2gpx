@@ -89,8 +89,8 @@ unsigned IgotuCommandPrivate::sendCommand(const QByteArray &data)
         connection->send(command.mid(i * 8, 8));
         responseSize = receiveResponseSize();
         if (responseSize < 0)
-            throw IgotuDeviceError(IgotuCommand::tr("Device responded with error code: %1")
-                 .arg(responseSize));
+            throw IgotuDeviceError(IgotuCommand::tr("Device responded with "
+                        "error code: %1").arg(responseSize));
         if (responseSize != 0 && i + 1 < pieces)
             throw IgotuProtocolError(IgotuCommand::tr
                     ("Non-empty intermediate reply packet: %1")

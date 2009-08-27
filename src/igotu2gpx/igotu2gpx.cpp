@@ -115,22 +115,29 @@ int main(int argc, char *argv[])
 
         if (variables.count("version")) {
             Messages::textOutput(Common::tr(
-                   "Igotu2gpx %1\n\n"
-                   "Shows the configuration and decodes the stored tracks and waypoints\n"
-                   "of a MobileAction i-gotU USB GPS travel logger.\n\n"
-                   "This program is licensed to you under the terms of the GNU General\n"
-                   "Public License. See the file LICENSE that came with this software\n"
-                   "for further details.\n\n"
-                   "Copyright (C) 2009 Michael Hofmann.\n\n"
-                   "The program is provided AS IS with NO WARRANTY OF ANY KIND,\n"
-                   "INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR\n"
-                   "A PARTICULAR PURPOSE.").arg(QLatin1String(IGOTU_VERSION_STR)));
+                        "Igotu2gpx %1\n\n"
+                        "Shows the configuration and decodes the stored tracks "
+                            "and waypoints\n"
+                        "of a MobileAction i-gotU USB GPS travel logger.\n\n"
+                        "This program is licensed to you under the terms of "
+                            "the GNU General\n"
+                        "Public License. See the file LICENSE that came with "
+                            "this software\n"
+                        "for further details.\n\n"
+                        "Copyright (C) 2009 Michael Hofmann.\n\n"
+                        "The program is provided AS IS with NO WARRANTY OF ANY "
+                            "KIND,\n"
+                        "INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND "
+                            "FITNESS FOR\n"
+                        "A PARTICULAR PURPOSE.")
+                    .arg(QLatin1String(IGOTU_VERSION_STR)));
             return 0;
         }
         if (variables.count("help") || action.isEmpty()) {
             Messages::textOutput(Common::tr("Usage:"));
-            Messages::textOutput(MainObject::tr("%1 info|dump|purge|diff [OPTIONS...]")
-                .arg(QFileInfo(app.applicationFilePath()).fileName()));
+            Messages::textOutput(MainObject::tr
+                    ("%1 info|dump|purge|diff [OPTIONS...]")
+                    .arg(QFileInfo(app.applicationFilePath()).fileName()));
             Messages::normalMessage(QString());
             std::cout << options << "\n";
             return 1;

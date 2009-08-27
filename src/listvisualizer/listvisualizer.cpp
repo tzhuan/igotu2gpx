@@ -117,7 +117,8 @@ ListVisualizer::ListVisualizer(TrackVisualizerCreator::AppearanceMode mode,
 
     verticalLayout->addWidget(trackList);
 
-    QAction * const saveTracksAction = new QAction(tr("Save selected tracks..."), this);
+    QAction * const saveTracksAction = new QAction(tr
+            ("Save selected tracks..."), this);
     saveTracksAction->setObjectName(QLatin1String("saveTracksAction"));
     trackList->addAction(saveTracksAction);
 
@@ -169,7 +170,8 @@ void ListVisualizer::highlightTrack(const QList<igotu::IgotuPoint> &track)
                 Qt::UserRole).value<QList<IgotuPoint> >();
         if (track.at(0).dateTime() == firstPoint.dateTime()) {
             trackList->selectionModel()->select(trackList->model()->index(i, 0),
-                    QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+                    QItemSelectionModel::ClearAndSelect |
+                    QItemSelectionModel::Rows);
             break;
         }
     }
@@ -187,7 +189,8 @@ void ListVisualizer::on_trackList_activated(const QModelIndex &index)
 void ListVisualizer::on_saveTracksAction_activated()
 {
     QList<QList<IgotuPoint> > tracks;
-    Q_FOREACH (const QModelIndex &index, trackList->selectionModel()->selectedRows())
+    Q_FOREACH (const QModelIndex &index,
+            trackList->selectionModel()->selectedRows())
         tracks.append(index.data(Qt::UserRole).value<QList<IgotuPoint> >());
     emit saveTracksRequested(tracks);
 }
@@ -204,7 +207,8 @@ int ListVisualizerCreator::visualizerPriority() const
     return 100;
 }
 
-TrackVisualizerCreator::AppearanceModes ListVisualizerCreator::supportedVisualizerAppearances() const
+TrackVisualizerCreator::AppearanceModes
+ListVisualizerCreator::supportedVisualizerAppearances() const
 {
     return MainWindowAppearance | DockWidgetAppearance;
 }

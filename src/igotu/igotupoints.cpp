@@ -372,7 +372,8 @@ QByteArray IgotuPoints::gpx(int utcOffset) const
     return gpx(tracks(), utcOffset);
 }
 
-QByteArray IgotuPoints::gpx(const QList<QList<IgotuPoint> > &tracks, int utcOffset)
+QByteArray IgotuPoints::gpx(const QList<QList<IgotuPoint> > &tracks,
+        int utcOffset)
 {
     QByteArray result;
     QTextStream out(&result);
@@ -420,7 +421,8 @@ QByteArray IgotuPoints::gpx(const QList<QList<IgotuPoint> > &tracks, int utcOffs
                     << "</time>\n"
                 << xmlIndent(4) << "<sat>" << point.satellites().count()
                     << "</sat>\n"
-                << xmlIndent(4) << "<speed>" << point.speed() / 3.6 << "</speed>\n"
+                << xmlIndent(4) << "<speed>" << point.speed() / 3.6
+                    << "</speed>\n"
                 << xmlIndent(3) << "</trkpt>\n";
         out << xmlIndent(2) << "</trkseg>\n";
         out << xmlIndent(1) << "</trk>\n";

@@ -163,19 +163,22 @@ QByteArray CountCommand::sendAndReceive()
     bool useWorkAround = bugWorkaround &&
             !connection()->mode().testFlag(DataConnection::NonBlockingPurge);
     bool message = false;
-    if (bugWorkaround && !useWorkAround && !qgetenv("IGOTU2GPX_WORKAROUND").isEmpty()) {
+    if (bugWorkaround && !useWorkAround &&
+            !qgetenv("IGOTU2GPX_WORKAROUND").isEmpty()) {
         Messages::normalMessage(IgotuCommand::tr("Using workaround"));
         useWorkAround = true;
         message = true;
     }
-    if (bugWorkaround && useWorkAround && !qgetenv("IGOTU2GPX_NOWORKAROUND").isEmpty()) {
+    if (bugWorkaround && useWorkAround &&
+            !qgetenv("IGOTU2GPX_NOWORKAROUND").isEmpty()) {
         Messages::normalMessage(IgotuCommand::tr("Not using workaround"));
         useWorkAround = false;
         message = true;
     }
     if (message)
         Messages::normalMessage(IgotuCommand::tr
-           ("Please file a bug at https://bugs.launchpad.net/igotu2gpx/+filebug if this\n"
+           ("Please file a bug at "
+                "https://bugs.launchpad.net/igotu2gpx/+filebug if this\n"
             "solves your connection problems. Please include:\n"
             "- the tracker type and\n"
             "- the output of igotu2gpx info"));

@@ -62,6 +62,7 @@ public:
 
 } // namespace igotu
 
-Q_DECLARE_INTERFACE(igotu::DataConnectionCreator, "de.mh21.igotu2gpx.dataconnection/1.0")
+Q_DECLARE_INTERFACE(igotu::DataConnectionCreator,
+        "de.mh21.igotu2gpx.dataconnection/1.0")
 
 #endif

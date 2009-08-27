@@ -207,16 +207,19 @@ void IgotuControlPrivateWorker::info()
 
             IdentificationCommand id(connection.get());
             id.sendAndReceive();
-            status += IgotuControl::tr("S/N: %1").arg(id.serialNumber()) + QLatin1Char('\n');
+            status += IgotuControl::tr("S/N: %1").arg(id.serialNumber()) +
+                QLatin1Char('\n');
             status += IgotuControl::tr("Firmware version: %1")
                 .arg(id.firmwareVersionString()) + QLatin1Char('\n');
 
             ModelCommand model(connection.get());
             model.sendAndReceive();
             if (model.modelId() != ModelCommand::Unknown)
-                status += IgotuControl::tr("Model: %1").arg(model.modelName()) + QLatin1Char('\n');
+                status += IgotuControl::tr("Model: %1").arg(model.modelName()) +
+                    QLatin1Char('\n');
             else
-                status += IgotuControl::tr("Model: %1, please file a bug at http://bugs.launchpad.net/igotu2gpx/+filebug")
+                status += IgotuControl::tr("Model: %1, please file a bug at "
+                        "http://bugs.launchpad.net/igotu2gpx/+filebug")
                     .arg(model.modelName()) + QLatin1Char('\n');
 
             // Workaround necessary for:
@@ -230,7 +233,8 @@ void IgotuControlPrivateWorker::info()
                     id.firmwareVersion() >= 0x0200);
             countCommand.sendAndReceive();
             unsigned count = countCommand.trackPointCount();
-            status += IgotuControl::tr("Number of unfiltered trackpoints: %1").arg(count) + QLatin1Char('\n');
+            status += IgotuControl::tr("Number of unfiltered trackpoints: %1")
+                .arg(count) + QLatin1Char('\n');
             contents = ReadCommand(connection.get(), 0, 0x1000)
                 .sendAndReceive();
             NmeaSwitchCommand(connection.get(), true).sendAndReceive();
@@ -245,17 +249,19 @@ void IgotuControlPrivateWorker::info()
         status += IgotuControl::tr("Schedule date: %1")
             .arg(QLocale::system().toString(igotuPoints.firstScheduleDate() ,
                         QLocale::LongFormat)) + QLatin1Char('\n');
-        status += IgotuControl::tr("Schedule date offset: %1 days").arg(igotuPoints
-                .dateOffset()) + QLatin1Char('\n');
+        status += IgotuControl::tr("Schedule date offset: %1 days")
+            .arg(igotuPoints.dateOffset()) + QLatin1Char('\n');
         QList<unsigned> tablePlans = igotuPoints.scheduleTablePlans();
         QSet<unsigned> tablePlanSet = QSet<unsigned>::fromList(tablePlans);
         if (igotuPoints.isScheduleTableEnabled()) {
-            status += IgotuControl::tr("Schedule table: enabled") + QLatin1Char('\n');
+            status += IgotuControl::tr("Schedule table: enabled") +
+                QLatin1Char('\n');
             status += IgotuControl::tr("Schedule table plans used:");
             Q_FOREACH (unsigned plan, tablePlanSet)
                 status += QLatin1Char(' ') + QString::number(plan);
             status += QLatin1Char('\n');
-            status += IgotuControl::tr("Schedule table plan order:") + QLatin1Char(' ');
+            status += IgotuControl::tr("Schedule table plan order:") +
+                QLatin1Char(' ');
             if (tablePlans.size() > 1)
                 status += QLatin1String("\n  ");
             for (unsigned i = 0; i < unsigned(tablePlans.size()); ++i) {
@@ -277,38 +283,43 @@ void IgotuControlPrivateWorker::info()
                             QLatin1Char('\n');
                         printed = true;
                     }
-                    status += QLatin1String("  ") + IgotuControl::tr("Start time: %1")
+                    status += QLatin1String("  ") + IgotuControl::tr
+                        ("Start time: %1")
                         .arg(QLocale::system().toString(entry.startTime(),
                                     QLocale::LongFormat)) + QLatin1Char('\n');
-                    status += QLatin1String("  ") + IgotuControl::tr("End time: %1")
+                    status += QLatin1String("  ") + IgotuControl::tr
+                        ("End time: %1")
                         .arg(QLocale::system().toString(entry.endTime(),
                                     (QLocale::LongFormat))) + QLatin1Char('\n');
-                    status += QLatin1String("  ") +
-                        IgotuControl::tr("Log interval: %1 s").arg(entry.logInterval()) +
-                        QLatin1Char('\n');
+                    status += QLatin1String("  ") + IgotuControl::tr
+                        ("Log interval: %1 s")
+                        .arg(entry.logInterval()) + QLatin1Char('\n');
                     if (entry.isIntervalChangeEnabled()) {
-                        status += QLatin1String("  ") +
-                            IgotuControl::tr("Interval change: above %1 km/h, use %2 s")
+                        status += QLatin1String("  ") + IgotuControl::tr
+                            ("Interval change: above %1 km/h, use %2 s")
                             .arg(qRound(entry.intervalChangeSpeed()))
                             .arg(entry.changedLogInterval()) +
                             QLatin1Char('\n');
                     } else {
-                        status += QLatin1String("  ") +
-                            IgotuControl::tr("Interval change: disabled") + QLatin1Char('\n');
+                        status += QLatin1String("  ") + IgotuControl::tr
+                            ("Interval change: disabled") + QLatin1Char('\n');
                     }
                 }
             }
         } else {
-            status += IgotuControl::tr("Schedule table: disabled") + QLatin1Char('\n');
-            ScheduleTableEntry entry = igotuPoints.scheduleTableEntries(1)[0];
-            status += IgotuControl::tr("Log interval: %1 s").arg(entry.logInterval()) +
+            status += IgotuControl::tr("Schedule table: disabled") +
                 QLatin1Char('\n');
+            ScheduleTableEntry entry = igotuPoints.scheduleTableEntries(1)[0];
+            status += IgotuControl::tr("Log interval: %1 s")
+                .arg(entry.logInterval()) + QLatin1Char('\n');
             if (entry.isIntervalChangeEnabled()) {
-                status += IgotuControl::tr("Interval change: above %1 km/h, use %2 s")
-                        .arg(qRound(entry.intervalChangeSpeed()))
-                        .arg(entry.changedLogInterval()) + QLatin1Char('\n');
+                status += IgotuControl::tr
+                    ("Interval change: above %1 km/h, use %2 s")
+                    .arg(qRound(entry.intervalChangeSpeed()))
+                    .arg(entry.changedLogInterval()) + QLatin1Char('\n');
             } else {
-                status += IgotuControl::tr("Interval change: disabled") + QLatin1Char('\n');
+                status += IgotuControl::tr("Interval change: disabled") +
+                    QLatin1Char('\n');
             }
         }
 
@@ -392,7 +403,8 @@ void IgotuControlPrivateWorker::purge()
         connect();
 
         if (!connection)
-            throw IgotuError(IgotuControl::tr("Need an actual device to purge"));
+            throw IgotuError(IgotuControl::tr
+                    ("Need an actual device to purge"));
 
         NmeaSwitchCommand(connection.get(), false).sendAndReceive();
 
@@ -415,7 +427,8 @@ void IgotuControlPrivateWorker::purge()
                                 .sendAndReceive() == QByteArray(1, '\x00'))
                             break;
                         if (retries == 1)
-                            throw IgotuError(IgotuControl::tr("Timeout during purge"));
+                            throw IgotuError(IgotuControl::tr
+                                    ("Timeout during purge"));
                     }
                 } else {
                     if (ReadCommand(connection.get(), i * 0x1000, 0x10)
@@ -436,7 +449,8 @@ void IgotuControlPrivateWorker::purge()
                             .sendAndReceive() == QByteArray(1, '\x00'))
                         break;
                     if (retries == 1)
-                        throw IgotuError(IgotuControl::tr("Timeout during purge"));
+                        throw IgotuError(IgotuControl::tr
+                                ("Timeout during purge"));
                 }
             }
             UnknownPurgeCommand1(connection.get(), 0x1e).sendAndReceive();
@@ -454,7 +468,8 @@ void IgotuControlPrivateWorker::purge()
                                 .sendAndReceive() == QByteArray(1, '\x00'))
                             break;
                         if (retries == 1)
-                            throw IgotuError(IgotuControl::tr("Timeout during purge"));
+                            throw IgotuError(IgotuControl::tr
+                                    ("Timeout during purge"));
                     }
                 } else {
                     if (ReadCommand(connection.get(), i * 0x1000, 0x10)
@@ -474,17 +489,19 @@ void IgotuControlPrivateWorker::purge()
                             .sendAndReceive() == QByteArray(1, '\x00'))
                         break;
                     if (retries == 1)
-                        throw IgotuError(IgotuControl::tr("Timeout during purge"));
+                        throw IgotuError(IgotuControl::tr
+                                ("Timeout during purge"));
                 }
             }
             emit purgeBlocksFinished(blocks, blocks);
             break; }
         default: {
-            throw IgotuError(IgotuControl::tr("%1: No purge support available. If you have "
-                        "time and feel adventurous, create a bug report at "
-                        "https://bugs.launchpad.net/igotu2gpx/+filebug, and "
-                        "follow the steps at "
-                        "https://answers.launchpad.net/igotu2gpx/+faq/480.")
+            throw IgotuError(IgotuControl::tr
+                    ("%1: No purge support available. If you have "
+                     "time and feel adventurous, create a bug report at "
+                     "https://bugs.launchpad.net/igotu2gpx/+filebug, and "
+                     "follow the steps at "
+                     "https://answers.launchpad.net/igotu2gpx/+faq/480.")
                     .arg(model.modelName()));
             break; }
         }
