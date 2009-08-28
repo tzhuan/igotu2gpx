@@ -171,13 +171,13 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
         const int seconds = (timeZone / 100) * 3600 + (timeZone % 100) * 60;
         if (timeZone == 0)
             //: Use unicode character U+00B1 PLUS-MINUS SIGN
-            d->ui->utcOffset->addItem(trUtf8("GMT±%1:%2")
+            d->ui->utcOffset->addItem(trUtf8("GMT\302\261%1:%2")
                     .arg(0, 2, 10, QLatin1Char('0'))
                     .arg(0, 2, 10, QLatin1Char('0')),
                     seconds);
         else if (timeZone < 0)
             //: Use unicode character U+2212 MINUS SIGN
-            d->ui->utcOffset->addItem(trUtf8("GMT−%1:%2")
+            d->ui->utcOffset->addItem(trUtf8("GMT\342\210\222%1:%2")
                     .arg(-timeZone / 100, 2, 10, QLatin1Char('0'))
                     .arg(-timeZone % 100, 2, 10, QLatin1Char('0')),
                     seconds);

@@ -31,7 +31,9 @@ INSTALLS *= docs
 todo.commands = @grep -Rn '\'TODO\|FIXME\|XXX\|\\todo\'' src/*/*.pro src/*/*.h src/*/*.cpp tools/*
 QMAKE_EXTRA_TARGETS *= todo
 
+# Use iconv mangling as lupdate does not recognize octal/hex utf8 strings
 po.commands = lupdate src -ts translations/igotu2gpx.ts; \
+    iconv -f utf8 -t latin1 translations/igotu2gpx.ts | sponge translations/igotu2gpx.ts; \
     lconvert translations/igotu2gpx.ts -o translations/igotu2gpx.pot -of po; \
     msgfmt -c translations/igotu2gpx.pot -o translations/igotu2gpx.mo
 QMAKE_EXTRA_TARGETS *= po

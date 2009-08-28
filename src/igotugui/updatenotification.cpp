@@ -105,6 +105,7 @@ void UpdateNotificationPrivate::on_http_done(bool error)
         return;
     }
 
+    // TODO: secure cryptographically, e.g. with SSL or a RSA signature
     QTemporaryFile iniFile;
     if (!iniFile.open()) {
         qWarning("Unable to create temporary update file: %s",

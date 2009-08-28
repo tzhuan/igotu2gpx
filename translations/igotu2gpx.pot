@@ -537,6 +537,13 @@ msgstr ""
 msgid "GMT±%1:%2"
 msgstr ""
 
+#. Use unicode character U+2212 MINUS SIGN
+#. ts-context PreferencesDialog
+#: ../src/igotugui/preferencesdialog.cpp:180
+#, fuzzy
+msgid "GMT−%1:%2"
+msgstr ""
+
 #. ts-context PreferencesDialog
 #: ../src/igotugui/preferencesdialog.cpp:185
 #, fuzzy
@@ -548,13 +555,6 @@ msgstr ""
 #, fuzzy
 msgctxt "no update notification"
 msgid "Never"
-msgstr ""
-
-#. Use unicode character U+2212 MINUS SIGN
-#. ts-context PreferencesDialog
-#: ../src/igotugui/preferencesdialog.cpp:180
-#, fuzzy
-msgid "GMT−%1:%2"
 msgstr ""
 
 #. ts-context PreferencesDialog
