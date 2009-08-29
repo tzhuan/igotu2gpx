@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
          MainObject::tr("clear: clear memory of the GPS tracker")
          .toLocal8Bit() + '\n' +
          //: Do not translate the word before the colon
-         MainObject::tr("diff: show configuration changes relative to an image file")
+         MainObject::tr("diff: show configuration differences relative to an image file")
          .toLocal8Bit())
     ;
     po::positional_options_description positionalOptions;

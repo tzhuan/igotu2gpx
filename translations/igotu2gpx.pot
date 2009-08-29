@@ -122,6 +122,13 @@ msgstr ""
 msgid "time zone offset in seconds"
 msgstr ""
 
+#. Do not translate the word before the colon
+#. ts-context MainObject
+#: ../src/igotu2gpx/igotu2gpx.cpp:123
+#, fuzzy
+msgid "diff: show configuration differences relative to an image file"
+msgstr ""
+
 #. ts-context MainObject
 #: ../src/igotu2gpx/igotu2gpx.cpp:168 ../src/igotu2gpx/igotu2gpx.cpp:186
 #, fuzzy
@@ -184,13 +191,6 @@ msgstr ""
 #: ../src/igotu2gpx/igotu2gpx.cpp:120
 #, fuzzy
 msgid "clear: clear memory of the GPS tracker"
-msgstr ""
-
-#. Do not translate the word before the colon
-#. ts-context MainObject
-#: ../src/igotu2gpx/igotu2gpx.cpp:123
-#, fuzzy
-msgid "diff: show configuration changes relative to an image file"
 msgstr ""
 
 #. ts-context MainObject
