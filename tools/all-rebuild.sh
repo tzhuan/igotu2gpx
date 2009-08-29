@@ -15,5 +15,5 @@ fi
 find . -depth \( -name .build -o -name 'Makefile*' -o -name 'object_script.*' \) -exec rm -r {} \;
 rm -r bin
 echo qmake $QMAKEARGS
-qmake $QMAKEARGS
+qmake-qt4 $QMAKEARGS || qmake $QMAKEARGS
 $MAKE $MAKEOPTS
