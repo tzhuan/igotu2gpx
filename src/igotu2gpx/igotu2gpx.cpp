@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
         ("action", po::value<QString>(&action),
          "info: show general info\n"
          "dump: dump the trackpoints\n"
-         "purge: remove all trackpoints from the GPS tracker\n"
+         "clear: remove all trackpoints from the GPS tracker\n"
          "diff: show change relative to image file")
     ;
     po::positional_options_description positionalOptions;
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
         if (variables.count("help") || action.isEmpty()) {
             Messages::textOutput(Common::tr("Usage:"));
             Messages::textOutput(MainObject::tr
-                    ("%1 info|dump|purge|diff [OPTIONS...]")
+                    ("%1 info|dump|clear|diff [OPTIONS...]")
                     .arg(QFileInfo(app.applicationFilePath()).fileName()));
             Messages::normalMessage(QString());
             std::cout << options << "\n";
@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
             mainObject.info();
         } else if (action == QLatin1String("diff")) {
             if (imagePath.isEmpty())
-                throw IgotuError(MainObject::tr("Unable to calculate diff "
+                throw IgotuError(MainObject::tr("Unable to show change "
                             "without original image, please specify --image"));
             QFile file(imagePath);
             if (!file.open(QIODevice::ReadOnly))
@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
             mainObject.info(file.readAll().left(0x1000));
         } else if (action == QLatin1String("dump")) {
             mainObject.save(variables.count("details"), variables.count("raw"));
-        } else if (action == QLatin1String("purge")) {
+        } else if (action == QLatin1String("clear")) {
             mainObject.purge();
         } else {
             throw IgotuError(MainObject::tr("Unknown command: %1")

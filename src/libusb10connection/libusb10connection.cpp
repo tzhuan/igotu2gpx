@@ -247,11 +247,11 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId)
 
 #ifdef Q_OS_LINUX
     if (libusb_kernel_driver_active(handle.get(), 0) == 1) {
-        Messages::verboseMessage(tr
+        Messages::verboseMessage(Common::tr
                 ("Interface 0 already claimed by kernel driver, detaching"));
 
         if (int result = libusb_detach_kernel_driver(handle.get(), 0))
-            throw IgotuError(tr
+            throw IgotuError(Common::tr
                     ("Unable to detach kernel driver from device: %1")
                     .arg(result));
     }

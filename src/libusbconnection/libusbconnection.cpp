@@ -105,14 +105,14 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId)
 #ifdef Q_OS_LINUX
     char buf[256];
     if (usb_get_driver_np(handle.get(), 0, buf, sizeof(buf)) == 0) {
-        Messages::verboseMessage(tr
-                ("Interface 0 already claimed by driver '%1', detaching")
+        Messages::verboseMessage(Common::tr
+                ("Interface 0 already claimed by kernel driver, detaching")
                 .arg(QString::fromAscii(buf)));
 
         int result = usb_detach_kernel_driver_np(handle.get(), 0);
         if (result < 0)
-            throw IgotuError(tr
-                    ("Unable to detach kernel driver '%1' from device: %1")
+            throw IgotuError(Common::tr
+                    ("Unable to detach kernel driver from device: %1")
                     .arg(QString::fromAscii(buf),
                         QString::fromLocal8Bit(strerror(-result))));
     }

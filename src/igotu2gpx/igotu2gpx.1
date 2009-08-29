@@ -30,12 +30,12 @@ igotu2gpx \- command line interface ot the i-gotU gps trackers
 .PP
 \fBigotu2gpx\fP gives access to the i-gotU USB GPS trackers via serial port
 (Windows) or libusb (Linux). It is possible to show the configuration of a GPS
-tracker, export tracks and waypoints in GPX format and dump and purge the
+tracker, export tracks and waypoints in GPX format and dump and clear the
 internal flash memory.
 .TP
 \fB\-\-action\fR \fIaction\fR
-show general info (info), dump the trackpoints (dump), purge all tracks from
-the GPS tracker (purge) or show the config changes (diff)
+show general info (info), dump the trackpoints (dump), clear all tracks from
+the GPS tracker (clear) or show the config changes (diff)
 .TP
 \fB\-u\fR, \fB\-\-device\fR \fIprotocol:id\fR
 connect to the device specified (usb:vendor:product (Unix) or serial:port (Windows)
@@ -78,7 +78,7 @@ Dump all tracks and waypoints on a GPS tracker in GPX format:
 .PP
 Remove all trackpoints from the GPS tracker:
 .nf
-    igotu2gpx purge
+    igotu2gpx clear
 .fi
 .PP
 Dump the complete flash memory of a GPS tracker to a file, and use it later

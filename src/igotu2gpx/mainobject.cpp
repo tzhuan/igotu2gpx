@@ -61,7 +61,7 @@ public:
 static QString dump(const QByteArray &data)
 {
     QString result;
-    result += MainObject::tr("Complete dump:") + QLatin1Char('\n');
+    result += MainObject::tr("Flash contents:") + QLatin1Char('\n');
     const unsigned chunks = (data.size() + 15) / 16;
     bool firstLine = true;
     for (unsigned i = 0; i < chunks; ++i) {
@@ -83,7 +83,7 @@ static QString dump(const QByteArray &data)
 static QString dumpDiff(const QByteArray &oldData, const QByteArray &newData)
 {
     QString result;
-    result += MainObject::tr("Difference dump:") + QLatin1Char('\n');
+    result += MainObject::tr("Differences:") + QLatin1Char('\n');
     const unsigned chunks = (oldData.size() + 15) / 16;
     bool firstLine = true;
     for (unsigned i = 0; i < chunks; ++i) {
@@ -127,7 +127,7 @@ static QString dumpDiff(const QByteArray &oldData, const QByteArray &newData)
 
 void MainObjectPrivate::on_control_infoStarted()
 {
-    Messages::normalMessage(Common::tr("Retrieving info..."));
+    Messages::normalMessage(Common::tr("Downloading configuration..."));
 }
 
 void MainObjectPrivate::on_control_infoFinished(const QString &info,
@@ -145,97 +145,91 @@ void MainObjectPrivate::on_control_infoFinished(const QString &info,
 void MainObjectPrivate::on_control_infoFailed(const QString &message)
 {
     Messages::errorMessage(Common::tr
-                ("Unable to obtain info from GPS tracker: %1").arg(message));
+                ("Unable to download configuration from GPS tracker: %1").arg(message));
     QCoreApplication::quit();
 }
 
 void MainObjectPrivate::on_control_contentsStarted()
 {
-    Messages::normalMessage(Common::tr("Retrieving data..."));
+    Messages::normalMessage(Common::tr("Downloading tracks..."));
 }
 
 void MainObjectPrivate::on_control_contentsBlocksFinished(uint num, uint total)
 {
-    Messages::normalMessage(MainObject::tr("Retrieved block %1/%2")
+    Messages::normalMessage(MainObject::tr("Downloaded block %1/%2")
             .arg(num).arg(total));
 }
 
 void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
         uint count)
 {
-    try {
-        if (raw) {
-            Messages::directOutput(contents);
-        } else if (details) {
-            IgotuPoints igotuPoints(contents, count);
-            unsigned index = 0;
-            Q_FOREACH (const IgotuPoint &igotuPoint, igotuPoints.points()) {
-                // These shouldn't be localized, just in case somebody wants to
-                // parse them?
-                Messages::textOutput(QString::fromLatin1("Record %1")
-                        .arg(++index));
-                if (igotuPoint.isWayPoint())
-                    Messages::textOutput(QString::fromLatin1("  Waypoint"));
-                if (igotuPoint.isTrackStart())
-                    Messages::textOutput(QString::fromLatin1("  Track start"));
-                Messages::textOutput(QString::fromLatin1("  Date %1")
-                        .arg(igotuPoint.dateTimeString(control->utcOffset())));
-                Messages::textOutput(QString::fromLatin1("  Latitude %1")
-                        .arg(igotuPoint.latitude(), 0, 'f', 6));
-                Messages::textOutput(QString::fromLatin1("  Longitude %1")
-                        .arg(igotuPoint.longitude(), 0, 'f', 6));
-                Messages::textOutput(QString::fromLatin1("  Elevation %1 m")
-                        .arg(igotuPoint.elevation(), 0, 'f', 1));
-                Messages::textOutput(QString::fromLatin1("  Speed %1 km/h")
-                        .arg(igotuPoint.speed(), 0, 'f', 1));
-                Messages::textOutput(QString::fromLatin1("  Course %1 degrees")
-                        .arg(igotuPoint.course(), 0, 'f', 2));
-                Messages::textOutput(QString::fromLatin1("  EHPE %1 m")
-                        .arg(igotuPoint.ehpe(), 0, 'f', 2));
-                QString satellites = QLatin1String("  Satellites:");
-                Q_FOREACH (unsigned satellite, igotuPoint.satellites())
-                    satellites += QString::fromLatin1(" %1").arg(satellite);
-                Messages::textOutput(satellites);
-                Messages::textOutput(QString::fromLatin1("  Flags 0x%1")
-                        .arg(igotuPoint.flags(), 2, 16, QLatin1Char('0')));
-                Messages::textOutput(QString::fromLatin1("  Timeout %1 s")
-                        .arg(igotuPoint.timeout()));
-                Messages::textOutput(QString::fromLatin1("  MSVs_QCN %1")
-                        .arg(igotuPoint.msvsQcn()));
-                Messages::textOutput(QString::fromLatin1
-                        ("  Weight criteria 0x%1").arg
-                        (igotuPoint.weightCriteria(), 2, 16, QLatin1Char('0')));
-                Messages::textOutput(QString::fromLatin1("  Sleep time %1")
-                        .arg(igotuPoint.sleepTime()));
-            }
-        } else {
-            IgotuPoints igotuPoints(contents, count);
-            Messages::directOutput(igotuPoints.gpx(control->utcOffset()));
+    if (raw) {
+        Messages::directOutput(contents);
+    } else if (details) {
+        IgotuPoints igotuPoints(contents, count);
+        unsigned index = 0;
+        Q_FOREACH (const IgotuPoint &igotuPoint, igotuPoints.points()) {
+            // These shouldn't be localized, just in case somebody wants to
+            // parse them?
+            Messages::textOutput(QString::fromLatin1("Record %1")
+                    .arg(++index));
+            if (igotuPoint.isWayPoint())
+                Messages::textOutput(QString::fromLatin1("  Waypoint"));
+            if (igotuPoint.isTrackStart())
+                Messages::textOutput(QString::fromLatin1("  Track start"));
+            Messages::textOutput(QString::fromLatin1("  Date %1")
+                    .arg(igotuPoint.dateTimeString(control->utcOffset())));
+            Messages::textOutput(QString::fromLatin1("  Latitude %1")
+                    .arg(igotuPoint.latitude(), 0, 'f', 6));
+            Messages::textOutput(QString::fromLatin1("  Longitude %1")
+                    .arg(igotuPoint.longitude(), 0, 'f', 6));
+            Messages::textOutput(QString::fromLatin1("  Elevation %1 m")
+                    .arg(igotuPoint.elevation(), 0, 'f', 1));
+            Messages::textOutput(QString::fromLatin1("  Speed %1 km/h")
+                    .arg(igotuPoint.speed(), 0, 'f', 1));
+            Messages::textOutput(QString::fromLatin1("  Course %1 degrees")
+                    .arg(igotuPoint.course(), 0, 'f', 2));
+            Messages::textOutput(QString::fromLatin1("  EHPE %1 m")
+                    .arg(igotuPoint.ehpe(), 0, 'f', 2));
+            QString satellites = QLatin1String("  Satellites:");
+            Q_FOREACH (unsigned satellite, igotuPoint.satellites())
+                satellites += QString::fromLatin1(" %1").arg(satellite);
+            Messages::textOutput(satellites);
+            Messages::textOutput(QString::fromLatin1("  Flags 0x%1")
+                    .arg(igotuPoint.flags(), 2, 16, QLatin1Char('0')));
+            Messages::textOutput(QString::fromLatin1("  Timeout %1 s")
+                    .arg(igotuPoint.timeout()));
+            Messages::textOutput(QString::fromLatin1("  MSVs_QCN %1")
+                    .arg(igotuPoint.msvsQcn()));
+            Messages::textOutput(QString::fromLatin1
+                    ("  Weight criteria 0x%1").arg
+                    (igotuPoint.weightCriteria(), 2, 16, QLatin1Char('0')));
+            Messages::textOutput(QString::fromLatin1("  Sleep time %1")
+                    .arg(igotuPoint.sleepTime()));
         }
-    } catch (const std::exception &e) {
-        Messages::errorMessage(MainObject::tr
-                    ("Unable to save data: %1")
-                    .arg(QString::fromLocal8Bit(e.what())));
+    } else {
+        IgotuPoints igotuPoints(contents, count);
+        Messages::directOutput(igotuPoints.gpx(control->utcOffset()));
     }
     QCoreApplication::quit();
 }
 
 void MainObjectPrivate::on_control_contentsFailed(const QString &message)
 {
-    Messages::errorMessage(Common::tr("Unable to obtain trackpoints from "
+    Messages::errorMessage(Common::tr("Unable to download trackpoints from "
                 "GPS tracker: %1").arg(message));
     QCoreApplication::quit();
 }
 
 void MainObjectPrivate::on_control_purgeStarted()
 {
-    Messages::normalMessage(Common::tr("Purging data..."));
+    Messages::normalMessage(Common::tr("Clearing memory..."));
 }
 
 void MainObjectPrivate::on_control_purgeBlocksFinished(uint num, uint total)
 {
     Messages::normalMessage(MainObject::tr
-            ("Purged block %1/%2").arg(num).arg(total));
+            ("Clearing block %1/%2").arg(num).arg(total));
 }
 
 void MainObjectPrivate::on_control_purgeFinished()
@@ -246,7 +240,7 @@ void MainObjectPrivate::on_control_purgeFinished()
 void MainObjectPrivate::on_control_purgeFailed(const QString &message)
 {
     Messages::errorMessage(Common::tr
-                ("Unable to purge GPS tracker: %1").arg(message));
+                ("Unable to clear memory of GPS tracker: %1").arg(message));
     QCoreApplication::quit();
 }
 

@@ -123,14 +123,8 @@ void MainWindowPrivate::on_actionAbout_triggered()
 
 void MainWindowPrivate::on_actionAboutPlugins_triggered()
 {
-    try {
-        PluginDialog *pluginDialog = new PluginDialog(p);
-        pluginDialog->show();
-    } catch (const std::exception &e) {
-        QMessageBox::critical(p, tr("Plugin Error"),
-                tr("Unable to display available plugins\n%1")
-                .arg(QString::fromLocal8Bit(e.what())));
-    }
+    PluginDialog *pluginDialog = new PluginDialog(p);
+    pluginDialog->show();
 }
 
 void MainWindowPrivate::on_actionDebug_triggered()
@@ -167,14 +161,14 @@ void MainWindowPrivate::on_actionSave_triggered()
 void MainWindowPrivate::on_actionPurge_triggered()
 {
     QPointer<QMessageBox> messageBox(new QMessageBox(QMessageBox::Question,
-                QString(), MainWindow::tr
+                MainWindow::tr("Clear Memory"), MainWindow::tr
                 ("This function is highly experimental and may brick your GPS "
                  "tracker! Only use it if your GPS tracker has been identified "
                  "correctly. Do you really want to remove all tracks from the "
                  "GPS tracker?"),
                 QMessageBox::Cancel, p));
     QPushButton * const purgeButton = messageBox->addButton
-        (MainWindow::tr("Purge"), QMessageBox::AcceptRole);
+        (MainWindow::tr("Clear Memory"), QMessageBox::AcceptRole);
     if (messageBox->style()->styleHint
             (QStyle::SH_DialogButtonBox_ButtonsHaveIcons))
         purgeButton->setIcon(IconStorage::get(IconStorage::PurgeIcon));
@@ -252,7 +246,7 @@ void MainWindowPrivate::on_update_newVersionAvailable(const QString &version,
 
 void MainWindowPrivate::on_control_infoStarted()
 {
-    startBackgroundAction(Common::tr("Retrieving info..."));
+    startBackgroundAction(Common::tr("Downloading configuration..."));
 }
 
 void MainWindowPrivate::on_control_infoFinished(const QString &info)
@@ -264,12 +258,12 @@ void MainWindowPrivate::on_control_infoFinished(const QString &info)
 void MainWindowPrivate::on_control_infoFailed(const QString &message)
 {
     abortBackgroundAction(Common::tr
-            ("Unable to obtain info from GPS tracker: %1").arg(message));
+            ("Unable to download configuration from GPS tracker: %1").arg(message));
 }
 
 void MainWindowPrivate::on_control_contentsStarted()
 {
-    startBackgroundAction(Common::tr("Retrieving data..."));
+    startBackgroundAction(Common::tr("Downloading tracks..."));
 }
 
 void MainWindowPrivate::on_control_contentsBlocksFinished(uint num,
@@ -299,7 +293,7 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
         stopBackgroundAction();
     } catch (const std::exception &e) {
         abortBackgroundAction(Common::tr
-                ("Unable to obtain trackpoints from GPS tracker: %1")
+                ("Unable to download trackpoints from GPS tracker: %1")
                 .arg(QString::fromLocal8Bit(e.what())));
     }
 }
@@ -307,13 +301,13 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
 void MainWindowPrivate::on_control_contentsFailed(const QString &message)
 {
     abortBackgroundAction(Common::tr
-            ("Unable to obtain trackpoints from GPS tracker: %1")
+            ("Unable to download trackpoints from GPS tracker: %1")
             .arg(message));
 }
 
 void MainWindowPrivate::on_control_purgeStarted()
 {
-    startBackgroundAction(Common::tr("Purging data..."));
+    startBackgroundAction(Common::tr("Clearing memory..."));
 }
 
 void MainWindowPrivate::on_control_purgeBlocksFinished(uint num,
@@ -330,7 +324,7 @@ void MainWindowPrivate::on_control_purgeFinished()
 void MainWindowPrivate::on_control_purgeFailed(const QString &message)
 {
     abortBackgroundAction(Common::tr
-            ("Unable to purge GPS tracker: %1").arg(message));
+            ("Unable to clear memory of GPS tracker: %1").arg(message));
 }
 
 void MainWindowPrivate::startBackgroundAction(const QString &text)
@@ -375,7 +369,7 @@ void MainWindowPrivate::saveTracksRequested
         const QDateTime date = tracks.count() == 1 ?
             tracks[0].at(0).dateTime() : QDateTime::currentDateTime();
         QString filePath = QFileDialog::getSaveFileName(p,
-                MainWindow::tr("Save GPS data"),
+                MainWindow::tr("Save GPS Tracks"),
                 date.toString(QLatin1String("yyyy-MM-dd-hh-mm-ss")) +
                 QLatin1String(".gpx"),
                 MainWindow::tr("GPX files (*.gpx)"));
@@ -391,11 +385,11 @@ void MainWindowPrivate::saveTracksRequested
         const QByteArray gpxData = IgotuPoints::gpx(tracks,
                 control->utcOffset());
         if (file.write(gpxData) != gpxData.length())
-            throw IgotuError(MainWindow::tr("Unable to save to file: %1")
+            throw IgotuError(MainWindow::tr("Unable to save file: %1")
                     .arg(file.errorString()));
     } catch (const std::exception &e) {
         QMessageBox::critical(p, MainWindow::tr("File Error"),
-                MainWindow::tr("Unable to save trackpoints: %1")
+                MainWindow::tr("Unable to save tracks: %1")
                 .arg(QString::fromLocal8Bit(e.what())));
     }
 }
