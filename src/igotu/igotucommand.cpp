@@ -55,7 +55,7 @@ int IgotuCommandPrivate::receiveResponseSize()
                 ("Response too short: expected %1, got %2 bytes")
                 .arg(3).arg(data.size()));
     if (data[0] != '\x93')
-        throw IgotuProtocolError(IgotuCommand::tr("Invalid reply packet: %1")
+        throw IgotuProtocolError(IgotuCommand::tr("Invalid response packet: %1")
                 .arg(QString::fromAscii(data.toHex())));
     return qFromBigEndian<qint16>(reinterpret_cast<const uchar*>
             (data.data() + 1));
@@ -66,7 +66,7 @@ QByteArray IgotuCommandPrivate::receiveResponseRemainder(unsigned size)
     const QByteArray result = connection->receive(size);
     if (unsigned(result.size()) != size)
         throw IgotuProtocolError(IgotuCommand::tr
-                ("Response remainder too short: expected %1, got %2 bytes")
+                ("Response data too short: expected %1, got %2 bytes")
                 .arg(size).arg(result.size()));
     return result;
 }
@@ -93,7 +93,7 @@ unsigned IgotuCommandPrivate::sendCommand(const QByteArray &data)
                         "error code: %1").arg(responseSize));
         if (responseSize != 0 && i + 1 < pieces)
             throw IgotuProtocolError(IgotuCommand::tr
-                    ("Non-empty intermediate reply packet: %1")
+                    ("Non-empty intermediate response packet: %1")
                     .arg(QString::fromAscii(data.toHex())));
     }
     return responseSize;
@@ -173,7 +173,7 @@ QByteArray IgotuCommand::sendAndReceive()
                 if (d->ignoreProtocolErrors) {
                     Messages::verboseMessage(tr("Command: %1")
                                 .arg(QString::fromAscii(d->command.toHex())));
-                    Messages::verboseMessage(tr("Failed protocol (ignored): %1")
+                    Messages::verboseMessage(tr("Protocol violated (ignored): %1")
                                 .arg(QString::fromLocal8Bit(e.what())));
                     return remainder;
                 }
@@ -182,7 +182,7 @@ QByteArray IgotuCommand::sendAndReceive()
                 if (protocolErrors <= 5) {
                     Messages::verboseMessage(tr("Command: %1")
                                 .arg(QString::fromAscii(d->command.toHex())));
-                    Messages::verboseMessage(tr("Failed protocol: %1")
+                    Messages::verboseMessage(tr("Protocol violated : %1")
                                 .arg(QString::fromLocal8Bit(e.what())));
                     continue;
                 }
@@ -193,7 +193,7 @@ QByteArray IgotuCommand::sendAndReceive()
                 if (deviceErrors <= 3) {
                     Messages::verboseMessage(tr("Command: %1")
                                 .arg(QString::fromAscii(d->command.toHex())));
-                    Messages::verboseMessage(tr("Device failure: %1")
+                    Messages::verboseMessage(tr("Device error: %1")
                                 .arg(QString::fromLocal8Bit(e.what())));
                     continue;
                 }

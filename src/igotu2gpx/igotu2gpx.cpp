@@ -110,11 +110,17 @@ int main(int argc, char *argv[])
 
         ("action",
          po::value<QString>(&action),
-         //: Do not translate the words before the colons
-         MainObject::tr("info: show GPS tracker configuration\n"
-         "dump: output trackpoints\n"
-         "clear: clear memory of the GPS tracker\n"
-         "diff: show configuration changes relative to an image file")
+         //: Do not translate the word before the colon
+         MainObject::tr("info: show GPS tracker configuration")
+         .toLocal8Bit() + '\n' +
+         //: Do not translate the word before the colon
+         MainObject::tr("dump: output trackpoints")
+         .toLocal8Bit() + '\n' +
+         //: Do not translate the word before the colon
+         MainObject::tr("clear: clear memory of the GPS tracker")
+         .toLocal8Bit() + '\n' +
+         //: Do not translate the word before the colon
+         MainObject::tr("diff: show configuration changes relative to an image file")
          .toLocal8Bit())
     ;
     po::positional_options_description positionalOptions;

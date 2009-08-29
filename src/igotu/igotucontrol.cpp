@@ -244,23 +244,24 @@ void IgotuControlPrivateWorker::info()
 
         IgotuPoints igotuPoints(contents, 0);
         if (!igotuPoints.isValid())
-            throw IgotuError(IgotuControl::tr("Uninitialized device"));
+            throw IgotuError(IgotuControl::tr("Uninitialized GPS tracker"));
 
         status += IgotuControl::tr("Schedule date: %1")
             .arg(QLocale::system().toString(igotuPoints.firstScheduleDate() ,
                         QLocale::LongFormat)) + QLatin1Char('\n');
-        status += IgotuControl::tr("Schedule date offset: %1 days")
+        status += IgotuControl::tr("Schedule date offset: %1 day(s)", "",
+                igotuPoints.dateOffset())
             .arg(igotuPoints.dateOffset()) + QLatin1Char('\n');
         QList<unsigned> tablePlans = igotuPoints.scheduleTablePlans();
         QSet<unsigned> tablePlanSet = QSet<unsigned>::fromList(tablePlans);
         if (igotuPoints.isScheduleTableEnabled()) {
-            status += IgotuControl::tr("Schedule table: %1")
+            status += IgotuControl::tr("Schedule plans: %1")
                 .arg(IgotuControl::tr("enabled")) + QLatin1Char('\n');
-            status += IgotuControl::tr("Schedule table plans used:");
+            status += IgotuControl::tr("Schedule plans used:");
             Q_FOREACH (unsigned plan, tablePlanSet)
                 status += QLatin1Char(' ') + QString::number(plan);
             status += QLatin1Char('\n');
-            status += IgotuControl::tr("Schedule table plan order:") +
+            status += IgotuControl::tr("Schedule plan order:") +
                 QLatin1Char(' ');
             if (tablePlans.size() > 1)
                 status += QLatin1String("\n  ");
@@ -279,7 +280,7 @@ void IgotuControlPrivateWorker::info()
                     if (!entry.isValid())
                         continue;
                     if (!printed) {
-                        status += IgotuControl::tr("Schedule %1:").arg(plan) +
+                        status += IgotuControl::tr("Schedule plan %1:").arg(plan) +
                             QLatin1Char('\n');
                         printed = true;
                     }
@@ -499,10 +500,8 @@ void IgotuControlPrivateWorker::purge()
             break; }
         default: {
             throw IgotuError(IgotuControl::tr
-                    ("%1: Unable to clear memory of this GPS tracker model. If "
-                     "you have time and feel adventurous, create a bug report "
-                     "at https://bugs.launchpad.net/igotu2gpx/+filebug, and "
-                     "follow the steps at "
+                    ("%1: Unable to clear memory of this GPS tracker model. "
+                     "Instructions how to help with this can be found at "
                      "https://answers.launchpad.net/igotu2gpx/+faq/480.")
                     .arg(model.modelName()));
             break; }

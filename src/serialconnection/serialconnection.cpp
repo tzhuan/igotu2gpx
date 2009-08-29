@@ -86,7 +86,7 @@ SerialConnection::SerialConnection(unsigned port)
                 0,
                 NULL);
     if (handle == INVALID_HANDLE_VALUE)
-        throw IgotuError(Common::tr("Unable to open device %1:").arg(device));
+        throw IgotuError(Common::tr("Unable to open device '%1'").arg(device));
 
     COMMTIMEOUTS Win_CommTimeouts;
     Win_CommTimeouts.ReadIntervalTimeout = 10;
@@ -132,7 +132,8 @@ QByteArray SerialConnection::receive(unsigned expected)
         QByteArray data(toRead, 0);
         DWORD result;
         if (!ReadFile(handle, data.data(), data.size(), &result, NULL))
-            throw IgotuError(tr("Unable to read data from device"));
+            throw IgotuError(Common::tr("Unable to read data from device: %1")
+                .arg(errorString(LastError())));
         if (result == 0)
             ++emptyCount;
         receiveBuffer += data.left(result);

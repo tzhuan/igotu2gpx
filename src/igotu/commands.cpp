@@ -165,22 +165,22 @@ QByteArray CountCommand::sendAndReceive()
     bool message = false;
     if (bugWorkaround && !useWorkAround &&
             !qgetenv("IGOTU2GPX_WORKAROUND").isEmpty()) {
-        Messages::normalMessage(IgotuCommand::tr("Using workaround"));
+        Messages::normalMessage(QLatin1String("IGOTU2GPX_WORKAROUND"));
         useWorkAround = true;
         message = true;
     }
     if (bugWorkaround && useWorkAround &&
             !qgetenv("IGOTU2GPX_NOWORKAROUND").isEmpty()) {
-        Messages::normalMessage(IgotuCommand::tr("Not using workaround"));
+        Messages::normalMessage(QLatin1String("IGOTU2GPX_NOWORKAROUND"));
         useWorkAround = false;
         message = true;
     }
     if (message)
-        Messages::normalMessage(IgotuCommand::tr
-           ("Please file a bug at "
-                "https://bugs.launchpad.net/igotu2gpx/+filebug if this\n"
-            "solves your connection problems. Please include:\n"
-            "- the tracker type and\n"
+        Messages::normalMessage(IgotuCommand::tr("Please file a bug at "
+            "https://bugs.launchpad.net/igotu2gpx/+filebug if the use\n"
+            "of IGOTU2GPX_(NO)WORKAROUND solves your connection problems. "
+            "Please include:\n"
+            "- the tracker model and\n"
             "- the output of igotu2gpx info"));
     if (useWorkAround)
         connection()->purge();

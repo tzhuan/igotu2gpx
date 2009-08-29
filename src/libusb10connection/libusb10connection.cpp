@@ -324,7 +324,7 @@ QByteArray Libusb10Connection::receive(unsigned expected)
             ++emptyCount;
         usleep(20 * 1000);
 //        if (result < 0)
-//            throw IgotuError(tr("Unable to read data from device: %1")
+//            throw IgotuError(Common::tr("Unable to read data from device: %1")
 //                    .arg(result));
     }
     return data;

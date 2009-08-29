@@ -182,7 +182,7 @@ QByteArray LibusbConnection::receive(unsigned expected)
         int result = usb_interrupt_read(handle.get(), 0x81, data.data(), 0x10,
                 20);
         if (result < 0)
-            throw IgotuError(tr("Unable to read data from device: %1")
+            throw IgotuError(Common::tr("Unable to read data from device: %1")
                 .arg(QString::fromLocal8Bit(strerror(-result))));
         if (result == 0)
             ++emptyCount;
