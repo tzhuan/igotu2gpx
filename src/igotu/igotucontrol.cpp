@@ -254,8 +254,8 @@ void IgotuControlPrivateWorker::info()
         QList<unsigned> tablePlans = igotuPoints.scheduleTablePlans();
         QSet<unsigned> tablePlanSet = QSet<unsigned>::fromList(tablePlans);
         if (igotuPoints.isScheduleTableEnabled()) {
-            status += IgotuControl::tr("Schedule table: enabled") +
-                QLatin1Char('\n');
+            status += IgotuControl::tr("Schedule table: %1")
+                .arg(IgotuControl::tr("enabled")) + QLatin1Char('\n');
             status += IgotuControl::tr("Schedule table plans used:");
             Q_FOREACH (unsigned plan, tablePlanSet)
                 status += QLatin1Char(' ') + QString::number(plan);
@@ -296,7 +296,8 @@ void IgotuControlPrivateWorker::info()
                         .arg(entry.logInterval()) + QLatin1Char('\n');
                     if (entry.isIntervalChangeEnabled()) {
                         status += QLatin1String("  ") + IgotuControl::tr
-                            ("Interval change: above %1 km/h, use %2 s")
+                            ("Interval change: %1")
+                            .arg(IgotuControl::tr("above %1 km/h, use %2 s"))
                             .arg(qRound(entry.intervalChangeSpeed()))
                             .arg(entry.changedLogInterval()) +
                             QLatin1Char('\n');

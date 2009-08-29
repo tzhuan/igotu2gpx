@@ -21,7 +21,7 @@ igotu2gpx \- command line interface ot the i-gotU gps trackers
 
 .SH SYNOPSIS
 .PP
-.B igotu2gpx info|dump|diff [\fIOPTIONS\fR]
+.B igotu2gpx info|dump|clear|diff [\fIOPTIONS\fR]
 
 .SH DESCRIPTION
 .\" TeX users may be more comfortable with the \fB<whatever>\fP and
@@ -34,28 +34,29 @@ tracker, export tracks and waypoints in GPX format and dump and clear the
 internal flash memory.
 .TP
 \fB\-\-action\fR \fIaction\fR
-show general info (info), dump the trackpoints (dump), clear all tracks from
-the GPS tracker (clear) or show the config changes (diff)
+show GPS tracker configuration (info), output trackpoints (dump),
+clear memory of the GPS tracker (clear) or show configuration changes
+relative to an image file (diff)
 .TP
 \fB\-u\fR, \fB\-\-device\fR \fIprotocol:id\fR
-connect to the device specified (usb:vendor:product (Unix) or serial:port (Windows)
+connect to the specified device (usb:<vendor>:<product> (Unix) or serial:<n>
+(Windows))
 .TP
 \fB\-i\fR, \fB\-\-image\fR \fIfile\fR
-instead of connecting to the gps tracker, use the specified image file (saved
-by "dump \-\-raw")
+read memory contents from file (saved by "dump \-\-raw")
 .TP
 \fB\-\-gpx\fR
-dump in GPX format (this is the default)
+output in GPX format (this is the default)
 .TP
 \fB\-\-details\fR
-dump a detailed representation of the track
+output a detailed representation of all track points
 .TP
 \fB\-\-raw\fR
-dump the raw binary flash contents of the gps tracker (be sure to redirect
-output to a file)
+output the memory contents of the GPS tracker (be sure to redirect output to a
+file)
 .TP
 \fB\-\-utc\-offset\fR \fIseconds\fR
-time zone offset from UTC in seconds for the GPX export
+time zone offset in seconds
 .TP
 \fB\-\-help\fR
 help message

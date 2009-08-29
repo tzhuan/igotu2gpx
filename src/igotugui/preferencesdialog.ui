@@ -23,7 +23,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="toolTip">
-         <string>usb:&lt;vendor&gt;:&lt;device&gt; or serial:&lt;n&gt;</string>
+         <string>usb:&lt;vendor&gt;:&lt;product&gt; or serial:&lt;n&gt;</string>
         </property>
         <property name="text">
          <string>Device:</string>

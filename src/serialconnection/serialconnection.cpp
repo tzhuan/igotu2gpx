@@ -58,6 +58,17 @@ public:
 
 Q_EXPORT_PLUGIN2(serialConnection, SerialConnectionCreator)
 
+QString errorString(DWORD err)
+{
+    WCHAR *s;
+    if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, &s, 0, NULL))
+        return QString();
+    const QString result = QString::fromUtf16(s).remove(QLatin1Char('\r'));
+    LocalFree(s);
+    return result;
+}
+
 // Put translations in the right context
 //
 // TRANSLATOR igotu::Common
@@ -75,7 +86,7 @@ SerialConnection::SerialConnection(unsigned port)
                 0,
                 NULL);
     if (handle == INVALID_HANDLE_VALUE)
-        throw IgotuError(Common::tr("Unable to open device %1").arg(device));
+        throw IgotuError(Common::tr("Unable to open device %1:").arg(device));
 
     COMMTIMEOUTS Win_CommTimeouts;
     Win_CommTimeouts.ReadIntervalTimeout = 10;
@@ -98,11 +109,12 @@ void SerialConnection::send(const QByteArray &query)
     receiveBuffer.clear();
 
     if (!WriteFile(handle, query.data(), query.size(), &result, NULL))
-        throw IgotuError(tr("Unable to send data to the device"));
+        throw IgotuError(Common::tr("Unable to send data to device: %1")
+                .arg(errorString(LastError())));
     if (result != unsigned(query.size()))
-        throw IgotuError(Common::tr("Unable to send data to the device: Tried "
-                    "to send %1 bytes, but only succeeded sending %2 bytes")
-                .arg(query.size(), result));
+        throw IgotuError(Common::tr("Unable to send data to device: %1")
+                .arg(Common::tr("Only %1/%2 bytes could be sent"))
+                .arg(result).arg(query.size()));
 }
 
 QByteArray SerialConnection::receive(unsigned expected)
@@ -120,7 +132,7 @@ QByteArray SerialConnection::receive(unsigned expected)
         QByteArray data(toRead, 0);
         DWORD result;
         if (!ReadFile(handle, data.data(), data.size(), &result, NULL))
-            throw IgotuError(tr("Unable to read data from the device"));
+            throw IgotuError(tr("Unable to read data from device"));
         if (result == 0)
             ++emptyCount;
         receiveBuffer += data.left(result);

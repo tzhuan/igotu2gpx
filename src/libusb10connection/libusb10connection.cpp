@@ -303,11 +303,11 @@ void Libusb10Connection::send(const QByteArray &query)
 
 // TODO
 //    if (result < 0)
-//        throw IgotuError(tr("Unable to send data to the device: %1")
+//        throw IgotuError(Common::tr("Unable to send data to device: %1")
 //                .arg(QString::fromLocal8Bit(strerror(-result))));
 //    if (result != query.size())
-//        throw IgotuError(Common::tr("Unable to send data to the device: Only "
-//                    "%1/%2 bytes could be sent")
+//        throw IgotuError(Common::tr("Unable to send data to device: %1")
+//                .arg(Common::tr("Only %1/%2 bytes could be sent"))
 //                .arg(result).arg(query.size()));
 }
 
@@ -324,7 +324,7 @@ QByteArray Libusb10Connection::receive(unsigned expected)
             ++emptyCount;
         usleep(20 * 1000);
 //        if (result < 0)
-//            throw IgotuError(tr("Unable to read data from the device: %1")
+//            throw IgotuError(tr("Unable to read data from device: %1")
 //                    .arg(result));
     }
     return data;

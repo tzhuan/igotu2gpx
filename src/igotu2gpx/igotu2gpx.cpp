@@ -83,36 +83,39 @@ int main(int argc, char *argv[])
 
         ("image,i",
          po::value<QString>(&imagePath),
-         MainObject::tr("instead of connecting to the GPS tracker, use the "
-             "specified image file (saved by \"dump --raw\")").toLocal8Bit())
+         MainObject::tr("read memory contents from file "
+             "(saved by \"dump --raw\")").toLocal8Bit())
         ("device,d",
          po::value<QString>(&device),
-         MainObject::tr("connect to the device specified (usb:vendor:product "
-             "(Unix) or serial:port (Windows)").toLocal8Bit())
+         MainObject::tr("connect to the specified device "
+             "(usb:<vendor>:<product> (Unix) or serial:<n> "
+             "(Windows))").toLocal8Bit())
         ("gpx",
          MainObject::tr("output in GPX format (this is the default)")
          .toLocal8Bit())
         ("details",
-         MainObject::tr("output a detailed representation of the track")
+         MainObject::tr("output a detailed representation of all track points")
          .toLocal8Bit())
         ("raw",
-         MainObject::tr("output the flash contents of the GPS "
+         MainObject::tr("output the memory contents of the GPS "
              "tracker (be sure to redirect output to a file)").toLocal8Bit())
 
         ("verbose,v",
-         Common::tr("increase the amount of informative messages")
+         Common::tr("increase verbosity")
          .toLocal8Bit())
         ("utc-offset",
          po::value<int>(&offset),
-         MainObject::tr("time zone offset from UTC in seconds").toLocal8Bit())
+         MainObject::tr("time zone offset in seconds")
+         .toLocal8Bit())
 
         ("action",
          po::value<QString>(&action),
-         //: Do not translate the words before the colon
-         MainObject::tr("info: show general info\n"
-         "dump: dump the trackpoints\n"
-         "clear: remove all trackpoints from the GPS tracker\n"
-         "diff: show change relative to image file").toLocal8Bit())
+         //: Do not translate the words before the colons
+         MainObject::tr("info: show GPS tracker configuration\n"
+         "dump: output trackpoints\n"
+         "clear: clear memory of the GPS tracker\n"
+         "diff: show configuration changes relative to an image file")
+         .toLocal8Bit())
     ;
     po::positional_options_description positionalOptions;
     positionalOptions.add("action", 1);
@@ -132,7 +135,7 @@ int main(int argc, char *argv[])
                     "This is free software: you are free to change and redistribute it.<br/>"
                     "There is NO WARRANTY, to the extent permitted by law.")
                     .replace(QRegExp(QLatin1String("<br/>")), QLatin1String("\n"))
-                    .replace(QRegExp(QLatin1String("<[^>]+>")), QString())
+                    .remove(QRegExp(QLatin1String("<[^>]+>")))
                     .arg(QLatin1String(IGOTU_VERSION_STR)));
             return 0;
         }

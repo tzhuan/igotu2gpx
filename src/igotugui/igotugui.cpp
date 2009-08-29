@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
          Common::tr("output version information and exit").toLocal8Bit())
 
         ("verbose,v",
-         Common::tr("increase the amount of informative messages")
+         Common::tr("increase verbosity")
          .toLocal8Bit())
     ;
 
@@ -94,22 +94,15 @@ int main(int argc, char *argv[])
 
         if (variables.count("version")) {
             Messages::textOutput(Common::tr(
-                        "Igotu2gpx %1\n\n"
-                        "Shows the configuration and decodes the stored tracks "
-                            "and waypoints\n"
-                        "of a MobileAction i-gotU USB GPS travel logger.\n\n"
-                        "This program is licensed to you under the terms of "
-                            "the GNU General\n"
-                        "Public License. See the file LICENSE that came with "
-                            "this software\n"
-                        "for further details.\n\n"
-                        "Copyright (C) 2009 Michael Hofmann.\n\n"
-                        "The program is provided AS IS with NO WARRANTY OF ANY "
-                            "KIND,\n"
-                        "INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND "
-                            "FITNESS FOR\n"
-                        "A PARTICULAR PURPOSE.")
-                .arg(QLatin1String(IGOTU_VERSION_STR)));
+                    "<h3>Igotu2gpx %1</h3><br/>"
+                    "Downloads tracks and waypoints from MobileAction i-gotU USB GPS travel loggers.<br/><br/>"
+                    "Copyright (C) 2009 Michael Hofmann.<br/>"
+                    "License GPLv3+: GNU GPL version 3 or later (http://gnu.org/licenses/gpl.html)<br/>"
+                    "This is free software: you are free to change and redistribute it.<br/>"
+                    "There is NO WARRANTY, to the extent permitted by law.")
+                    .replace(QRegExp(QLatin1String("<br/>")), QLatin1String("\n"))
+                    .remove(QRegExp(QLatin1String("<[^>]+>")))
+                    .arg(QLatin1String(IGOTU_VERSION_STR)));
             return 0;
         }
         if (variables.count("help")) {
