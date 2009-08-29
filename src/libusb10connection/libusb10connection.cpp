@@ -230,7 +230,7 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId)
     if (devs.isEmpty())
         devs = find_devices(vendorId, 0);
     if (devs.isEmpty())
-        throw IgotuError(Common::tr("Unable to find device %1")
+        throw IgotuError(Common::tr("Unable to find device '%1'")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
 
     Q_FOREACH (const Device &dev, devs) {
@@ -242,7 +242,7 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId)
     }
 
     if (!handle)
-        throw IgotuError(Common::tr("Unable to open device %1")
+        throw IgotuError(Common::tr("Unable to open device '%1'")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
 
 #ifdef Q_OS_LINUX
@@ -252,13 +252,14 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId)
 
         if (int result = libusb_detach_kernel_driver(handle.get(), 0))
             throw IgotuError(Common::tr
-                    ("Unable to detach kernel driver from device: %1")
+                    ("Unable to detach kernel driver from device '%1': %2")
+                    .arg(QString().sprintf("%04x:%04x", vendorId, productId))
                     .arg(result));
     }
 #endif
 
     if (libusb_claim_interface(handle.get(), 0) != 0)
-        throw IgotuError(Common::tr("Unable to claim interface 0 on device %1")
+        throw IgotuError(Common::tr("Unable to claim interface 0 on device '%1'")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
 
     thread.reset(new WorkerThread(context.get(), handle.get()));
@@ -305,9 +306,9 @@ void Libusb10Connection::send(const QByteArray &query)
 //        throw IgotuError(tr("Unable to send data to the device: %1")
 //                .arg(QString::fromLocal8Bit(strerror(-result))));
 //    if (result != query.size())
-//        throw IgotuError(Common::tr("Unable to send data to the device: Tried"
-//                    " to send %1 bytes, but only succeeded sending %2 bytes")
-//                .arg(query.size(), result));
+//        throw IgotuError(Common::tr("Unable to send data to the device: Only "
+//                    "%1/%2 bytes could be sent")
+//                .arg(result).arg(query.size()));
 }
 
 QByteArray Libusb10Connection::receive(unsigned expected)

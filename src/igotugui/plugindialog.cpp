@@ -97,13 +97,13 @@ void PluginDialogPrivate::scanPlugins()
         bool added = false;
         if (const TrackVisualizerCreator * const creator =
                 qobject_cast<TrackVisualizerCreator*>(object)) {
-            add(object, PluginDialog::tr("Track visualizer"),
+            add(object, PluginDialog::tr("Display"),
                     creator->trackVisualizer(), QString(), QString(),
                     QString::number(creator->visualizerPriority()));
             added = true;
         } else if (const DataConnectionCreator * const creator =
                 qobject_cast<DataConnectionCreator*>(object)) {
-            add(object, PluginDialog::tr("Data Connection"),
+            add(object, PluginDialog::tr("Connection"),
                     creator->dataConnection(), QString(), QString(),
                     QString::number(creator->connectionPriority()));
             added = true;

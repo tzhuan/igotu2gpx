@@ -76,33 +76,43 @@ int main(int argc, char *argv[])
 
     po::options_description options("Options");
     options.add_options()
-        ("help", "output this help and exit")
-        ("version", "output version information and exit")
+        ("help",
+         Common::tr("output this help and exit").toLocal8Bit())
+        ("version",
+         Common::tr("output version information and exit").toLocal8Bit())
 
-        ("image,i", po::value<QString>(&imagePath),
-         "instead of connecting to the GPS tracker, use the specified image "
-         "file (saved by \"dump --raw\")")
-        ("device,d", po::value<QString>(&device),
-         "connect to the device specified (usb:vendor:product (Unix) or "
-         "serial:port (Windows)")
+        ("image,i",
+         po::value<QString>(&imagePath),
+         MainObject::tr("instead of connecting to the GPS tracker, use the "
+             "specified image file (saved by \"dump --raw\")").toLocal8Bit())
+        ("device,d",
+         po::value<QString>(&device),
+         MainObject::tr("connect to the device specified (usb:vendor:product "
+             "(Unix) or serial:port (Windows)").toLocal8Bit())
         ("gpx",
-         "output in GPX format (this is the default)")
+         MainObject::tr("output in GPX format (this is the default)")
+         .toLocal8Bit())
         ("details",
-         "output a detailed representation of the track")
+         MainObject::tr("output a detailed representation of the track")
+         .toLocal8Bit())
         ("raw",
-         "output the raw binary flash contents of the GPS tracker "
-         "(be sure to redirect output to a file)")
+         MainObject::tr("output the flash contents of the GPS "
+             "tracker (be sure to redirect output to a file)").toLocal8Bit())
 
         ("verbose,v",
-         "increase the amount of informative messages")
-        ("utc-offset", po::value<int>(&offset),
-         "time zone offset from UTC in seconds")
+         Common::tr("increase the amount of informative messages")
+         .toLocal8Bit())
+        ("utc-offset",
+         po::value<int>(&offset),
+         MainObject::tr("time zone offset from UTC in seconds").toLocal8Bit())
 
-        ("action", po::value<QString>(&action),
-         "info: show general info\n"
+        ("action",
+         po::value<QString>(&action),
+         //: Do not translate the words before the colon
+         MainObject::tr("info: show general info\n"
          "dump: dump the trackpoints\n"
          "clear: remove all trackpoints from the GPS tracker\n"
-         "diff: show change relative to image file")
+         "diff: show change relative to image file").toLocal8Bit())
     ;
     po::positional_options_description positionalOptions;
     positionalOptions.add("action", 1);
@@ -115,26 +125,20 @@ int main(int argc, char *argv[])
 
         if (variables.count("version")) {
             Messages::textOutput(Common::tr(
-                        "Igotu2gpx %1\n\n"
-                        "Shows the configuration and decodes the stored tracks "
-                            "and waypoints\n"
-                        "of a MobileAction i-gotU USB GPS travel logger.\n\n"
-                        "This program is licensed to you under the terms of "
-                            "the GNU General\n"
-                        "Public License. See the file LICENSE that came with "
-                            "this software\n"
-                        "for further details.\n\n"
-                        "Copyright (C) 2009 Michael Hofmann.\n\n"
-                        "The program is provided AS IS with NO WARRANTY OF ANY "
-                            "KIND,\n"
-                        "INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND "
-                            "FITNESS FOR\n"
-                        "A PARTICULAR PURPOSE.")
+                    "<h3>Igotu2gpx %1</h3><br/>"
+                    "Downloads tracks and waypoints from MobileAction i-gotU USB GPS travel loggers.<br/><br/>"
+                    "Copyright (C) 2009 Michael Hofmann.<br/>"
+                    "License GPLv3+: GNU GPL version 3 or later (http://gnu.org/licenses/gpl.html)<br/>"
+                    "This is free software: you are free to change and redistribute it.<br/>"
+                    "There is NO WARRANTY, to the extent permitted by law.")
+                    .replace(QRegExp(QLatin1String("<br/>")), QLatin1String("\n"))
+                    .replace(QRegExp(QLatin1String("<[^>]+>")), QString())
                     .arg(QLatin1String(IGOTU_VERSION_STR)));
             return 0;
         }
         if (variables.count("help") || action.isEmpty()) {
             Messages::textOutput(Common::tr("Usage:"));
+            //: Do not translate the actions (info|dump|clear|diff)
             Messages::textOutput(MainObject::tr
                     ("%1 info|dump|clear|diff [OPTIONS...]")
                     .arg(QFileInfo(app.applicationFilePath()).fileName()));
@@ -143,7 +147,7 @@ int main(int argc, char *argv[])
             return 1;
         }
     } catch (const std::exception &e) {
-        Messages::normalMessage(Common::tr("Unable to parse command line: %1")
+        Messages::errorMessage(Common::tr("Unable to parse command line parameters: %1")
                     .arg(QString::fromLocal8Bit(e.what())));
         return 2;
     }
@@ -167,8 +171,7 @@ int main(int argc, char *argv[])
             mainObject.info();
         } else if (action == QLatin1String("diff")) {
             if (imagePath.isEmpty())
-                throw IgotuError(MainObject::tr("Unable to show change "
-                            "without original image, please specify --image"));
+                throw IgotuError(MainObject::tr("Diff action requires --image"));
             QFile file(imagePath);
             if (!file.open(QIODevice::ReadOnly))
                 throw IgotuError(MainObject::tr("Unable to read file '%1'")
@@ -179,15 +182,13 @@ int main(int argc, char *argv[])
         } else if (action == QLatin1String("clear")) {
             mainObject.purge();
         } else {
-            throw IgotuError(MainObject::tr("Unknown command: %1")
+            throw IgotuError(MainObject::tr("Unknown action: %1")
                     .arg(action));
         }
-
         return app.exec();
     } catch (const std::exception &e) {
-        Messages::normalMessage(MainObject::tr("Error: %1")
+        Messages::errorMessage(MainObject::tr("Error: %1")
                     .arg(QString::fromLocal8Bit(e.what())));
+        return 3;
     }
-
-    return 1;
 }

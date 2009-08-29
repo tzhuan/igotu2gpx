@@ -77,11 +77,14 @@ int main(int argc, char *argv[])
 
     po::options_description options("Options");
     options.add_options()
-        ("help", "output this help and exit")
-        ("version", "output version information and exit")
+        ("help",
+         Common::tr("output this help and exit").toLocal8Bit())
+        ("version",
+         Common::tr("output version information and exit").toLocal8Bit())
 
         ("verbose,v",
-         "increase the amount of informative messages")
+         Common::tr("increase the amount of informative messages")
+         .toLocal8Bit())
     ;
 
     try {
@@ -117,7 +120,7 @@ int main(int argc, char *argv[])
             return 1;
         }
     } catch (const std::exception &e) {
-        Messages::errorMessage(Common::tr("Unable to parse command line: %1")
+        Messages::errorMessage(Common::tr("Unable to parse command line parameters: %1")
                     .arg(QString::fromLocal8Bit(e.what())));
         return 2;
     }

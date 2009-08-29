@@ -61,7 +61,7 @@ public:
 static QString dump(const QByteArray &data)
 {
     QString result;
-    result += MainObject::tr("Flash contents:") + QLatin1Char('\n');
+    result += MainObject::tr("Memory contents:") + QLatin1Char('\n');
     const unsigned chunks = (data.size() + 15) / 16;
     bool firstLine = true;
     for (unsigned i = 0; i < chunks; ++i) {
@@ -229,7 +229,7 @@ void MainObjectPrivate::on_control_purgeStarted()
 void MainObjectPrivate::on_control_purgeBlocksFinished(uint num, uint total)
 {
     Messages::normalMessage(MainObject::tr
-            ("Clearing block %1/%2").arg(num).arg(total));
+            ("Cleared block %1/%2").arg(num).arg(total));
 }
 
 void MainObjectPrivate::on_control_purgeFinished()

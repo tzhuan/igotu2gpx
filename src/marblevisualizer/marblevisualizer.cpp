@@ -143,7 +143,7 @@ void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points,
     kmlFile.reset(new QTemporaryFile(QDir::tempPath() +
                 QLatin1String("/igotu2gpx_temp_XXXXXX.kml")));
     if (!kmlFile->open())
-        throw IgotuError(tr("Unable to create kml file: %1")
+        throw IgotuError(tr("Unable to create temporary kml file: %1")
                 .arg(kmlFile->errorString()));
     kmlFile->write(pointsToKml(wayPoints, trackPoints));
     kmlFile->flush();

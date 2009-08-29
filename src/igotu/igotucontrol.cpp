@@ -181,7 +181,7 @@ void IgotuControlPrivateWorker::connect()
             break;
         }
         if (!connection)
-            throw IgotuError(IgotuControl::tr("Unable to connect via %1")
+            throw IgotuError(IgotuControl::tr("Unable to connect via '%1'")
                     .arg(p->device));
     }
 }
@@ -207,7 +207,7 @@ void IgotuControlPrivateWorker::info()
 
             IdentificationCommand id(connection.get());
             id.sendAndReceive();
-            status += IgotuControl::tr("S/N: %1").arg(id.serialNumber()) +
+            status += IgotuControl::tr("Serial number: %1").arg(id.serialNumber()) +
                 QLatin1Char('\n');
             status += IgotuControl::tr("Firmware version: %1")
                 .arg(id.firmwareVersionString()) + QLatin1Char('\n');
@@ -233,7 +233,7 @@ void IgotuControlPrivateWorker::info()
                     id.firmwareVersion() >= 0x0200);
             countCommand.sendAndReceive();
             unsigned count = countCommand.trackPointCount();
-            status += IgotuControl::tr("Number of unfiltered trackpoints: %1")
+            status += IgotuControl::tr("Number of points: %1")
                 .arg(count) + QLatin1Char('\n');
             contents = ReadCommand(connection.get(), 0, 0x1000)
                 .sendAndReceive();
@@ -302,24 +302,26 @@ void IgotuControlPrivateWorker::info()
                             QLatin1Char('\n');
                     } else {
                         status += QLatin1String("  ") + IgotuControl::tr
-                            ("Interval change: disabled") + QLatin1Char('\n');
+                            ("Interval change: %1")
+                            .arg(IgotuControl::tr("disabled")) + QLatin1Char('\n');
                     }
                 }
             }
         } else {
-            status += IgotuControl::tr("Schedule table: disabled") +
-                QLatin1Char('\n');
+            status += IgotuControl::tr("Schedule table: %1")
+                .arg(IgotuControl::tr("disabled")) + QLatin1Char('\n');
             ScheduleTableEntry entry = igotuPoints.scheduleTableEntries(1)[0];
             status += IgotuControl::tr("Log interval: %1 s")
                 .arg(entry.logInterval()) + QLatin1Char('\n');
             if (entry.isIntervalChangeEnabled()) {
                 status += IgotuControl::tr
-                    ("Interval change: above %1 km/h, use %2 s")
+                    ("Interval change: %1")
+                    .arg(IgotuControl::tr("above %1 km/h, use %2 s"))
                     .arg(qRound(entry.intervalChangeSpeed()))
                     .arg(entry.changedLogInterval()) + QLatin1Char('\n');
             } else {
-                status += IgotuControl::tr("Interval change: disabled") +
-                    QLatin1Char('\n');
+                status += IgotuControl::tr("Interval change: %1")
+                    .arg(IgotuControl::tr("disabled")) + QLatin1Char('\n');
             }
         }
 
@@ -403,8 +405,7 @@ void IgotuControlPrivateWorker::purge()
         connect();
 
         if (!connection)
-            throw IgotuError(IgotuControl::tr
-                    ("Need an actual device to purge"));
+            throw IgotuError(IgotuControl::tr("No device specified"));
 
         NmeaSwitchCommand(connection.get(), false).sendAndReceive();
 
@@ -428,7 +429,7 @@ void IgotuControlPrivateWorker::purge()
                             break;
                         if (retries == 1)
                             throw IgotuError(IgotuControl::tr
-                                    ("Timeout during purge"));
+                                    ("Command timeout"));
                     }
                 } else {
                     if (ReadCommand(connection.get(), i * 0x1000, 0x10)
@@ -450,7 +451,7 @@ void IgotuControlPrivateWorker::purge()
                         break;
                     if (retries == 1)
                         throw IgotuError(IgotuControl::tr
-                                ("Timeout during purge"));
+                                ("Command timeout"));
                 }
             }
             UnknownPurgeCommand1(connection.get(), 0x1e).sendAndReceive();
@@ -469,7 +470,7 @@ void IgotuControlPrivateWorker::purge()
                             break;
                         if (retries == 1)
                             throw IgotuError(IgotuControl::tr
-                                    ("Timeout during purge"));
+                                    ("Command timeout"));
                     }
                 } else {
                     if (ReadCommand(connection.get(), i * 0x1000, 0x10)
@@ -490,16 +491,16 @@ void IgotuControlPrivateWorker::purge()
                         break;
                     if (retries == 1)
                         throw IgotuError(IgotuControl::tr
-                                ("Timeout during purge"));
+                                ("Command timeout"));
                 }
             }
             emit purgeBlocksFinished(blocks, blocks);
             break; }
         default: {
             throw IgotuError(IgotuControl::tr
-                    ("%1: No purge support available. If you have "
-                     "time and feel adventurous, create a bug report at "
-                     "https://bugs.launchpad.net/igotu2gpx/+filebug, and "
+                    ("%1: Unable to clear memory of this GPS tracker model. If "
+                     "you have time and feel adventurous, create a bug report "
+                     "at https://bugs.launchpad.net/igotu2gpx/+filebug, and "
                      "follow the steps at "
                      "https://answers.launchpad.net/igotu2gpx/+faq/480.")
                     .arg(model.modelName()));

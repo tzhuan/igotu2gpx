@@ -104,21 +104,14 @@ public:
 
 void MainWindowPrivate::on_actionAbout_triggered()
 {
-    QMessageBox::about(p, MainWindow::tr("About Igotu2gpx"), MainWindow::tr(
-        "<h3>Igotu2gpx %1</h3><br/><br/>"
-        "Shows the configuration and decodes the stored tracks and waypoints "
-        "of a MobileAction i-gotU USB GPS travel logger."
-        "<br/><br/>"
-        "This program is licensed to you under the terms of the GNU General "
-        "Public License. See the file LICENSE that came with this software "
-        "for further details."
-        "<br/><br/>"
-        "Copyright (C) 2009 Michael Hofmann."
-        "<br/><br/>"
-        "The program is provided AS IS with NO WARRANTY OF ANY KIND, "
-        "INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR "
-        "A PARTICULAR PURPOSE."
-        "<br/>").arg(QLatin1String(IGOTU_VERSION_STR)));
+    QMessageBox::about(p, MainWindow::tr("About Igotu2gpx"), Common::tr(
+                "<h3>Igotu2gpx %1</h3><br/>"
+                "Downloads tracks and waypoints from MobileAction i-gotU USB GPS travel loggers.<br/><br/>"
+                "Copyright (C) 2009 Michael Hofmann.<br/>"
+                "License GPLv3+: GNU GPL version 3 or later (http://gnu.org/licenses/gpl.html)<br/>"
+                "This is free software: you are free to change and redistribute it.<br/>"
+                "There is NO WARRANTY, to the extent permitted by law.")
+        .arg(QLatin1String(IGOTU_VERSION_STR)));
 }
 
 void MainWindowPrivate::on_actionAboutPlugins_triggered()

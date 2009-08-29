@@ -40,11 +40,7 @@
 void validate(boost::any &v,
         const std::vector<std::string> &values, QString *, int)
 {
-    if (!v.empty() || values.size() != 1)
-        throw igotu::IgotuError(QCoreApplication::translate("boost::po",
-                    "Unable to set a parameter more than once"));
-
-    v = boost::any(QString::fromStdString(values[0]));
+    v = boost::any(QString::fromStdString(values.back()));
 }
 
 void validate(boost::any &v,
