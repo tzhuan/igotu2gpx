@@ -79,6 +79,7 @@ cp /Applications/Marble.app/Contents/Resources/data/bitmaps/cursor_*.xpm "$RESOU
 cp /Applications/Marble.app/Contents/Resources/data/bitmaps/default_location.png "$RESOURCES"/marble/bitmaps
 cp /Applications/Marble.app/Contents/Resources/data/bitmaps/pole_1.png "$RESOURCES"/marble/bitmaps
 cp /Applications/Marble.app/Contents/Resources/data/placemarks/b*.cache "$RESOURCES"/marble/placemarks
+cp /Applications/Marble.app/Contents/Resources/data/LICENSE.txt "$RESOURCES"/marble
 
 cp /usr/local/lib/libboost_program_options-xgcc40-mt-1_39.dylib "$FRAMEWORKS"
 cp /usr/local/lib/libusb-0.1.4.dylib "$FRAMEWORKS"

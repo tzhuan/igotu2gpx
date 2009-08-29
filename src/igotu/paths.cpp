@@ -201,29 +201,35 @@ QStringList Paths::translationDirectories()
             QLatin1String("/locale");
     result << relativeToBaseDirectory
            (QStringList() << QLatin1String("/locale"),
-            QStringList() << QLatin1String("/tranlations"));
+            QStringList() << QLatin1String("/translations"));
 #else
 #error No idea where to find translation directories on this platform
 #endif
     return uniqueDirectoryList(result);
 }
 
-QString Paths::macPluginDirectory()
+QString Paths::mainPluginDirectory()
 {
     QString result;
 #if defined(Q_OS_MACX)
     result = relativeToBaseDirectory(QStringList(QLatin1String("/PlugIns")),
-            QStringList()).at(0);
+            QStringList()).value(0);
+#elif defined(Q_OS_WIN32)
+    result = relativeToBaseDirectory(QStringList(QLatin1String("/bin")),
+            QStringList()).value(0);
 #endif
     return result;
 }
 
-QString Paths::macDataDirectory()
+QString Paths::mainDataDirectory()
 {
     QString result;
 #if defined(Q_OS_MACX)
     result = relativeToBaseDirectory(QStringList(QLatin1String("/Resources")),
-            QStringList()).at(0);
+            QStringList()).value(0);
+#elif defined(Q_OS_WIN32)
+    result = relativeToBaseDirectory(QStringList(QLatin1String("/share")),
+            QStringList()).value(0);
 #endif
     return result;
 }

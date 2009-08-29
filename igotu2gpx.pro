@@ -50,6 +50,9 @@ for(pofile, pofiles) {
 porelease.commands = $$poconvertcommand lrelease translations/igotu2gpx_*.ts
 QMAKE_EXTRA_TARGETS *= porelease
 
+stripinstalled.commands = strip bin/debug-installed/bin/* bin/debug-installed/bin/plugins/* bin/debug-installed/lib/*
+QMAKE_EXTRA_TARGETS *= stripinstalled
+
 locale.files = $$qmfiles
 locale.path = $$TRANSLATIONDIR
 locale.CONFIG *= no_check_exist

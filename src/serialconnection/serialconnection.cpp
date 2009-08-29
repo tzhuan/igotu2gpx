@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
+#include "igotu/commonmessages.h"
 #include "igotu/exception.h"
 
 #include "dataconnection.h"
@@ -62,9 +63,12 @@ QString errorString(DWORD err)
 {
     WCHAR *s;
     if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, &s, 0, NULL))
+                FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, 
+                reinterpret_cast<WCHAR*>(&s), 0, NULL))
         return QString();
-    const QString result = QString::fromUtf16(s).remove(QLatin1Char('\r'));
+    // wchar_t can be a buildin type, but it is always 16bit
+    const QString result = QString::fromUtf16(reinterpret_cast<ushort*>(s))
+        .remove(QLatin1Char('\r'));
     LocalFree(s);
     return result;
 }
@@ -86,7 +90,8 @@ SerialConnection::SerialConnection(unsigned port)
                 0,
                 NULL);
     if (handle == INVALID_HANDLE_VALUE)
-        throw IgotuError(Common::tr("Unable to open device '%1'").arg(device));
+        throw IgotuError(Common::tr("Unable to open device '%1': %2")
+            .arg(device, errorString(GetLastError())));
 
     COMMTIMEOUTS Win_CommTimeouts;
     Win_CommTimeouts.ReadIntervalTimeout = 10;
@@ -110,7 +115,7 @@ void SerialConnection::send(const QByteArray &query)
 
     if (!WriteFile(handle, query.data(), query.size(), &result, NULL))
         throw IgotuError(Common::tr("Unable to send data to device: %1")
-                .arg(errorString(LastError())));
+                .arg(errorString(GetLastError())));
     if (result != unsigned(query.size()))
         throw IgotuError(Common::tr("Unable to send data to device: %1")
                 .arg(Common::tr("Only %1/%2 bytes could be sent"))
@@ -133,7 +138,7 @@ QByteArray SerialConnection::receive(unsigned expected)
         DWORD result;
         if (!ReadFile(handle, data.data(), data.size(), &result, NULL))
             throw IgotuError(Common::tr("Unable to read data from device: %1")
-                .arg(errorString(LastError())));
+                .arg(errorString(GetLastError())));
         if (result == 0)
             ++emptyCount;
         receiveBuffer += data.left(result);

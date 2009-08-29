@@ -29,9 +29,9 @@ namespace igotu
 class IGOTU_EXPORT Paths
 {
 public:
-    // return the most likely dir, only implemented on Mac OS X
-    static QString macPluginDirectory();
-    static QString macDataDirectory();
+    // return the most likely dir, only implemented on Mac OS X and Windows
+    static QString mainPluginDirectory();
+    static QString mainDataDirectory();
 
     static QStringList pluginDirectories();
     static QStringList iconDirectories();

@@ -1,9 +1,9 @@
 #!/bin/sh
 
-# Source this file in the home directory of rba
+# Source this file in the home directory
 [ -d src ] || exit 1
 
-pushd .. > /dev/null
+pushd ../.. > /dev/null
 
 if test -z "$OLDPATH"; then
     export OLDPATH=$PATH
@@ -14,7 +14,7 @@ fi
 BUILD_BASE=`pwd`
 WINBASE=`command.com /c cd 2>/dev/null | sed 'y/\\\\/\\//; s/\r//'`
 
-export PATH="$PATH:$BUILD_BASE/qt-4.5.0/bin:$BUILD_BASE/qt-4.5.0/qt/bin:$BUILD_BASE/qt-4.5.0/mingw/bin"
+export PATH="$PATH:$BUILD_BASE/api.mingw/qt-4.5.2/qt/bin:$BUILD_BASE/api.mingw/qt-4.5.2/mingw/bin"
 
 export QMAKESPEC="win32-g++"
 

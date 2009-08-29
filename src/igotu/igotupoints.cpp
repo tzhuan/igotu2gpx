@@ -31,7 +31,7 @@ IgotuPoint::IgotuPoint(const QByteArray &record) :
     record(record)
 {
     if (record.size() < 32) {
-        this->record += QByteArray(32 - record.size(), 0xff);
+        this->record += QByteArray(32 - record.size(), char(0xff));
         qWarning("Invalid record size");
     }
 }
@@ -185,7 +185,7 @@ ScheduleTableEntry::ScheduleTableEntry(const QByteArray &entry) :
     entry(entry)
 {
     if (entry.size() < 64) {
-        this->entry += QByteArray(64 - entry.size(), 0xff);
+        this->entry += QByteArray(64 - entry.size(), char(0xff));
         qWarning("Invalid entry size");
     }
 }
@@ -241,7 +241,7 @@ IgotuPoints::IgotuPoints(const QByteArray &dump, unsigned count) :
     count(count)
 {
     if (0x1000 + count * 0x20 > unsigned(dump.size())) {
-        this->dump += QByteArray(0x1000 + count * 0x20 - dump.size(), 0xff);
+	this->dump += QByteArray(0x1000 + count * 0x20 - dump.size(), char(0xff));
         qWarning("Invalid dump size");
     }
 }

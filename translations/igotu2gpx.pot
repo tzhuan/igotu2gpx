@@ -620,7 +620,6 @@ msgstr ""
 #. ts-context igotu::Common
 #: ../src/libusb10connection/libusb10connection.cpp:245
 #: ../src/libusbconnection/libusbconnection.cpp:102
-#: ../src/serialconnection/serialconnection.cpp:89
 #, fuzzy
 msgid "Unable to open device '%1'"
 msgstr ""
@@ -723,24 +722,30 @@ msgstr ""
 #. ts-context igotu::Common
 #: ../src/libusbconnection/libusbconnection.cpp:158
 #: ../src/libusbconnection/libusbconnection.cpp:161
-#: ../src/serialconnection/serialconnection.cpp:112
-#: ../src/serialconnection/serialconnection.cpp:115
+#: ../src/serialconnection/serialconnection.cpp:117
+#: ../src/serialconnection/serialconnection.cpp:120
 #, fuzzy
 msgid "Unable to send data to device: %1"
 msgstr ""
 
 #. ts-context igotu::Common
 #: ../src/libusbconnection/libusbconnection.cpp:162
-#: ../src/serialconnection/serialconnection.cpp:116
+#: ../src/serialconnection/serialconnection.cpp:121
 #, fuzzy
 msgid "Only %1/%2 bytes could be sent"
 msgstr ""
 
 #. ts-context igotu::Common
 #: ../src/libusbconnection/libusbconnection.cpp:185
-#: ../src/serialconnection/serialconnection.cpp:135
+#: ../src/serialconnection/serialconnection.cpp:140
 #, fuzzy
 msgid "Unable to read data from device: %1"
+msgstr ""
+
+#. ts-context igotu::Common
+#: ../src/serialconnection/serialconnection.cpp:93
+#, fuzzy
+msgid "Unable to open device '%1': %2"
 msgstr ""
 
 #. ts-context igotu::IgotuCommand
