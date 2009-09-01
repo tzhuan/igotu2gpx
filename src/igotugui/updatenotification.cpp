@@ -139,6 +139,9 @@ void UpdateNotificationPrivate::on_http_done(bool error)
 
     setLastCheck();
 
+    if (type == UpdateNotification::NotifyNever)
+        return;
+
     if (newestVersion == QLatin1String(IGOTU_VERSION_STR) ||
         newestVersion == ignoredVersion())
         return;
@@ -173,9 +176,6 @@ UpdateNotification::~UpdateNotification()
 
 void UpdateNotification::runScheduledCheck()
 {
-    if (d->type == NotifyNever)
-        return;
-
     QDateTime lastCheck(d->lastCheck());
     if (lastCheck.isValid() &&
         lastCheck.secsTo(QDateTime::currentDateTime()) < 7 * 24 * 60 * 60)
