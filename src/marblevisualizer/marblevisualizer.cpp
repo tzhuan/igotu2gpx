@@ -23,8 +23,11 @@
 #include "trackvisualizer.h"
 
 #include <marble/MarbleDirs.h>
-#include <marble/MarbleMap.h>
 #include <marble/MarbleWidget.h>
+
+#ifdef MARBLE_VERSION
+#include <marble/MarbleMap.h>
+#endif
 
 #include <QDir>
 #include <QTemporaryFile>
@@ -106,6 +109,7 @@ void MarbleVisualizer::initMarble()
 
     verticalLayout->addWidget(tracks);
 
+#if defined(MARBLE_VERSION)
 #if MARBLE_VERSION < 0x000800
     // This is a hack to get a HttpDownloadManager instance from MarbleMap
     // because we can't instantiate it ourselves
@@ -115,6 +119,7 @@ void MarbleVisualizer::initMarble()
     tracks->setMapThemeId(QLatin1String
             ("earth/openstreetmap/openstreetmap.dgml"));
     // TODO: disable plugins that are not used (wikipedia)
+#endif
 }
 
 void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points,

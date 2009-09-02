@@ -3,14 +3,14 @@ Section: utils
 Priority: extra
 Maintainer: Michael Hofmann <mh21@piware.de>
 Build-Depends: cdbs, debhelper, libqt4-dev, libboost-dev,
- libboost-program-options-dev, libusb-dev, libmarble-dev
+ libboost-program-options-dev, libusb-dev, libmarble-dev | libmarble-dev-kde4
 Standards-Version: 3.8.0
 Homepage: http://mh21.de/igotu2gpx/
 
 Package: igotu2gpx
 Section: utils
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, marble-data
+Depends: ${shlibs:Depends}, ${misc:Depends}, marble-data | marble-data-kde4
 Description: Gives access to the i-gotU gps trackers
  Gives access to the i-gotU gps trackers via serial port (Windows) or libusb
  (Linux). It is possible to dump the internal flash memory and to export tracks

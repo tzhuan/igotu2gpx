@@ -21,9 +21,17 @@ clebsCheck(libmarble) {
     }
 
     unix:!macx {
-	isEmpty(MARBLEINCLUDEDIR):MARBLEINCLUDEDIR = /usr/include
+	isEmpty(MARBLEINCLUDEDIR) {
+	    exists(/usr/lib/kde4/include/marble) {
+		MARBLEINCLUDEDIR = /usr/lib/kde4/include
+		MARBLELIBDIR = /usr/lib/kde4/lib
+	    } else {
+		MARBLEINCLUDEDIR = /usr/include
+	    }
+	}
 	isEmpty(MARBLELIB):MARBLELIB = marblewidget
 
+	exists($${MARBLEINCLUDEDIR}/marble):CLEBS_DEPENDENCIES *= libmarble
 	exists($${MARBLEINCLUDEDIR}/marble):CLEBS_DEPENDENCIES *= libmarble
     }
 }
@@ -46,6 +54,7 @@ clebsDependency(libmarble) {
     unix:!macx {
 	INCLUDEPATH *= $${MARBLEINCLUDEDIR}
 	LIBS *= -l$${MARBLELIB}
+	!isEmpty(MARBLELIBDIR):LIBS *= -L$${MARBLELIBDIR}
     }
 }
 
