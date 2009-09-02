@@ -102,8 +102,8 @@
    <property name="text">
     <string>About Igotu2gpx</string>
    </property>
-   <property name="toolTip">
-    <string>About Igotu2gpx</string>
+   <property name="menuRole">
+    <enum>QAction::ApplicationSpecificRole</enum>
    </property>
   </action>
   <action name="actionPreferences">
