@@ -31,6 +31,9 @@ INSTALLS *= docs
 todo.commands = @grep -Rn '\'TODO\|FIXME\|XXX\|\\todo\'' src/*/*.pro src/*/*.h src/*/*.cpp tools/*
 QMAKE_EXTRA_TARGETS *= todo
 
+stripinstalled.commands = strip bin/debug-installed/bin/* bin/debug-installed/bin/plugins/* bin/debug-installed/lib/*
+QMAKE_EXTRA_TARGETS *= stripinstalled
+
 # Use iconv mangling as lupdate does not recognize octal/hex utf8 strings
 po.commands = lupdate src -ts translations/igotu2gpx.ts; \
     iconv -f utf8 -t latin1 translations/igotu2gpx.ts | sponge translations/igotu2gpx.ts; \
@@ -39,6 +42,7 @@ po.commands = lupdate src -ts translations/igotu2gpx.ts; \
 QMAKE_EXTRA_TARGETS *= po
 
 pofiles = $$files(translations/*.po)
+tsfiles = $$files(translations/*.ts)
 for(pofile, pofiles) {
     language = $$replace(pofile, '(.*)/(.*)\.po$', '\2')
     tsfile = $$replace(pofile, '(.*)/(.*)\.po$', '\1/igotu2gpx_\2.ts')
@@ -48,13 +52,15 @@ for(pofile, pofiles) {
     # fiddle a bit with the xml output
     poconvertcommand += perl -0pi -e \'s!(<translation)(>\\s*(?:<numerusform></numerusform>\\s*)*</translation>)!\\1 type=\"unfinished\"\\2!g\' $$tsfile;
 }
-porelease.commands = $$poconvertcommand lrelease translations/igotu2gpx_*.ts
-QMAKE_EXTRA_TARGETS *= porelease
+for(tsfile, tsfiles) {
+    qmfiles *= $$replace(tsfile, '\.ts$', '.qm')
+}
 
-stripinstalled.commands = strip bin/debug-installed/bin/* bin/debug-installed/bin/plugins/* bin/debug-installed/lib/*
-QMAKE_EXTRA_TARGETS *= stripinstalled
+porelease.commands = $$poconvertcommand
+QMAKE_EXTRA_TARGETS *= porelease
 
 locale.files = $$qmfiles
 locale.path = $$TRANSLATIONDIR
+locale.extra = lrelease translations/igotu2gpx_*.ts
 locale.CONFIG *= no_check_exist
 INSTALLS *= locale
