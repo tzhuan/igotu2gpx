@@ -146,11 +146,10 @@ int main(int argc, char *argv[])
             return 0;
         }
         if (variables.count("help") || action.isEmpty()) {
-            Messages::textOutput(Common::tr("Usage:"));
-            //: Do not translate the actions (info|dump|clear|diff)
-            Messages::textOutput(MainObject::tr
-                    ("%1 info|dump|clear|diff [OPTIONS...]")
-                    .arg(QFileInfo(app.applicationFilePath()).fileName()));
+            Messages::textOutput(Common::tr("Usage: %1")
+                    //: Do not translate the actions (info|dump|clear|diff)
+                    .arg(MainObject::tr("%1 info|dump|clear|diff [OPTIONS...]")
+                        .arg(QFileInfo(app.applicationFilePath()).fileName())));
             Messages::normalMessage(QString());
             std::cout << options << "\n";
             return 1;

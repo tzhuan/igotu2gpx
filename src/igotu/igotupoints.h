@@ -34,7 +34,7 @@ namespace igotu
 
 class IGOTU_EXPORT IgotuPoint
 {
-    Q_DECLARE_TR_FUNCTIONS(IgotuPoint)
+    Q_DECLARE_TR_FUNCTIONS(igotu::IgotuPoint)
 public:
     IgotuPoint(const QByteArray &record);
     ~IgotuPoint();
@@ -79,7 +79,7 @@ private:
 
 class IGOTU_EXPORT ScheduleTableEntry
 {
-    Q_DECLARE_TR_FUNCTIONS(ScheduleTableEntry)
+    Q_DECLARE_TR_FUNCTIONS(igotu::ScheduleTableEntry)
 public:
     ScheduleTableEntry(const QByteArray &entry);
     ~ScheduleTableEntry();
@@ -103,7 +103,7 @@ private:
 
 class IGOTU_EXPORT IgotuPoints
 {
-    Q_DECLARE_TR_FUNCTIONS(IgotuPoints)
+    Q_DECLARE_TR_FUNCTIONS(igotu::IgotuPoints)
 public:
     IgotuPoints(const QByteArray &dump, unsigned count);
     ~IgotuPoints();

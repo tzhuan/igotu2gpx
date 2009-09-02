@@ -249,9 +249,8 @@ void IgotuControlPrivateWorker::info()
         status += IgotuControl::tr("Schedule date: %1")
             .arg(QLocale::system().toString(igotuPoints.firstScheduleDate() ,
                         QLocale::LongFormat)) + QLatin1Char('\n');
-        status += IgotuControl::tr("Schedule date offset: %1 day(s)", "",
-                igotuPoints.dateOffset())
-            .arg(igotuPoints.dateOffset()) + QLatin1Char('\n');
+        status += IgotuControl::tr("Schedule date offset: %n day(s)", "",
+                igotuPoints.dateOffset()) + QLatin1Char('\n');
         QList<unsigned> tablePlans = igotuPoints.scheduleTablePlans();
         QSet<unsigned> tablePlanSet = QSet<unsigned>::fromList(tablePlans);
         if (igotuPoints.isScheduleTableEnabled()) {

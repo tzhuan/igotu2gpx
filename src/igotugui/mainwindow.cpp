@@ -126,10 +126,12 @@ void MainWindowPrivate::on_actionDebug_triggered()
         "<h3>Versions</h3>"
             "Compiled against Qt %1<br/>"
             "Running with Qt %2"
+        "<h3>Translation Directories</h3>%3"
         "<h3>Icon Directories</h3>%4"
         "<h3>Plugin Directories</h3>%5").arg(
             QLatin1String(QT_VERSION_STR),
             QLatin1String(qVersion()),
+            Paths::translationDirectories().join(QLatin1String("<br/>")),
             Paths::iconDirectories().join(QLatin1String("<br/>")),
             Paths::pluginDirectories().join(QLatin1String("<br/>")));
     QMessageBox::information(p, MainWindow::tr("Debug Information"), message);

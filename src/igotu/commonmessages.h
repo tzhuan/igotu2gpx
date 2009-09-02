@@ -32,7 +32,7 @@ namespace igotu
 // for them.
 class Common
 {
-    Q_DECLARE_TR_FUNCTIONS(Common)
+    Q_DECLARE_TR_FUNCTIONS(igotu::Common)
 };
 
 } // namespace igotu

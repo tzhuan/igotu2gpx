@@ -33,7 +33,7 @@ class IgotuCommandPrivate;
 
 class IGOTU_EXPORT IgotuCommand
 {
-    Q_DECLARE_TR_FUNCTIONS(IgotuCommand)
+    Q_DECLARE_TR_FUNCTIONS(igotu::IgotuCommand)
 public:
     IgotuCommand(DataConnection *connection,
             const QByteArray &command = QByteArray(),

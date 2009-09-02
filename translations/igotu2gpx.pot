@@ -103,6 +103,12 @@ msgid ""
 msgstr ""
 
 #. ts-context MainObject
+#: ../src/igotu2gpx/igotu2gpx.cpp:94
+#, fuzzy
+msgid "output in GPX format (this is the default)"
+msgstr ""
+
+#. ts-context MainObject
 #: ../src/igotu2gpx/igotu2gpx.cpp:97
 #, fuzzy
 msgid "output a detailed representation of all track points"
@@ -120,56 +126,6 @@ msgstr ""
 #: ../src/igotu2gpx/igotu2gpx.cpp:108
 #, fuzzy
 msgid "time zone offset in seconds"
-msgstr ""
-
-#. Do not translate the word before the colon
-#. ts-context MainObject
-#: ../src/igotu2gpx/igotu2gpx.cpp:123
-#, fuzzy
-msgid "diff: show configuration differences relative to an image file"
-msgstr ""
-
-#. ts-context MainObject
-#: ../src/igotu2gpx/igotu2gpx.cpp:168 ../src/igotu2gpx/igotu2gpx.cpp:186
-#, fuzzy
-msgid "Unable to read file '%1'"
-msgstr ""
-
-#. ts-context MainObject
-#: ../src/igotu2gpx/igotu2gpx.cpp:199
-#, fuzzy
-msgid "Error: %1"
-msgstr ""
-
-#. ts-context MainObject
-#: ../src/igotu2gpx/mainobject.cpp:86
-#, fuzzy
-msgid "Differences:"
-msgstr ""
-
-#. ts-context MainObject
-#: ../src/igotu2gpx/mainobject.cpp:159
-#, fuzzy
-msgid "Downloaded block %1/%2"
-msgstr ""
-
-#. Do not translate the actions (info|dump|clear|diff)
-#. ts-context MainObject
-#: ../src/igotu2gpx/igotu2gpx.cpp:151
-#, fuzzy
-msgid "%1 info|dump|clear|diff [OPTIONS...]"
-msgstr ""
-
-#. ts-context MainObject
-#: ../src/igotu2gpx/mainobject.cpp:64
-#, fuzzy
-msgid "Memory contents:"
-msgstr ""
-
-#. ts-context MainObject
-#: ../src/igotu2gpx/igotu2gpx.cpp:94
-#, fuzzy
-msgid "output in GPX format (this is the default)"
 msgstr ""
 
 #. Do not translate the word before the colon
@@ -193,16 +149,60 @@ msgstr ""
 msgid "clear: clear memory of the GPS tracker"
 msgstr ""
 
+#. Do not translate the word before the colon
 #. ts-context MainObject
-#: ../src/igotu2gpx/igotu2gpx.cpp:183
+#: ../src/igotu2gpx/igotu2gpx.cpp:123
+#, fuzzy
+msgid "diff: show configuration differences relative to an image file"
+msgstr ""
+
+#. Do not translate the actions (info|dump|clear|diff)
+#. ts-context MainObject
+#: ../src/igotu2gpx/igotu2gpx.cpp:151
+#, fuzzy
+msgid "%1 info|dump|clear|diff [OPTIONS...]"
+msgstr ""
+
+#. ts-context MainObject
+#: ../src/igotu2gpx/igotu2gpx.cpp:167 ../src/igotu2gpx/igotu2gpx.cpp:185
+#, fuzzy
+msgid "Unable to read file '%1'"
+msgstr ""
+
+#. ts-context MainObject
+#: ../src/igotu2gpx/igotu2gpx.cpp:182
 #, fuzzy
 msgid "Diff action requires --image"
 msgstr ""
 
 #. ts-context MainObject
-#: ../src/igotu2gpx/igotu2gpx.cpp:194
+#: ../src/igotu2gpx/igotu2gpx.cpp:193
 #, fuzzy
 msgid "Unknown action: %1"
+msgstr ""
+
+#. ts-context MainObject
+#: ../src/igotu2gpx/igotu2gpx.cpp:198
+#, fuzzy
+msgid "Error: %1"
+msgstr ""
+
+#. ts-context MainObject
+#: ../src/igotu2gpx/mainobject.cpp:64
+#, fuzzy
+msgid "Memory contents:"
+msgstr ""
+
+#. ts-context MainObject
+#: ../src/igotu2gpx/mainobject.cpp:86
+#, fuzzy
+msgid "Differences:"
+msgstr ""
+
+#. ts-context MainObject
+#: ../src/igotu2gpx/mainobject.cpp:159
+#, fuzzy
+msgid "Downloaded block %1/%2"
 msgstr ""
 
 #. ts-context MainObject
@@ -224,6 +224,12 @@ msgid "Igotu2gpx"
 msgstr ""
 
 #. ts-context MainWindow
+#: ../src/igotugui/igotugui.ui:34
+#, fuzzy
+msgid "&GPS Tracker"
+msgstr ""
+
+#. ts-context MainWindow
 #: ../src/igotugui/igotugui.ui:47
 #, fuzzy
 msgid "&Help"
@@ -242,8 +248,7 @@ msgid "&Quit"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/igotugui.ui:103 ../src/igotugui/igotugui.ui:106
-#: ../src/igotugui/mainwindow.cpp:107
+#: ../src/igotugui/igotugui.ui:103 ../src/igotugui/mainwindow.cpp:107
 #, fuzzy
 msgid "About Igotu2gpx"
 msgstr ""
@@ -315,21 +320,15 @@ msgid "&Cancel Transfer"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/igotugui.ui:158
-#, fuzzy
-msgid "Cancel the current transfer from the GPS tracker"
-msgstr ""
-
-#. ts-context MainWindow
 #: ../src/igotugui/igotugui.ui:155
 #, fuzzy
 msgid "Cancel"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/igotugui.ui:34
+#: ../src/igotugui/igotugui.ui:158
 #, fuzzy
-msgid "&GPS Tracker"
+msgid "Cancel the current transfer from the GPS tracker"
 msgstr ""
 
 #. ts-context MainWindow
@@ -339,7 +338,7 @@ msgid "About Plugins"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/igotugui.ui:171 ../src/igotugui/mainwindow.cpp:135
+#: ../src/igotugui/igotugui.ui:171 ../src/igotugui/mainwindow.cpp:137
 #, fuzzy
 msgid "Debug Information"
 msgstr ""
@@ -348,12 +347,19 @@ msgstr ""
 #: ../src/igotugui/mainwindow.cpp:125
 #, fuzzy
 msgid ""
-"<h3>Versions</h3>Compiled against Qt %1<br/>Running with Qt %2<h3>Icon "
-"Directories</h3>%4<h3>Plugin Directories</h3>%5"
+"<h3>Versions</h3>Compiled against Qt %1<br/>Running with Qt "
+"%2<h3>Translation Directories</h3>%3<h3>Icon Directories</h3>%4<h3>Plugin "
+"Directories</h3>%5"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:157
+#: ../src/igotugui/mainwindow.cpp:159 ../src/igotugui/mainwindow.cpp:166
+#, fuzzy
+msgid "Clear Memory"
+msgstr ""
+
+#. ts-context MainWindow
+#: ../src/igotugui/mainwindow.cpp:159
 #, fuzzy
 msgid ""
 "This function is highly experimental and may brick your GPS tracker! Only "
@@ -362,97 +368,91 @@ msgid ""
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:157 ../src/igotugui/mainwindow.cpp:164
-#, fuzzy
-msgid "Clear Memory"
-msgstr ""
-
-#. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:212
+#: ../src/igotugui/mainwindow.cpp:214
 #, fuzzy
 msgid "New Version Available"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:212
+#: ../src/igotugui/mainwindow.cpp:214
 #, fuzzy
 msgid "You can download and install a newer version of igotu2gpx: %1"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:217
+#: ../src/igotugui/mainwindow.cpp:219
 #, fuzzy
 msgid "Later"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:219
+#: ../src/igotugui/mainwindow.cpp:221
 #, fuzzy
 msgid "Never"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:221
+#: ../src/igotugui/mainwindow.cpp:223
 #, fuzzy
 msgid "Go to Download Page"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:365
+#: ../src/igotugui/mainwindow.cpp:367
 #, fuzzy
 msgid "Save GPS Tracks"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:381
-#, fuzzy
-msgid "Unable to save file: %1"
-msgstr ""
-
-#. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:385
-#, fuzzy
-msgid "Unable to save tracks: %1"
-msgstr ""
-
-#. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:368
+#: ../src/igotugui/mainwindow.cpp:370
 #, fuzzy
 msgid "GPX files (*.gpx)"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:375
+#: ../src/igotugui/mainwindow.cpp:377
 #, fuzzy
 msgid "Unable to create file: %1"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:384
+#: ../src/igotugui/mainwindow.cpp:383
+#, fuzzy
+msgid "Unable to save file: %1"
+msgstr ""
+
+#. ts-context MainWindow
+#: ../src/igotugui/mainwindow.cpp:386
 #, fuzzy
 msgid "File Error"
 msgstr ""
 
+#. ts-context MainWindow
+#: ../src/igotugui/mainwindow.cpp:387
+#, fuzzy
+msgid "Unable to save tracks: %1"
+msgstr ""
+
 #. ts-context MarbleVisualizer
-#: ../src/marblevisualizer/marblevisualizer.cpp:146
+#: ../src/marblevisualizer/marblevisualizer.cpp:151
 #, fuzzy
 msgid "Unable to create temporary kml file: %1"
 msgstr ""
 
 #. ts-context MarbleVisualizer
-#: ../src/marblevisualizer/marblevisualizer.cpp:168
+#: ../src/marblevisualizer/marblevisualizer.cpp:173
 #, fuzzy
 msgid "Map"
 msgstr ""
 
 #. ts-context MarbleVisualizer
-#: ../src/marblevisualizer/marblevisualizer.cpp:200
+#: ../src/marblevisualizer/marblevisualizer.cpp:205
 #, fuzzy
 msgid "Waypoint %1"
 msgstr ""
 
 #. ts-context MarbleVisualizer
-#: ../src/marblevisualizer/marblevisualizer.cpp:213
+#: ../src/marblevisualizer/marblevisualizer.cpp:218
 #, fuzzy
 msgid "Track %1"
 msgstr ""
@@ -605,9 +605,83 @@ msgid "Notify if a new version is available:"
 msgstr ""
 
 #. ts-context igotu::Common
+#: ../src/igotu2gpx/igotu2gpx.cpp:80 ../src/igotugui/igotugui.cpp:81
+#, fuzzy
+msgid "output this help and exit"
+msgstr ""
+
+#. ts-context igotu::Common
+#: ../src/igotu2gpx/igotu2gpx.cpp:82 ../src/igotugui/igotugui.cpp:83
+#, fuzzy
+msgid "output version information and exit"
+msgstr ""
+
+#. ts-context igotu::Common
 #: ../src/igotu2gpx/igotu2gpx.cpp:104 ../src/igotugui/igotugui.cpp:86
 #, fuzzy
 msgid "increase verbosity"
+msgstr ""
+
+#. ts-context igotu::Common
+#: ../src/igotu2gpx/igotu2gpx.cpp:136 ../src/igotugui/igotugui.cpp:96
+#: ../src/igotugui/mainwindow.cpp:107
+#, fuzzy
+msgid ""
+"<h3>Igotu2gpx %1</h3><br/>Downloads tracks and waypoints from MobileAction "
+"i-gotU USB GPS travel loggers.<br/><br/>Copyright (C) 2009 Michael "
+"Hofmann.<br/>License GPLv3+: GNU GPL version 3 or later "
+"(http://gnu.org/licenses/gpl.html)<br/>This is free software: you are free "
+"to change and redistribute it.<br/>There is NO WARRANTY, to the extent "
+"permitted by law."
+msgstr ""
+
+#. ts-context igotu::Common
+#: ../src/igotu2gpx/igotu2gpx.cpp:149 ../src/igotugui/igotugui.cpp:109
+#, fuzzy
+msgid "Usage: %1"
+msgstr ""
+
+#. ts-context igotu::Common
+#: ../src/igotu2gpx/igotu2gpx.cpp:158 ../src/igotugui/igotugui.cpp:116
+#, fuzzy
+msgid "Unable to parse command line parameters: %1"
+msgstr ""
+
+#. ts-context igotu::Common
+#: ../src/igotu2gpx/mainobject.cpp:130 ../src/igotugui/mainwindow.cpp:244
+#, fuzzy
+msgid "Downloading configuration..."
+msgstr ""
+
+#. ts-context igotu::Common
+#: ../src/igotu2gpx/mainobject.cpp:147 ../src/igotugui/mainwindow.cpp:255
+#, fuzzy
+msgid "Unable to download configuration from GPS tracker: %1"
+msgstr ""
+
+#. ts-context igotu::Common
+#: ../src/igotu2gpx/mainobject.cpp:154 ../src/igotugui/mainwindow.cpp:261
+#, fuzzy
+msgid "Downloading tracks..."
+msgstr ""
+
+#. ts-context igotu::Common
+#: ../src/igotu2gpx/mainobject.cpp:219 ../src/igotugui/mainwindow.cpp:290
+#: ../src/igotugui/mainwindow.cpp:298
+#, fuzzy
+msgid "Unable to download trackpoints from GPS tracker: %1"
+msgstr ""
+
+#. ts-context igotu::Common
+#: ../src/igotu2gpx/mainobject.cpp:226 ../src/igotugui/mainwindow.cpp:305
+#, fuzzy
+msgid "Clearing memory..."
+msgstr ""
+
+#. ts-context igotu::Common
+#: ../src/igotu2gpx/mainobject.cpp:242 ../src/igotugui/mainwindow.cpp:321
+#, fuzzy
+msgid "Unable to clear memory of GPS tracker: %1"
 msgstr ""
 
 #. ts-context igotu::Common
@@ -625,6 +699,13 @@ msgid "Unable to open device '%1'"
 msgstr ""
 
 #. ts-context igotu::Common
+#: ../src/libusb10connection/libusb10connection.cpp:250
+#: ../src/libusbconnection/libusbconnection.cpp:108
+#, fuzzy
+msgid "Interface 0 already claimed by kernel driver, detaching"
+msgstr ""
+
+#. ts-context igotu::Common
 #: ../src/libusb10connection/libusb10connection.cpp:254
 #: ../src/libusbconnection/libusbconnection.cpp:114
 #, fuzzy
@@ -636,87 +717,6 @@ msgstr ""
 #: ../src/libusbconnection/libusbconnection.cpp:122
 #, fuzzy
 msgid "Unable to claim interface 0 on device '%1'"
-msgstr ""
-
-#. ts-context igotu::Common
-#: ../src/igotu2gpx/igotu2gpx.cpp:136 ../src/igotugui/igotugui.cpp:96
-#: ../src/igotugui/mainwindow.cpp:107
-#, fuzzy
-msgid ""
-"<h3>Igotu2gpx %1</h3><br/>Downloads tracks and waypoints from MobileAction "
-"i-gotU USB GPS travel loggers.<br/><br/>Copyright (C) 2009 Michael "
-"Hofmann.<br/>License GPLv3+: GNU GPL version 3 or later "
-"(http://gnu.org/licenses/gpl.html)<br/>This is free software: you are free "
-"to change and redistribute it.<br/>There is NO WARRANTY, to the extent "
-"permitted by law."
-msgstr ""
-
-#. ts-context igotu::Common
-#: ../src/igotu2gpx/igotu2gpx.cpp:159 ../src/igotugui/igotugui.cpp:116
-#, fuzzy
-msgid "Unable to parse command line parameters: %1"
-msgstr ""
-
-#. ts-context igotu::Common
-#: ../src/igotu2gpx/mainobject.cpp:130 ../src/igotugui/mainwindow.cpp:242
-#, fuzzy
-msgid "Downloading configuration..."
-msgstr ""
-
-#. ts-context igotu::Common
-#: ../src/igotu2gpx/mainobject.cpp:147 ../src/igotugui/mainwindow.cpp:253
-#, fuzzy
-msgid "Unable to download configuration from GPS tracker: %1"
-msgstr ""
-
-#. ts-context igotu::Common
-#: ../src/igotu2gpx/mainobject.cpp:154 ../src/igotugui/mainwindow.cpp:259
-#, fuzzy
-msgid "Downloading tracks..."
-msgstr ""
-
-#. ts-context igotu::Common
-#: ../src/igotu2gpx/mainobject.cpp:219 ../src/igotugui/mainwindow.cpp:288
-#: ../src/igotugui/mainwindow.cpp:296
-#, fuzzy
-msgid "Unable to download trackpoints from GPS tracker: %1"
-msgstr ""
-
-#. ts-context igotu::Common
-#: ../src/igotu2gpx/mainobject.cpp:226 ../src/igotugui/mainwindow.cpp:303
-#, fuzzy
-msgid "Clearing memory..."
-msgstr ""
-
-#. ts-context igotu::Common
-#: ../src/igotu2gpx/mainobject.cpp:242 ../src/igotugui/mainwindow.cpp:319
-#, fuzzy
-msgid "Unable to clear memory of GPS tracker: %1"
-msgstr ""
-
-#. ts-context igotu::Common
-#: ../src/libusb10connection/libusb10connection.cpp:250
-#: ../src/libusbconnection/libusbconnection.cpp:108
-#, fuzzy
-msgid "Interface 0 already claimed by kernel driver, detaching"
-msgstr ""
-
-#. ts-context igotu::Common
-#: ../src/igotu2gpx/igotu2gpx.cpp:80 ../src/igotugui/igotugui.cpp:81
-#, fuzzy
-msgid "output this help and exit"
-msgstr ""
-
-#. ts-context igotu::Common
-#: ../src/igotu2gpx/igotu2gpx.cpp:82 ../src/igotugui/igotugui.cpp:83
-#, fuzzy
-msgid "output version information and exit"
-msgstr ""
-
-#. ts-context igotu::Common
-#: ../src/igotu2gpx/igotu2gpx.cpp:149 ../src/igotugui/igotugui.cpp:109
-#, fuzzy
-msgid "Usage:"
 msgstr ""
 
 #. ts-context igotu::Common
@@ -805,20 +805,6 @@ msgid "Response too short: expected %1, got %2 bytes"
 msgstr ""
 
 #. ts-context igotu::IgotuCommand
-#: ../src/igotu/igotucommand.cpp:92
-#, fuzzy
-msgid "Device responded with error code: %1"
-msgstr ""
-
-#. ts-context igotu::IgotuCommand
-#: ../src/igotu/igotucommand.cpp:174 ../src/igotu/igotucommand.cpp:183
-#: ../src/igotu/igotucommand.cpp:194 ../src/igotu/igotucommand.cpp:203
-#: ../src/igotu/igotucommand.cpp:210
-#, fuzzy
-msgid "Command: %1"
-msgstr ""
-
-#. ts-context igotu::IgotuCommand
 #: ../src/igotu/igotucommand.cpp:58
 #, fuzzy
 msgid "Invalid response packet: %1"
@@ -831,9 +817,23 @@ msgid "Response data too short: expected %1, got %2 bytes"
 msgstr ""
 
 #. ts-context igotu::IgotuCommand
+#: ../src/igotu/igotucommand.cpp:92
+#, fuzzy
+msgid "Device responded with error code: %1"
+msgstr ""
+
+#. ts-context igotu::IgotuCommand
 #: ../src/igotu/igotucommand.cpp:95
 #, fuzzy
 msgid "Non-empty intermediate response packet: %1"
+msgstr ""
+
+#. ts-context igotu::IgotuCommand
+#: ../src/igotu/igotucommand.cpp:174 ../src/igotu/igotucommand.cpp:183
+#: ../src/igotu/igotucommand.cpp:194 ../src/igotu/igotucommand.cpp:203
+#: ../src/igotu/igotucommand.cpp:210
+#, fuzzy
+msgid "Command: %1"
 msgstr ""
 
 #. ts-context igotu::IgotuCommand
@@ -867,6 +867,18 @@ msgid "Failed: %1"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
+#: ../src/igotu/igotucontrol.cpp:184
+#, fuzzy
+msgid "Unable to connect via '%1'"
+msgstr ""
+
+#. ts-context igotu::IgotuControl
+#: ../src/igotu/igotucontrol.cpp:210
+#, fuzzy
+msgid "Serial number: %1"
+msgstr ""
+
+#. ts-context igotu::IgotuControl
 #: ../src/igotu/igotucontrol.cpp:212
 #, fuzzy
 msgid "Firmware version: %1"
@@ -886,85 +898,9 @@ msgid ""
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:249
-#, fuzzy
-msgid "Schedule date: %1"
-msgstr ""
-
-#. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:287
-#, fuzzy
-msgid "Start time: %1"
-msgstr ""
-
-#. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:291
-#, fuzzy
-msgid "End time: %1"
-msgstr ""
-
-#. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:295 ../src/igotu/igotucontrol.cpp:316
-#, fuzzy
-msgid "Log interval: %1 s"
-msgstr ""
-
-#. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:330
-#, fuzzy
-msgid "LEDs: %1"
-msgstr ""
-
-#. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:259 ../src/igotu/igotucontrol.cpp:331
-#: ../src/igotu/igotucontrol.cpp:335 ../src/igotu/igotucontrol.cpp:343
-#, fuzzy
-msgid "enabled"
-msgstr ""
-
-#. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:308 ../src/igotu/igotucontrol.cpp:314
-#: ../src/igotu/igotucontrol.cpp:326 ../src/igotu/igotucontrol.cpp:331
-#: ../src/igotu/igotucontrol.cpp:335 ../src/igotu/igotucontrol.cpp:344
-#, fuzzy
-msgid "disabled"
-msgstr ""
-
-#. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:184
-#, fuzzy
-msgid "Unable to connect via '%1'"
-msgstr ""
-
-#. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:210
-#, fuzzy
-msgid "Serial number: %1"
-msgstr ""
-
-#. ts-context igotu::IgotuControl
 #: ../src/igotu/igotucontrol.cpp:236
 #, fuzzy
 msgid "Number of points: %1"
-msgstr ""
-
-#. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:299 ../src/igotu/igotucontrol.cpp:306
-#: ../src/igotu/igotucontrol.cpp:319 ../src/igotu/igotucontrol.cpp:325
-#, fuzzy
-msgid "Interval change: %1"
-msgstr ""
-
-#. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:313
-#, fuzzy
-msgid "Schedule table: %1"
-msgstr ""
-
-#. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:301 ../src/igotu/igotucontrol.cpp:321
-#, fuzzy
-msgid "above %1 km/h, use %2 s"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
@@ -974,81 +910,145 @@ msgid "Uninitialized GPS tracker"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
+#: ../src/igotu/igotucontrol.cpp:249
+#, fuzzy
+msgid "Schedule date: %1"
+msgstr ""
+
+#. ts-context igotu::IgotuControl
 #: ../src/igotu/igotucontrol.cpp:252
 #, fuzzy
-msgid "Schedule date offset: %1 day(s)"
-msgid_plural "Schedule date offset: %1 day(s)"
+msgid "Schedule date offset: %n day(s)"
+msgid_plural "Schedule date offset: %n day(s)"
 msgstr[0] ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:258
+#: ../src/igotu/igotucontrol.cpp:257
 #, fuzzy
 msgid "Schedule plans: %1"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:260
+#: ../src/igotu/igotucontrol.cpp:258 ../src/igotu/igotucontrol.cpp:330
+#: ../src/igotu/igotucontrol.cpp:334 ../src/igotu/igotucontrol.cpp:342
+#, fuzzy
+msgid "enabled"
+msgstr ""
+
+#. ts-context igotu::IgotuControl
+#: ../src/igotu/igotucontrol.cpp:259
 #, fuzzy
 msgid "Schedule plans used:"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:264
+#: ../src/igotu/igotucontrol.cpp:263
 #, fuzzy
 msgid "Schedule plan order:"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:283
+#: ../src/igotu/igotucontrol.cpp:282
 #, fuzzy
 msgid "Schedule plan %1:"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:333
+#: ../src/igotu/igotucontrol.cpp:286
+#, fuzzy
+msgid "Start time: %1"
+msgstr ""
+
+#. ts-context igotu::IgotuControl
+#: ../src/igotu/igotucontrol.cpp:290
+#, fuzzy
+msgid "End time: %1"
+msgstr ""
+
+#. ts-context igotu::IgotuControl
+#: ../src/igotu/igotucontrol.cpp:294 ../src/igotu/igotucontrol.cpp:315
+#, fuzzy
+msgid "Log interval: %1 s"
+msgstr ""
+
+#. ts-context igotu::IgotuControl
+#: ../src/igotu/igotucontrol.cpp:298 ../src/igotu/igotucontrol.cpp:305
+#: ../src/igotu/igotucontrol.cpp:318 ../src/igotu/igotucontrol.cpp:324
+#, fuzzy
+msgid "Interval change: %1"
+msgstr ""
+
+#. ts-context igotu::IgotuControl
+#: ../src/igotu/igotucontrol.cpp:300 ../src/igotu/igotucontrol.cpp:320
+#, fuzzy
+msgid "above %1 km/h, use %2 s"
+msgstr ""
+
+#. ts-context igotu::IgotuControl
+#: ../src/igotu/igotucontrol.cpp:307 ../src/igotu/igotucontrol.cpp:313
+#: ../src/igotu/igotucontrol.cpp:325 ../src/igotu/igotucontrol.cpp:330
+#: ../src/igotu/igotucontrol.cpp:334 ../src/igotu/igotucontrol.cpp:343
+#, fuzzy
+msgid "disabled"
+msgstr ""
+
+#. ts-context igotu::IgotuControl
+#: ../src/igotu/igotucontrol.cpp:312
+#, fuzzy
+msgid "Schedule table: %1"
+msgstr ""
+
+#. ts-context igotu::IgotuControl
+#: ../src/igotu/igotucontrol.cpp:329
+#, fuzzy
+msgid "LEDs: %1"
+msgstr ""
+
+#. ts-context igotu::IgotuControl
+#: ../src/igotu/igotucontrol.cpp:332
 #, fuzzy
 msgid "Button: %1"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:338
+#: ../src/igotu/igotucontrol.cpp:337
 #, fuzzy
 msgid "Security version: %1"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:341
+#: ../src/igotu/igotucontrol.cpp:340
 #, fuzzy
 msgid "Password: %1, [%2]"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:380 ../src/igotu/igotucontrol.cpp:425
+#: ../src/igotu/igotucontrol.cpp:379 ../src/igotu/igotucontrol.cpp:424
 #, fuzzy
 msgid "Cancelled"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:391
+#: ../src/igotu/igotucontrol.cpp:390
 #, fuzzy
 msgid "Invalid data"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:410
+#: ../src/igotu/igotucontrol.cpp:409
 #, fuzzy
 msgid "No device specified"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:433 ../src/igotu/igotucontrol.cpp:455
-#: ../src/igotu/igotucontrol.cpp:474 ../src/igotu/igotucontrol.cpp:495
+#: ../src/igotu/igotucontrol.cpp:432 ../src/igotu/igotucontrol.cpp:454
+#: ../src/igotu/igotucontrol.cpp:473 ../src/igotu/igotucontrol.cpp:494
 #, fuzzy
 msgid "Command timeout"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:502
+#: ../src/igotu/igotucontrol.cpp:501
 #, fuzzy
 msgid ""
 "%1: Unable to clear memory of this GPS tracker model. Instructions how to "

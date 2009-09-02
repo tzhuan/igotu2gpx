@@ -106,9 +106,9 @@ int main(int argc, char *argv[])
             return 0;
         }
         if (variables.count("help")) {
-            Messages::textOutput(Common::tr("Usage:"));
-            Messages::textOutput(MainWindow::tr("%1 [OPTIONS...]")
-                .arg(QFileInfo(app.applicationFilePath()).fileName()));
+            Messages::textOutput(Common::tr("Usage: %1")
+                    .arg(MainWindow::tr("%1 [OPTIONS...]")
+                        .arg(QFileInfo(app.applicationFilePath()).fileName())));
             std::cout << options << "\n";
             return 1;
         }
