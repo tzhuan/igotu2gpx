@@ -54,13 +54,20 @@ for(pofile, pofiles) {
 }
 for(tsfile, tsfiles) {
     qmfiles *= $$replace(tsfile, '\.ts$', '.qm')
+    win32:tsrelease += lrelease $$tsfile &&
 }
+win32 {
+    tsrelease += cd .
+} else {
+    tsrelease = lrelease translations/igotu2gpx_*.ts
+}
+
 
 porelease.commands = $$poconvertcommand
 QMAKE_EXTRA_TARGETS *= porelease
 
 locale.files = $$qmfiles
 locale.path = $$TRANSLATIONDIR
-locale.extra = lrelease translations/igotu2gpx_*.ts
+locale.extra = $$tsrelease
 locale.CONFIG *= no_check_exist
 INSTALLS *= locale
