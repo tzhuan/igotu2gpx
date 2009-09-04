@@ -48,9 +48,9 @@ win32 {
     win32-g++|win32-x-g++*:installfiles *= mingwm10.dll
     win32-x-g++-4.2:installfiles *= libgcc_sjlj_1.dll libstdc++_sjlj_6.dll
     CONFIG(debug, debug|release) {
-        installfiles *= QtCored4.dll QtGuid4.dll QtXmld4.dll QtNetworkd4.dll QtSvgd4.dll
+        installfiles *= QtCored4.dll QtGuid4.dll QtXmld4.dll QtNetworkd4.dll QtSvgd4.dll QtWebKitd4.dll
     } else {
-        installfiles *= QtCore4.dll QtGui4.dll QtXml4.dll QtNetwork4.dll QtSvg4.dll
+        installfiles *= QtCore4.dll QtGui4.dll QtXml4.dll QtNetwork4.dll QtSvg4.dll QtWebKit4.dll
     }
                             
     # native bin path for mingwm10.dll
