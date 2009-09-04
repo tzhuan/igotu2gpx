@@ -128,8 +128,10 @@ ListVisualizer::ListVisualizer(TrackVisualizerCreator::AppearanceMode mode,
 void ListVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset)
 {
     QList<QTreeWidgetItem*> items;
-    const QList<QList<IgotuPoint> > tracks =  points.tracks();
+    const QList<QList<IgotuPoint> > tracks = points.tracks();
     Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
+        if (track.isEmpty())
+            continue;
         QString date = track.at(0).humanDateTimeString(utcOffset);
         QStringList data;
         data << date;
@@ -151,7 +153,8 @@ void ListVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset)
     for (unsigned i = 0; i < 3; ++i)
         trackList->resizeColumnToContents(i);
 
-    highlightTrack(tracks.at(0));
+    if (!tracks.isEmpty())
+        highlightTrack(tracks.at(0));
 }
 
 QString ListVisualizer::tabTitle() const
@@ -164,7 +167,7 @@ void ListVisualizer::highlightTrack(const QList<igotu::IgotuPoint> &track)
     if (track.isEmpty())
         return;
 
-    IgotuPoint firstPoint = track[0];
+    IgotuPoint firstPoint = track.at(0);
     for (unsigned i = 0; i < unsigned(trackList->topLevelItemCount()); ++i) {
         const QList<IgotuPoint> track = trackList->topLevelItem(i)->data(0,
                 Qt::UserRole).value<QList<IgotuPoint> >();
@@ -181,6 +184,7 @@ void ListVisualizer::on_trackList_activated(const QModelIndex &index)
 {
     if (!index.isValid())
         return;
+
     const QList<IgotuPoint> track = index.sibling(index.row(),
             0).data(Qt::UserRole).value<QList<IgotuPoint> >();
     emit trackActivated(track);

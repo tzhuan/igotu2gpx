@@ -175,6 +175,9 @@ QString MarbleVisualizer::tabTitle() const
 
 void MarbleVisualizer::highlightTrack(const QList<IgotuPoint> &track)
 {
+    if (track.isEmpty())
+        return;
+
     tracks->setCenterLongitude(track.at(0).longitude());
     tracks->setCenterLatitude(track.at(0).latitude());
 }
@@ -214,6 +217,8 @@ QByteArray MarbleVisualizer::pointsToKml(const QList<IgotuPoint> &wayPoints,
 
     unsigned trackCounter = 1;
     Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
+        if (track.isEmpty())
+            continue;
         out << "<Placemark>\n"
                "<name>" << tr("Track %1").arg(trackCounter++) << "</name>\n"
                "<Point>\n"
@@ -226,6 +231,8 @@ QByteArray MarbleVisualizer::pointsToKml(const QList<IgotuPoint> &wayPoints,
 
     out << "<Folder>\n";
     Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
+        if (track.isEmpty())
+            continue;
         out << "<Placemark>\n"
                "<styleUrl>#line</styleUrl>\n";
 

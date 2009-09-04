@@ -272,7 +272,7 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
 {
     try {
         lastTrackPoints.reset(new IgotuPoints(contents, count));
-        ui->actionSave->setEnabled(true);
+        ui->actionSave->setEnabled(count > 0);
 
         QString errorMessage;
         Q_FOREACH (TrackVisualizer *visualizer, visualizers) {
@@ -354,12 +354,17 @@ void MainWindowPrivate::abortBackgroundAction(const QString &text)
 
 void MainWindowPrivate::trackActivated(const QList<IgotuPoint> &track)
 {
+    if (visualizers.isEmpty())
+        return;
     visualizers[0]->highlightTrack(track);
 }
 
 void MainWindowPrivate::saveTracksRequested
         (const QList<QList<igotu::IgotuPoint> > &tracks)
 {
+    if (tracks.isEmpty())
+        return;
+
     try {
         const QDateTime date = tracks.count() == 1 ?
             tracks[0].at(0).dateTime() : QDateTime::currentDateTime();
