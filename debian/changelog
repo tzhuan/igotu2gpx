@@ -1,3 +1,16 @@
+igotu2gpx (0.2.91-0) UNRELEASED; urgency=low
+
+  * Released the first release candidate of igotu2gpx 0.3.0.
+  * Changes since version 0.2.3:
+    - Localization
+    - Update notifications
+    - Reworked GUI
+    - GT120/GT200 purge support
+    - Export with offset to UTC
+
+
+ -- Michael Hofmann <mh21@piware.de>  Sat, 05 Sep 2009 00:25:25 +0200
+
 igotu2gpx (0.2.2-1ubuntu1) jaunty; urgency=low
 
   * Linux icon fix.

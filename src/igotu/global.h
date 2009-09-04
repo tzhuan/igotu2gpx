@@ -21,7 +21,7 @@
 
 #include <QtGlobal>
 
-#define IGOTU_VERSION_STR "0.2.90"
+#define IGOTU_VERSION_STR "0.2.91"
 
 #define GCC_VERSION (__GNUC__ * 100                                         \
                    + __GNUC_MINOR__ * 10                                    \
