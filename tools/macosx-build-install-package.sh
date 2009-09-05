@@ -20,7 +20,7 @@ PLUGINS="$CONTENTS"/PlugIns
 make
 rm -rf "$APP" "$DMG"
 mkdir -p "$FRAMEWORKS" "$RESOURCES" "$MACOS" "$PLUGINS"
-mkdir -p "$RESOURCES"/marble/maps/earth "$RESOURCES"/marble/svg "$RESOURCES"/marble/placemarks "$RESOURCES"/marble/stars "$RESOURCES"/marble/mwdbii "$RESOURCES"/marble/bitmaps "$PLUGINS"/marble
+mkdir -p "$RESOURCES"/marble/maps/earth "$RESOURCES"/marble/svg "$RESOURCES"/marble/placemarks "$RESOURCES"/marble/stars "$RESOURCES"/marble/mwdbii "$RESOURCES"/marble/bitmaps "$PLUGINS"/marble "$RESOURCES"/locale
 cp "$SOURCE"/"$GUI" "$MACOS"
 cp "$SOURCE"/"$CMDLINE" "$MACOS"
 cp "$SOURCE"/libigotu.1.dylib "$FRAMEWORKS"
@@ -29,6 +29,7 @@ cp "$SOURCE"/lib*connection.dylib "$PLUGINS"
 cp data/mac/igotugui.icns "$RESOURCES"/igotu2gpx.icns
 cp -R data/icons "$RESOURCES"
 cp -R contrib/tango/icons "$RESOURCES"
+cp translations/*.qm "$RESOURCES"/locale
 cp LICENSE "$RESOURCES"
 
 cat > "$CONTENTS"/Info.plist << EOF
