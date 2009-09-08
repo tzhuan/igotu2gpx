@@ -60,7 +60,7 @@ public:
 
     enum Model {
         Unknown,
-        // Gt100,
+        Gt100,
         Gt120,
         Gt200
     };

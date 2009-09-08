@@ -112,6 +112,10 @@ QByteArray ModelCommand::sendAndReceive()
     id = Unknown;
     if (part1 == 0xC220) {
         switch (part2) {
+        case 0x13:
+            name = IgotuCommand::tr("GT-100");
+            id = Gt100;
+            break;
         case 0x14:
             name = IgotuCommand::tr("GT-200");
             id = Gt200;
