@@ -23,6 +23,7 @@
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QHttp>
+#include <QProcess>
 #include <QSettings>
 #include <QTemporaryFile>
 #include <QUrl>
@@ -38,14 +39,19 @@ public:
     QString ignoredVersion() const;
     bool newerVersion(const QString &oldVersion, const QString &newVersion) const;
 
+    void requestReleases(const QString &os);
     void setLastCheck();
 
 public Q_SLOTS:
     void on_http_done(bool error);
+    void on_lsbRelease_finished(int exitCode, QProcess::ExitStatus exitStatus);
+    void on_lsbRelease_error();
 
 public:
     UpdateNotification *p;
     QHttp *http;
+    QProcess *lsbRelease;
+    bool lsbReleaseError;
     UpdateNotification::Type type;
 };
 
@@ -59,7 +65,6 @@ QString UpdateNotificationPrivate::releaseUrl() const
 {
     return QSettings().value(NOTIFY_URL,
             QLatin1String("http://mh21.de/igotu2gpx/releases.txt")).toString();
-
 }
 
 QDateTime UpdateNotificationPrivate::lastCheck() const
@@ -97,6 +102,16 @@ bool UpdateNotificationPrivate::newerVersion(const QString &oldVersion,
     return false;
 }
 
+void UpdateNotificationPrivate::requestReleases(const QString &os)
+{
+    QUrl url = releaseUrl();
+    url.addQueryItem(QLatin1String("os"), os);
+    http->setHost(url.host(), url.scheme() == QLatin1String("https") ?
+            QHttp::ConnectionModeHttps : QHttp::ConnectionModeHttp,
+            url.port(0));
+    http->get(QString::fromAscii(url.toEncoded()));
+}
+
 void UpdateNotificationPrivate::on_http_done(bool error)
 {
     if (error) {
@@ -105,7 +120,7 @@ void UpdateNotificationPrivate::on_http_done(bool error)
         return;
     }
 
-    // TODO: secure cryptographically, e.g. with SSL or a RSA signature
+    // TODO: secure cryptographically, e.g. with SSL or an RSA signature
     QTemporaryFile iniFile;
     if (!iniFile.open()) {
         qWarning("Unable to create temporary update file: %s",
@@ -154,6 +169,33 @@ void UpdateNotificationPrivate::on_http_done(bool error)
             settings.value(QLatin1String("name")).toString(), url);
 }
 
+void UpdateNotificationPrivate::on_lsbRelease_error()
+{
+    if (lsbReleaseError)
+        return;
+
+    lsbReleaseError = true;
+    requestReleases(QLatin1String("unknown"));
+}
+
+void UpdateNotificationPrivate::on_lsbRelease_finished(int exitCode,
+        QProcess::ExitStatus exitStatus)
+{
+    if (lsbReleaseError)
+        return;
+
+    if (exitCode != 0 || exitStatus != QProcess::NormalExit) {
+        on_lsbRelease_error();
+        return;
+    }
+
+    QString os = QString::fromLocal8Bit(lsbRelease
+            ->readAllStandardOutput()).trimmed();
+    os.replace(QRegExp(QLatin1String("^\"(.*)\"$")), QLatin1String("\\1"));
+
+    requestReleases(os);
+}
+
 // UpdateNotification ==========================================================
 
 UpdateNotification::UpdateNotification(QObject *parent) :
@@ -166,6 +208,9 @@ UpdateNotification::UpdateNotification(QObject *parent) :
 
     d->http = new QHttp(this);
     d->http->setObjectName(QLatin1String("http"));
+
+    d->lsbRelease = new QProcess(this);
+    d->lsbRelease->setObjectName(QLatin1String("lsbRelease"));
 
     connectSlotsByNameToPrivate(this, d.get());
 }
@@ -181,11 +226,17 @@ void UpdateNotification::runScheduledCheck()
         lastCheck.secsTo(QDateTime::currentDateTime()) < 7 * 24 * 60 * 60)
         return;
 
-    const QUrl url = d->releaseUrl();
-    d->http->setHost(url.host(), url.scheme() == QLatin1String("https") ?
-            QHttp::ConnectionModeHttps : QHttp::ConnectionModeHttp,
-            url.port(0));
-    d->http->get(QString::fromAscii(QUrl(d->releaseUrl()).toEncoded()));
+    QString version;
+#if defined(Q_OS_WIN32)
+    d->requestReleases(QString::fromLatin1("win-0x%1")
+            .arg(QSysInfo::WindowsVersion, 4, 10, QLatin1Char('0')));
+#elif defined(Q_OS_MAC)
+    d->requestReleases(QString::fromLatin1("mac-0x%1")
+            .arg(QSysInfo::MacintoshVersion, 4, 10, QLatin1Char('0')));
+#else
+    d->lsbReleaseError = false;
+    d->lsbRelease->start(QLatin1String("lsb_release -ds"));
+#endif
 }
 
 void UpdateNotification::setIgnoredVersion(const QString &version)
