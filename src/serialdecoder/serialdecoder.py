@@ -95,9 +95,9 @@ with open(sys.argv[1], 'r') as f:
                 responseline = True
                 continue
         else:
-            tokens = line.rstrip().split('\t')
+            tokens = line.split('\t')
             command = tokens[3]
-            data = tokens[6]
+            data = tokens[6].rstrip()
         if command == 'IRP_MJ_WRITE':
             if len(writedata) > 0:
                 parts += [{'query': writedata, 'response': readdata}]
