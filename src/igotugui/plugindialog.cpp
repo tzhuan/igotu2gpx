@@ -114,9 +114,21 @@ void PluginDialogPrivate::scanPlugins()
         }
     }
 
+    QStringList ignored;
+#if defined(Q_OS_LINUX)
+    ignored << QLatin1String("libigotu.so");
+#elif defined(Q_OS_WIN32)
+    ignored << QLatin1String("igotu.dll");
+#elif defined(Q_OS_MACX)
+    // TODO: does this catch all dll links on Mac OS X?
+    ignored << QLatin1String("libigotu.dylib");
+#endif
+
     QMapIterator<QString, QString> i(PluginLoader().pluginsWithErrors());
     while (i.hasNext()) {
         i.next();
+        if (ignored.contains(QFileInfo(i.key()).fileName()))
+            continue;
         add(NULL, PluginDialog::tr("Invalid plugins"),
                 PluginDialog::tr("unknown"), i.value(), i.key());
     }
