@@ -76,14 +76,14 @@ msgid "Save selected tracks..."
 msgstr ""
 
 #. ts-context ListVisualizer
-#: ../src/listvisualizer/listvisualizer.cpp:139
+#: ../src/listvisualizer/listvisualizer.cpp:141
 #, fuzzy
 msgid "%n point(s)"
 msgid_plural "%n point(s)"
 msgstr[0] ""
 
 #. ts-context ListVisualizer
-#: ../src/listvisualizer/listvisualizer.cpp:159
+#: ../src/listvisualizer/listvisualizer.cpp:162
 #, fuzzy
 msgid "Track list"
 msgstr ""
@@ -398,37 +398,37 @@ msgid "Go to Download Page"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:367
+#: ../src/igotugui/mainwindow.cpp:372
 #, fuzzy
 msgid "Save GPS Tracks"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:370
+#: ../src/igotugui/mainwindow.cpp:375
 #, fuzzy
 msgid "GPX files (*.gpx)"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:377
+#: ../src/igotugui/mainwindow.cpp:382
 #, fuzzy
 msgid "Unable to create file: %1"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:383
+#: ../src/igotugui/mainwindow.cpp:388
 #, fuzzy
 msgid "Unable to save file: %1"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:386
+#: ../src/igotugui/mainwindow.cpp:391
 #, fuzzy
 msgid "File Error"
 msgstr ""
 
 #. ts-context MainWindow
-#: ../src/igotugui/mainwindow.cpp:387
+#: ../src/igotugui/mainwindow.cpp:392
 #, fuzzy
 msgid "Unable to save tracks: %1"
 msgstr ""
@@ -446,13 +446,13 @@ msgid "Map"
 msgstr ""
 
 #. ts-context MarbleVisualizer
-#: ../src/marblevisualizer/marblevisualizer.cpp:205
+#: ../src/marblevisualizer/marblevisualizer.cpp:208
 #, fuzzy
 msgid "Waypoint %1"
 msgstr ""
 
 #. ts-context MarbleVisualizer
-#: ../src/marblevisualizer/marblevisualizer.cpp:218
+#: ../src/marblevisualizer/marblevisualizer.cpp:223
 #, fuzzy
 msgid "Track %1"
 msgstr ""
@@ -482,19 +482,19 @@ msgid "Unknown plugins"
 msgstr ""
 
 #. ts-context PluginDialog
-#: ../src/igotugui/plugindialog.cpp:113 ../src/igotugui/plugindialog.cpp:121
+#: ../src/igotugui/plugindialog.cpp:113 ../src/igotugui/plugindialog.cpp:133
 #, fuzzy
 msgid "unknown"
 msgstr ""
 
 #. ts-context PluginDialog
-#: ../src/igotugui/plugindialog.cpp:120
+#: ../src/igotugui/plugindialog.cpp:132
 #, fuzzy
 msgid "Invalid plugins"
 msgstr ""
 
 #. ts-context PluginDialog
-#: ../src/igotugui/plugindialog.cpp:151
+#: ../src/igotugui/plugindialog.cpp:163
 #, fuzzy
 msgid "Refresh plugins"
 msgstr ""
@@ -750,7 +750,7 @@ msgstr ""
 
 #. ts-context igotu::IgotuCommand
 #: ../src/igotu/commands.cpp:68 ../src/igotu/commands.cpp:104
-#: ../src/igotu/commands.cpp:155
+#: ../src/igotu/commands.cpp:159
 #, fuzzy
 msgid "Response too short"
 msgstr ""
@@ -764,17 +764,23 @@ msgstr ""
 #. ts-context igotu::IgotuCommand
 #: ../src/igotu/commands.cpp:116
 #, fuzzy
-msgid "GT-200"
+msgid "GT-100"
 msgstr ""
 
 #. ts-context igotu::IgotuCommand
 #: ../src/igotu/commands.cpp:120
 #, fuzzy
+msgid "GT-200"
+msgstr ""
+
+#. ts-context igotu::IgotuCommand
+#: ../src/igotu/commands.cpp:124
+#, fuzzy
 msgid "GT-120"
 msgstr ""
 
 #. ts-context igotu::IgotuCommand
-#: ../src/igotu/commands.cpp:179
+#: ../src/igotu/commands.cpp:183
 #, fuzzy
 msgid ""
 "Please file a bug at https://bugs.launchpad.net/igotu2gpx/+filebug if the "
@@ -786,14 +792,14 @@ msgid ""
 msgstr ""
 
 #. ts-context igotu::IgotuCommand
-#: ../src/igotu/commands.cpp:216 ../src/igotu/commands.cpp:286
+#: ../src/igotu/commands.cpp:220 ../src/igotu/commands.cpp:290
 #, fuzzy
 msgid "Wrong response length"
 msgstr ""
 
 #. ts-context igotu::IgotuCommand
-#: ../src/igotu/commands.cpp:265 ../src/igotu/commands.cpp:305
-#: ../src/igotu/commands.cpp:322
+#: ../src/igotu/commands.cpp:269 ../src/igotu/commands.cpp:309
+#: ../src/igotu/commands.cpp:326
 #, fuzzy
 msgid "Response too long"
 msgstr ""

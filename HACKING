@@ -90,16 +90,21 @@ NmeaSwitchCommand:
   Response:        93 00 00
   Command chunk 2: 00 00 00 00 00 00 00 SS
   Response:        93 00 00
-  XX: 00 to enable, 03 to disable NMEA output
+  XX: 
+    00 GPS Dongle mode (NMEA)
+    01 GPS Tracer mode (normal trackpoint recording)
+    03 GPS Configure mode (no NMEA)
 
 IdentificationCommand:
   Command chunk 1: 93 0A 00 00 00 00 00 00
   Response:        93 00 00
   Command chunk 2: 00 00 00 00 00 00 00 SS
-  Response:        93 00 0A XX XX XX XX YY ZZ ?? ?? ?? ??
+  Response:        93 00 0A XX XX XX XX YY ZZ MM MM UU UU
   XX: little endian serial number
   YY: major version number
   ZZ: minor version number
+  MM: model number (01 for GT100/GT120, 02 for GT200)?
+  UU: USB library version
 
 CountCommand (number of data points):
   Command chunk 1: 93 0B 03 00 1D 00 00 00
@@ -123,7 +128,7 @@ ModelCommand:
   Command chunk 2: 00 00 00 00 00 00 00 SS
   Response:        93 00 03 XX XX YY
   XX: always C220?
-  YY: 14 for GT-120, 15 for GT-200
+  YY: 13 for GT-100, 14 for GT-120, 15 for GT-200
 
 Internal memory read? (used for model type):
   Command chunk 1: 93 05 04 XX XX 01 9F 00
@@ -205,6 +210,17 @@ Command used after write (not tested):
   Response:        93 00 00
 ----
 
+----
+BC4 off mode:
+  Command chunk 1: 93 01 XX 04 HH MM LL 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 00 00
+  XX: 
+    01 log time = 0
+    04 log time > 0
+  HH, MM, LL: logtime (seconds)?
+
 Purge
 -----
 
@@ -273,12 +289,24 @@ Configuration data:
   0x0000: uint8 number of schedule table plans (1 if no schedule used)
   0x0001: uint16 first schedule day (days since 01.01.2000 + 1)
   0x0003: uint8 flags
+          0x01: debug mode (save extra records for debugging, fw 2.15)
+          0x02: recycle record if memory full (fw 2.15)
           0x04: schedule enabled
-          0x40: button disabled
-          0x80: LEDs disabled
-  ...
-  0x0008: uint8 schedule date offset?
-  0x0009..0x00ff: uint4 schedule table plans (1 if no schedule used, one-based)
+          0x08: GT200e dual mode
+          0x10: obsolete
+          0x20: schedule is repeat?
+          0x40: button disabled (gated by password command?)
+          0x80: LED flashing when valid data is recorded is disabled
+  0x0004: uint8 max allowed time when button is pushed and start tracer mode?
+  0x0005: uint8 initial timeout when button is pushed and start tracer mode?
+  0x0004: uint8 max allowed time when RTC power of GPS is lost (data/time is
+          not a valid value)
+  0x0005: uint8 initial timeout when RTC power of GPS is lost (data/time is 
+          not a valid value)
+  0x0008: uint8 schedule date offset: start date = utc date + offset
+  0x0009..0x00ff: uint4 schedule table plans (1 if no schedule used,
+          one-based), if terminated with 0 recording is stopped, 0xff means
+          loop from beginning
 
   0x0100: schedule table entries for plan 1 (normally Sunday, no schedule)
   0x0200: schedule table entries for plan 2 (normally Monday)
@@ -310,18 +338,23 @@ Schedule table entries are stored in records of 0x40 bytes:
 Trackpoints are stored in records of 0x20 bytes:
 ----
   0x00: uint8 flags
-        0x04: waypoint    (type = -1)
-        0x20: ignored     (type = -4)
-        0x40: track start (type = -2)
+        0x01: RTC calibration log (only in debug mode)
+        0x02: time out log
+        0x04: normal log (0) or waypoint log (1)   (type = -1)
+        0x08: timeout > ok criteria?
+        0x10: navigation data invalid
+        0x20: track stop                           (type = -4)
+        0x40: track start                          (type = -2)
+        0x80: debug mode (64 byte trackpoints)
   0x01: uint8 YYYYMMMM
-        YY year - 2000
+        YY year - 2000 (modulo 16)
         MM month (starting with 1)
   0x02: uint16b DDDDDHHHHHMMMMMM
         DD day of month (starting with 1)
         HH hour
         MM minute
   0x04: uint16b seconds * 1000 + milliseconds
-  0x06: uint16b: AAAAEEEEEEEEEEEE
+  0x06: uint16b AAAAEEEEEEEEEEEE
         AA unknown, found values 0 (common) and 1 (for flags = 0x12)
         EE EHPE * 1e2 / 16 (in m)
   0x08: uint32b satellite map (one bit per satellite)
@@ -331,7 +364,10 @@ Trackpoints are stored in records of 0x20 bytes:
   0x18: uint16b speed * 1e2 (in m/s)
   0x1a: uint16b course * 1e2 (in degrees)
   0x1c: uint8 timeout in s
-  0x1d: uint8 MSVs_QCN
+  0x1d: uint8 SSSSCCCC
+        SS maximum found SV for this record
+        CC qualified satellite number with C/N value > criteria
   0x1e: uint8 weight criteria
-  0x1f: uint8 sleep time
+  0x1f: uint8 qualified satellite number with C/N value > criteria? or sleep
+        time (unit 16s, debug mode)
 ----
