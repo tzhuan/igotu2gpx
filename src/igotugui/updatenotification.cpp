@@ -241,7 +241,7 @@ void UpdateNotificationPrivate::on_http_done(bool error)
     QSettings settings(iniFile.fileName(), QSettings::IniFormat);
 
     QString newestVersion = QLatin1String(IGOTU_VERSION_STR);
-    Q_FOREACH(const QString group, settings.childGroups()) {
+    Q_FOREACH (const QString group, settings.childGroups()) {
         settings.beginGroup(group);
         if (settings.contains(QLatin1String("version")) &&
             settings.contains(QLatin1String("name")) &&

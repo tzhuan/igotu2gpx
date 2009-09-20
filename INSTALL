@@ -14,6 +14,7 @@ To compile igotu2gpx, you need:
 - chrpath (on Linux, optional, makes it possible to run the program without
   installation)
 - marble (http://edu.kde.org/marble, optional, openstreetmap display of tracks)
+- openssl (on Windows already on install, otherwise only at runtime, http://openssl.org)
 
 On a Ubuntu system, this should get you the dependencies:
 ----

@@ -1,5 +1,6 @@
 CLEBS_REQUIRED *= qtversion430 boost-po
 CLEBS_SUGGESTED *= libmarble
+win32:CLEBS_REQUIRED *= libopenssl
 unix:CLEBS_SUGGESTED *=  libusb
 unix:!macx:CLEBS_SUGGESTED *= libusb10 chrpath
 
