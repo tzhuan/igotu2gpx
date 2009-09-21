@@ -1,6 +1,6 @@
 BASEDIR = ../..
 CLEBS *= buildplugin dataconnection libigotu
-TARGET = libserialconnection
+TARGET = serialconnection
 
 include($$BASEDIR/clebs.pri)
 

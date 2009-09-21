@@ -1,6 +1,6 @@
 BASEDIR = ../..
 CLEBS *= buildplugin dataconnection libusb10 libigotu
-TARGET = usb10connection
+TARGET = libusb10connection
 
 include($$BASEDIR/clebs.pri)
 
