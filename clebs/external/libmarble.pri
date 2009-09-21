@@ -94,7 +94,7 @@ clebsInstall(libmarble) {
             marbleplacemarksinstall.files *= $${MARBLELIBDIR_RELEASE}/data/placemarks/b*.cache
 	}
 	marbleinstall.path = $$BINDIR
-	marblepluginsinstall.path = $$BINDIR/plugins
+	marblepluginsinstall.path = $$BINDIR/marble
 	marbledatainstall.path = $$DATADIR/marble
         marblemapsinstall.path = $$DATADIR/marble/maps/earth
         marblesvginstall.path = $$DATADIR/marble/svg

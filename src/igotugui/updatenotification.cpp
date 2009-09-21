@@ -25,6 +25,8 @@
 #include <QHttp>
 #include <QProcess>
 #include <QSettings>
+#include <QSslError>
+#include <QSslSocket>
 #include <QTemporaryFile>
 #include <QUrl>
 
@@ -43,6 +45,7 @@ public:
     void setLastCheck();
 
 public Q_SLOTS:
+    void on_http_sslErrors(const QList<QSslError> &errors);
     void on_http_done(bool error);
     void on_lsbRelease_finished(int exitCode, QProcess::ExitStatus exitStatus);
     void on_lsbRelease_error();
@@ -59,12 +62,96 @@ public:
 #define NOTIFY_LAST QLatin1String("Updates/lastCheck")
 #define NOTIFY_IGNORE QLatin1String("Updates/ignoreVersion")
 
+#define DEFAULT_RELEASE_URL QLatin1String("https://mh21.de/igotu2gpx/releases.txt")
+
+// CAcert is not included per default, but the certificate at mh21.de
+// is signed by it
+
+const char rootCaCert[] =
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIIHPTCCBSWgAwIBAgIBADANBgkqhkiG9w0BAQQFADB5MRAwDgYDVQQKEwdSb290\n"
+    "IENBMR4wHAYDVQQLExVodHRwOi8vd3d3LmNhY2VydC5vcmcxIjAgBgNVBAMTGUNB\n"
+    "IENlcnQgU2lnbmluZyBBdXRob3JpdHkxITAfBgkqhkiG9w0BCQEWEnN1cHBvcnRA\n"
+    "Y2FjZXJ0Lm9yZzAeFw0wMzAzMzAxMjI5NDlaFw0zMzAzMjkxMjI5NDlaMHkxEDAO\n"
+    "BgNVBAoTB1Jvb3QgQ0ExHjAcBgNVBAsTFWh0dHA6Ly93d3cuY2FjZXJ0Lm9yZzEi\n"
+    "MCAGA1UEAxMZQ0EgQ2VydCBTaWduaW5nIEF1dGhvcml0eTEhMB8GCSqGSIb3DQEJ\n"
+    "ARYSc3VwcG9ydEBjYWNlcnQub3JnMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIIC\n"
+    "CgKCAgEAziLA4kZ97DYoB1CW8qAzQIxL8TtmPzHlawI229Z89vGIj053NgVBlfkJ\n"
+    "8BLPRoZzYLdufujAWGSuzbCtRRcMY/pnCujW0r8+55jE8Ez64AO7NV1sId6eINm6\n"
+    "zWYyN3L69wj1x81YyY7nDl7qPv4coRQKFWyGhFtkZip6qUtTefWIonvuLwphK42y\n"
+    "fk1WpRPs6tqSnqxEQR5YYGUFZvjARL3LlPdCfgv3ZWiYUQXw8wWRBB0bF4LsyFe7\n"
+    "w2t6iPGwcswlWyCR7BYCEo8y6RcYSNDHBS4CMEK4JZwFaz+qOqfrU0j36NK2B5jc\n"
+    "G8Y0f3/JHIJ6BVgrCFvzOKKrF11myZjXnhCLotLddJr3cQxyYN/Nb5gznZY0dj4k\n"
+    "epKwDpUeb+agRThHqtdB7Uq3EvbXG4OKDy7YCbZZ16oE/9KTfWgu3YtLq1i6L43q\n"
+    "laegw1SJpfvbi1EinbLDvhG+LJGGi5Z4rSDTii8aP8bQUWWHIbEZAWV/RRyH9XzQ\n"
+    "QUxPKZgh/TMfdQwEUfoZd9vUFBzugcMd9Zi3aQaRIt0AUMyBMawSB3s42mhb5ivU\n"
+    "fslfrejrckzzAeVLIL+aplfKkQABi6F1ITe1Yw1nPkZPcCBnzsXWWdsC4PDSy826\n"
+    "YreQQejdIOQpvGQpQsgi3Hia/0PsmBsJUUtaWsJx8cTLc6nloQsCAwEAAaOCAc4w\n"
+    "ggHKMB0GA1UdDgQWBBQWtTIb1Mfz4OaO873SsDrusjkY0TCBowYDVR0jBIGbMIGY\n"
+    "gBQWtTIb1Mfz4OaO873SsDrusjkY0aF9pHsweTEQMA4GA1UEChMHUm9vdCBDQTEe\n"
+    "MBwGA1UECxMVaHR0cDovL3d3dy5jYWNlcnQub3JnMSIwIAYDVQQDExlDQSBDZXJ0\n"
+    "IFNpZ25pbmcgQXV0aG9yaXR5MSEwHwYJKoZIhvcNAQkBFhJzdXBwb3J0QGNhY2Vy\n"
+    "dC5vcmeCAQAwDwYDVR0TAQH/BAUwAwEB/zAyBgNVHR8EKzApMCegJaAjhiFodHRw\n"
+    "czovL3d3dy5jYWNlcnQub3JnL3Jldm9rZS5jcmwwMAYJYIZIAYb4QgEEBCMWIWh0\n"
+    "dHBzOi8vd3d3LmNhY2VydC5vcmcvcmV2b2tlLmNybDA0BglghkgBhvhCAQgEJxYl\n"
+    "aHR0cDovL3d3dy5jYWNlcnQub3JnL2luZGV4LnBocD9pZD0xMDBWBglghkgBhvhC\n"
+    "AQ0ESRZHVG8gZ2V0IHlvdXIgb3duIGNlcnRpZmljYXRlIGZvciBGUkVFIGhlYWQg\n"
+    "b3ZlciB0byBodHRwOi8vd3d3LmNhY2VydC5vcmcwDQYJKoZIhvcNAQEEBQADggIB\n"
+    "ACjH7pyCArpcgBLKNQodgW+JapnM8mgPf6fhjViVPr3yBsOQWqy1YPaZQwGjiHCc\n"
+    "nWKdpIevZ1gNMDY75q1I08t0AoZxPuIrA2jxNGJARjtT6ij0rPtmlVOKTV39O9lg\n"
+    "18p5aTuxZZKmxoGCXJzN600BiqXfEVWqFcofN8CCmHBh22p8lqOOLlQ+TyGpkO/c\n"
+    "gr/c6EWtTZBzCDyUZbAEmXZ/4rzCahWqlwQ3JNgelE5tDlG+1sSPypZt90Pf6DBl\n"
+    "Jzt7u0NDY8RD97LsaMzhGY4i+5jhe1o+ATc7iwiwovOVThrLm82asduycPAtStvY\n"
+    "sONvRUgzEv/+PDIqVPfE94rwiCPCR/5kenHA0R6mY7AHfqQv0wGP3J8rtsYIqQ+T\n"
+    "SCX8Ev2fQtzzxD72V7DX3WnRBnc0CkvSyqD/HMaMyRa+xMwyN2hzXwj7UfdJUzYF\n"
+    "CpUCTPJ5GhD22Dp1nPMd8aINcGeGG7MW9S/lpOt5hvk9C8JzC6WZrG/8Z7jlLwum\n"
+    "GCSNe9FINSkYQKyTYOGWhlC0elnYjyELn8+CkcY7v2vcB5G5l1YjqrZslMZIBjzk\n"
+    "zk6q5PYvCdxTby78dOs6Y5nCpqyJvKeyRKANihDjbPIky/qbn3BHLt4Ui9SyIAmW\n"
+    "omTxJBzcoTWcFbLUvFUufQb1nA5V9FrWk9p2rSVzTMVD\n"
+    "-----END CERTIFICATE-----\n";
+
+const char class3CaCert[] =
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIIGCDCCA/CgAwIBAgIBATANBgkqhkiG9w0BAQQFADB5MRAwDgYDVQQKEwdSb290\n"
+    "IENBMR4wHAYDVQQLExVodHRwOi8vd3d3LmNhY2VydC5vcmcxIjAgBgNVBAMTGUNB\n"
+    "IENlcnQgU2lnbmluZyBBdXRob3JpdHkxITAfBgkqhkiG9w0BCQEWEnN1cHBvcnRA\n"
+    "Y2FjZXJ0Lm9yZzAeFw0wNTEwMTQwNzM2NTVaFw0zMzAzMjgwNzM2NTVaMFQxFDAS\n"
+    "BgNVBAoTC0NBY2VydCBJbmMuMR4wHAYDVQQLExVodHRwOi8vd3d3LkNBY2VydC5v\n"
+    "cmcxHDAaBgNVBAMTE0NBY2VydCBDbGFzcyAzIFJvb3QwggIiMA0GCSqGSIb3DQEB\n"
+    "AQUAA4ICDwAwggIKAoICAQCrSTURSHzSJn5TlM9Dqd0o10Iqi/OHeBlYfA+e2ol9\n"
+    "4fvrcpANdKGWZKufoCSZc9riVXbHF3v1BKxGuMO+f2SNEGwk82GcwPKQ+lHm9WkB\n"
+    "Y8MPVuJKQs/iRIwlKKjFeQl9RrmK8+nzNCkIReQcn8uUBByBqBSzmGXEQ+xOgo0J\n"
+    "0b2qW42S0OzekMV/CsLj6+YxWl50PpczWejDAz1gM7/30W9HxM3uYoNSbi4ImqTZ\n"
+    "FRiRpoWSR7CuSOtttyHshRpocjWr//AQXcD0lKdq1TuSfkyQBX6TwSyLpI5idBVx\n"
+    "bgtxA+qvFTia1NIFcm+M+SvrWnIl+TlG43IbPgTDZCciECqKT1inA62+tC4T7V2q\n"
+    "SNfVfdQqe1z6RgRQ5MwOQluM7dvyz/yWk+DbETZUYjQ4jwxgmzuXVjit89Jbi6Bb\n"
+    "6k6WuHzX1aCGcEDTkSm3ojyt9Yy7zxqSiuQ0e8DYbF/pCsLDpyCaWt8sXVJcukfV\n"
+    "m+8kKHA4IC/VfynAskEDaJLM4JzMl0tF7zoQCqtwOpiVcK01seqFK6QcgCExqa5g\n"
+    "eoAmSAC4AcCTY1UikTxW56/bOiXzjzFU6iaLgVn5odFTEcV7nQP2dBHgbbEsPyyG\n"
+    "kZlxmqZ3izRg0RS0LKydr4wQ05/EavhvE/xzWfdmQnQeiuP43NJvmJzLR5iVQAX7\n"
+    "6QIDAQABo4G/MIG8MA8GA1UdEwEB/wQFMAMBAf8wXQYIKwYBBQUHAQEEUTBPMCMG\n"
+    "CCsGAQUFBzABhhdodHRwOi8vb2NzcC5DQWNlcnQub3JnLzAoBggrBgEFBQcwAoYc\n"
+    "aHR0cDovL3d3dy5DQWNlcnQub3JnL2NhLmNydDBKBgNVHSAEQzBBMD8GCCsGAQQB\n"
+    "gZBKMDMwMQYIKwYBBQUHAgEWJWh0dHA6Ly93d3cuQ0FjZXJ0Lm9yZy9pbmRleC5w\n"
+    "aHA/aWQ9MTAwDQYJKoZIhvcNAQEEBQADggIBAH8IiKHaGlBJ2on7oQhy84r3HsQ6\n"
+    "tHlbIDCxRd7CXdNlafHCXVRUPIVfuXtCkcKZ/RtRm6tGpaEQU55tiKxzbiwzpvD0\n"
+    "nuB1wT6IRanhZkP+VlrRekF490DaSjrxC1uluxYG5sLnk7mFTZdPsR44Q4Dvmw2M\n"
+    "77inYACHV30eRBzLI++bPJmdr7UpHEV5FpZNJ23xHGzDwlVks7wU4vOkHx4y/CcV\n"
+    "Bc/dLq4+gmF78CEQGPZE6lM5+dzQmiDgxrvgu1pPxJnIB721vaLbLmINQjRBvP+L\n"
+    "ivVRIqqIMADisNS8vmW61QNXeZvo3MhN+FDtkaVSKKKs+zZYPumUK5FQhxvWXtaM\n"
+    "zPcPEAxSTtAWYeXlCmy/F8dyRlecmPVsYGN6b165Ti/Iubm7aoW8mA3t+T6XhDSU\n"
+    "rgCvoeXnkm5OvfPi2RSLXNLrAWygF6UtEOucekq9ve7O/e0iQKtwOIj1CodqwqsF\n"
+    "YMlIBdpTwd5Ed2qz8zw87YC8pjhKKSRf/lk7myV6VmMAZLldpGJ9VzZPrYPvH5JT\n"
+    "oI53V93lYRE9IwCQTDz6o2CTBKOvNfYOao9PSmCnhQVsRqGP9Md246FZV/dxssRu\n"
+    "FFxtbUFm3xuTsdQAw+7Lzzw9IYCpX2Nl/N3gX6T0K/CFcUHUZyX7GrGXrtaZghNB\n"
+    "0m6lG5kngOcLqagA\n"
+    "-----END CERTIFICATE-----\n";
+
 // UpdateNotificationPrivate ===================================================
 
 QString UpdateNotificationPrivate::releaseUrl() const
 {
-    return QSettings().value(NOTIFY_URL,
-            QLatin1String("http://mh21.de/igotu2gpx/releases.txt")).toString();
+    return QSettings().value(NOTIFY_URL, DEFAULT_RELEASE_URL).toString();
 }
 
 QDateTime UpdateNotificationPrivate::lastCheck() const
@@ -105,11 +192,15 @@ bool UpdateNotificationPrivate::newerVersion(const QString &oldVersion,
 void UpdateNotificationPrivate::requestReleases(const QString &os)
 {
     QUrl url = releaseUrl();
+
+    if (url.scheme().toLower() != QLatin1String("https")) {
+        qWarning("Update information needs to be retrieved over https connection");
+        return;
+    }
+
     url.addQueryItem(QLatin1String("os"), os);
     url.addQueryItem(QLatin1String("version"), QLatin1String(IGOTU_VERSION_STR));
-    http->setHost(url.host(), url.scheme().toLower() == QLatin1String("https") ?
-            QHttp::ConnectionModeHttps : QHttp::ConnectionModeHttp,
-            url.port(0));
+    http->setHost(url.host(), QHttp::ConnectionModeHttps, url.port(0));
     if (!url.userName().isEmpty())
         http->setUser(url.userName(), url.password());
     QByteArray path = QUrl::toPercentEncoding(url.path(), "!$&'()*+,;=:@/");
@@ -124,6 +215,13 @@ void UpdateNotificationPrivate::requestReleases(const QString &os)
     http->request(header);
 }
 
+void UpdateNotificationPrivate::on_http_sslErrors(const QList<QSslError> &errors)
+{
+    Q_FOREACH (const QSslError &error, errors)
+        qWarning("Unable to retrieve update information: %s",
+                qPrintable(error.errorString()));
+}
+
 void UpdateNotificationPrivate::on_http_done(bool error)
 {
     if (error) {
@@ -132,7 +230,6 @@ void UpdateNotificationPrivate::on_http_done(bool error)
         return;
     }
 
-    // TODO: secure cryptographically, e.g. with SSL or an RSA signature
     QTemporaryFile iniFile;
     if (!iniFile.open()) {
         qWarning("Unable to create temporary update file: %s",
@@ -144,7 +241,7 @@ void UpdateNotificationPrivate::on_http_done(bool error)
     QSettings settings(iniFile.fileName(), QSettings::IniFormat);
 
     QString newestVersion = QLatin1String(IGOTU_VERSION_STR);
-    Q_FOREACH(const QString group, settings.childGroups()) {
+    Q_FOREACH (const QString group, settings.childGroups()) {
         settings.beginGroup(group);
         if (settings.contains(QLatin1String("version")) &&
             settings.contains(QLatin1String("name")) &&
@@ -173,8 +270,7 @@ void UpdateNotificationPrivate::on_http_done(bool error)
         newestVersion == ignoredVersion())
         return;
 
-    if (url.scheme().toLower() != QLatin1String("http") &&
-        url.scheme().toLower() != QLatin1String("https"))
+    if (url.scheme().toLower() != QLatin1String("https"))
         return;
 
     emit p->newVersionAvailable(newestVersion,
@@ -215,6 +311,9 @@ UpdateNotification::UpdateNotification(QObject *parent) :
     d(new UpdateNotificationPrivate)
 {
     d->p = this;
+
+    QSslSocket::addDefaultCaCertificate(QSslCertificate(QByteArray(rootCaCert)));
+    QSslSocket::addDefaultCaCertificate(QSslCertificate(QByteArray(class3CaCert)));
 
     setUpdateNotification(defaultUpdateNotification());
 

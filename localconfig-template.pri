@@ -32,3 +32,15 @@
 #win32:BOOSTLIBDIR_DEBUG = $${BOOSTLIBDIR}
 #win32:BOOSTPOLIB_RELEASE = boost_program_options-vc71-mt-1_33_1
 #win32:BOOSTPOLIB_DEBUG = boost_program_options-vc71-mt-gd-1_33_1
+
+#win32:OPENSSLROOT = $$BASEDIR/../api/openssl
+#win32:OPENSSLLIBDIR = $${OPENSSLROOT}
+
+#win32:MARBLEROOT = $$BASEDIR/../../api/marble
+#win32:MARBLEINCLUDEDIR = $${MARBLEROOT}/include
+#win32:MARBLELIBDIR = $${MARBLEROOT}
+#win32:MARBLELIBDIR_RELEASE = $${MARBLELIBDIR}
+#win32:MARBLELIBDIR_DEBUG = $${MARBLELIBDIR}
+#win32:MARBLELIB_RELEASE = marblewidget
+#win32:MARBLELIB_DEBUG = marblewidgetd
+

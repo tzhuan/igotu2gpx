@@ -1,6 +1,6 @@
 BASEDIR = ../..
 CLEBS *= boost pch builddll
-CLEBS_INSTALL *= boost-po
+CLEBS_INSTALL *= boost-po libopenssl
 TARGET = igotu
 include($$BASEDIR/clebs.pri)
 
