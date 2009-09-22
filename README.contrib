@@ -70,3 +70,10 @@ libmarble
 - Virtual globe and world atlas
 - Available at http://edu.kde.org/marble/
 - Licensed under the GNU Lesser General Public License, version 2.1
+
+openssl (indirectly, dlopen inside Qt)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- Open Source toolkit for SSL/TLS
+- Available at http://www.openssl.org/
+- Licensed under two BSD-style licenses

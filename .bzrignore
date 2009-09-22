@@ -32,3 +32,6 @@ localconfig.*.pri
 
 /igotu2gpx.app/
 /igotu2gpx.dmg
+/igotu2gpx-*.dmg
+/igotu2gpx-*.tar.gz
+/igotu2gpx-*.zip
