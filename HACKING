@@ -229,8 +229,105 @@ flash (0x0FF000 or 0x1FF000) and stops at the first block where these bytes are
 not 0xFF. Each block but the first one is then purged according to the
 following pseudo code:
 
-Pseudo code for a GT-120 purge
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+GT-100, Firmware 1.39, @trip PC 2.0 908.446
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+----
+  purge = false
+  blocks = 0x080
+  for i = blocks - 1; i > 0; --i:
+    if purge:
+      while UnknownWriteCommand2(0x0001) != 0x00:
+        pass
+    else:
+      if ReadCommand(i * 0x1000, 0x10) != rep(0xff, 0x10):
+        purge = true
+      else:
+        continue
+    UnknownWriteCommand1(0x00)
+    WriteCommand(0x20, i * 0x1000, '')
+  if purge:
+    UnknownPurgeCommand2()
+    while UnknownWriteCommand2(0x0001) != 0x00:
+      pass
+  UnknownPurgeCommand2()
+----
+
+GT-200, Firmware 2.11, @trip PC 1.0 804.0976
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+----
+  purge = false
+  blocks = 0x100
+  for i = blocks - 1; i > 0; --i:
+    if purge:
+      while UnknownWriteCommand2(0x0001) != 0x00:
+        pass
+    else:
+      if ReadCommand(i * 0x1000, 0x10) != rep(0xff, 0x10):
+        purge = true
+      else:
+        continue
+    UnknownWriteCommand1(0x00)
+    WriteCommand(0x20, i * 0x1000, '')
+  if purge:
+    UnknownPurgeCommand2()
+    while UnknownWriteCommand2(0x0001) != 0x00:
+      pass
+----
+
+GT-200, Firmware 2.11, @trip PC 2.0 811.2582
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+----
+  purge = false
+  blocks = 0x100
+  for i = blocks - 1; i > 0; --i:
+    if purge:
+      while UnknownWriteCommand2(0x0001) != 0x00:
+        pass
+    else:
+      if ReadCommand(i * 0x1000, 0x10) != rep(0xff, 0x10):
+        purge = true
+      else:
+        continue
+    UnknownWriteCommand1(0x00)
+    WriteCommand(0x20, i * 0x1000, '')
+  if purge:
+    UnknownPurgeCommand2()
+    while UnknownWriteCommand2(0x0001) != 0x00:
+      pass
+  UnknownPurgeCommand2()
+----
+
+GT-100, Firmware 2.24, @trip PC 2.0 908.446
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+----
+  purge = false
+  blocks = 0x080
+  for i = blocks - 1; i > 0; --i:
+    if purge:
+      while UnknownWriteCommand2(0x0001) != 0x00:
+        pass
+    else:
+      if ReadCommand(i * 0x1000, 0x10) != rep(0xff, 0x10):
+        purge = true
+      else:
+        continue
+    UnknownWriteCommand1(0x00)
+    WriteCommand(0x20, i * 0x1000, '')
+  if purge:
+    UnknownPurgeCommand1(0x1e)
+    UnknownPurgeCommand1(0x1f)
+    while UnknownWriteCommand2(0x0001) != 0x00:
+      pass
+  UnknownPurgeCommand1(0x1e)
+  UnknownPurgeCommand1(0x1f)
+----
+
+GT-120, Firmware 3.03, @trip PC 2.0 811.2582
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ----
   purge = false
@@ -253,29 +350,6 @@ Pseudo code for a GT-120 purge
       pass
   UnknownPurgeCommand1(0x1e)
   UnknownPurgeCommand1(0x1f)
-----
-
-Pseudo code for a GT-200 purge
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-----
-  purge = false
-  blocks = 0x100
-  for i = blocks - 1; i > 0; --i:
-    if purge:
-      while UnknownWriteCommand2(0x0001) != 0x00:
-        pass
-    else:
-      if ReadCommand(i * 0x1000, 0x10) != rep(0xff, 0x10):
-        purge = true
-      else:
-        continue
-    UnknownWriteCommand1(0x00)
-    WriteCommand(0x20, i * 0x1000, '')
-  if purge:
-    UnknownPurgeCommand2()
-    while UnknownWriteCommand2(0x0001) != 0x00:
-      pass
 ----
 
 Flash layout

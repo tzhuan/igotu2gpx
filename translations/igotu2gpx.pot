@@ -482,19 +482,19 @@ msgid "Unknown plugins"
 msgstr ""
 
 #. ts-context PluginDialog
-#: ../src/igotugui/plugindialog.cpp:113 ../src/igotugui/plugindialog.cpp:133
+#: ../src/igotugui/plugindialog.cpp:113 ../src/igotugui/plugindialog.cpp:132
 #, fuzzy
 msgid "unknown"
 msgstr ""
 
 #. ts-context PluginDialog
-#: ../src/igotugui/plugindialog.cpp:132
+#: ../src/igotugui/plugindialog.cpp:131
 #, fuzzy
 msgid "Invalid plugins"
 msgstr ""
 
 #. ts-context PluginDialog
-#: ../src/igotugui/plugindialog.cpp:163
+#: ../src/igotugui/plugindialog.cpp:162
 #, fuzzy
 msgid "Refresh plugins"
 msgstr ""
@@ -904,157 +904,157 @@ msgid ""
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:236
+#: ../src/igotu/igotucontrol.cpp:239
 #, fuzzy
 msgid "Number of points: %1"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:247
+#: ../src/igotu/igotucontrol.cpp:250
 #, fuzzy
 msgid "Uninitialized GPS tracker"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:249
+#: ../src/igotu/igotucontrol.cpp:252
 #, fuzzy
 msgid "Schedule date: %1"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:252
+#: ../src/igotu/igotucontrol.cpp:255
 #, fuzzy
 msgid "Schedule date offset: %n day(s)"
 msgid_plural "Schedule date offset: %n day(s)"
 msgstr[0] ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:257
+#: ../src/igotu/igotucontrol.cpp:260
 #, fuzzy
 msgid "Schedule plans: %1"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:258 ../src/igotu/igotucontrol.cpp:330
-#: ../src/igotu/igotucontrol.cpp:334 ../src/igotu/igotucontrol.cpp:342
+#: ../src/igotu/igotucontrol.cpp:261 ../src/igotu/igotucontrol.cpp:333
+#: ../src/igotu/igotucontrol.cpp:337 ../src/igotu/igotucontrol.cpp:345
 #, fuzzy
 msgid "enabled"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:259
+#: ../src/igotu/igotucontrol.cpp:262
 #, fuzzy
 msgid "Schedule plans used:"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:263
+#: ../src/igotu/igotucontrol.cpp:266
 #, fuzzy
 msgid "Schedule plan order:"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:282
+#: ../src/igotu/igotucontrol.cpp:285
 #, fuzzy
 msgid "Schedule plan %1:"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:286
+#: ../src/igotu/igotucontrol.cpp:289
 #, fuzzy
 msgid "Start time: %1"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:290
+#: ../src/igotu/igotucontrol.cpp:293
 #, fuzzy
 msgid "End time: %1"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:294 ../src/igotu/igotucontrol.cpp:315
+#: ../src/igotu/igotucontrol.cpp:297 ../src/igotu/igotucontrol.cpp:318
 #, fuzzy
 msgid "Log interval: %1 s"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:298 ../src/igotu/igotucontrol.cpp:305
-#: ../src/igotu/igotucontrol.cpp:318 ../src/igotu/igotucontrol.cpp:324
+#: ../src/igotu/igotucontrol.cpp:301 ../src/igotu/igotucontrol.cpp:308
+#: ../src/igotu/igotucontrol.cpp:321 ../src/igotu/igotucontrol.cpp:327
 #, fuzzy
 msgid "Interval change: %1"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:300 ../src/igotu/igotucontrol.cpp:320
+#: ../src/igotu/igotucontrol.cpp:303 ../src/igotu/igotucontrol.cpp:323
 #, fuzzy
 msgid "above %1 km/h, use %2 s"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:307 ../src/igotu/igotucontrol.cpp:313
-#: ../src/igotu/igotucontrol.cpp:325 ../src/igotu/igotucontrol.cpp:330
-#: ../src/igotu/igotucontrol.cpp:334 ../src/igotu/igotucontrol.cpp:343
+#: ../src/igotu/igotucontrol.cpp:310 ../src/igotu/igotucontrol.cpp:316
+#: ../src/igotu/igotucontrol.cpp:328 ../src/igotu/igotucontrol.cpp:333
+#: ../src/igotu/igotucontrol.cpp:337 ../src/igotu/igotucontrol.cpp:346
 #, fuzzy
 msgid "disabled"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:312
+#: ../src/igotu/igotucontrol.cpp:315
 #, fuzzy
 msgid "Schedule table: %1"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:329
+#: ../src/igotu/igotucontrol.cpp:332
 #, fuzzy
 msgid "LEDs: %1"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:332
+#: ../src/igotu/igotucontrol.cpp:335
 #, fuzzy
 msgid "Button: %1"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:337
+#: ../src/igotu/igotucontrol.cpp:340
 #, fuzzy
 msgid "Security version: %1"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:340
+#: ../src/igotu/igotucontrol.cpp:343
 #, fuzzy
 msgid "Password: %1, [%2]"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:379 ../src/igotu/igotucontrol.cpp:424
+#: ../src/igotu/igotucontrol.cpp:382 ../src/igotu/igotucontrol.cpp:448
 #, fuzzy
 msgid "Cancelled"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:390
+#: ../src/igotu/igotucontrol.cpp:393
 #, fuzzy
 msgid "Invalid data"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:409
+#: ../src/igotu/igotucontrol.cpp:412
 #, fuzzy
 msgid "No device specified"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:432 ../src/igotu/igotucontrol.cpp:454
-#: ../src/igotu/igotucontrol.cpp:473 ../src/igotu/igotucontrol.cpp:494
+#: ../src/igotu/igotucontrol.cpp:456 ../src/igotu/igotucontrol.cpp:478
+#: ../src/igotu/igotucontrol.cpp:495 ../src/igotu/igotucontrol.cpp:516
 #, fuzzy
 msgid "Command timeout"
 msgstr ""
 
 #. ts-context igotu::IgotuControl
-#: ../src/igotu/igotucontrol.cpp:501
+#: ../src/igotu/igotucontrol.cpp:435
 #, fuzzy
 msgid ""
 "%1: Unable to clear memory of this GPS tracker model. Instructions how to "

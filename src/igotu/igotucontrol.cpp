@@ -229,8 +229,11 @@ void IgotuControlPrivateWorker::info()
             //   GT100 1.39
             // Can be forced with env variables:
             //   IGOTU2GPX_WORKAROUND and IGOTU2GPX_NOWORKAROUND
+            // There seems to be a major firmware rework around 2.15 (debug
+            // mode was introduced, so until proven otherwise we just use this
+            // version)
             CountCommand countCommand(connection.get(),
-                    id.firmwareVersion() >= 0x0200);
+                    id.firmwareVersion() >= 0x0215);
             countCommand.sendAndReceive();
             unsigned count = countCommand.trackPointCount();
             status += IgotuControl::tr("Number of points: %1")
@@ -410,13 +413,34 @@ void IgotuControlPrivateWorker::purge()
 
         NmeaSwitchCommand(connection.get(), false).sendAndReceive();
 
+        IdentificationCommand id(connection.get());
+        id.sendAndReceive();
+
         ModelCommand model(connection.get());
         model.sendAndReceive();
 
+        unsigned blocks = 1;
+
         switch (model.modelId()) {
-        case ModelCommand::Gt120: {
+        case ModelCommand::Gt100:
+            blocks = 0x080;
+            break;
+        case ModelCommand::Gt120:
+            blocks = 0x200;
+            break;
+        case ModelCommand::Gt200:
+            blocks = 0x100;
+            break;
+        default:
+            throw IgotuError(IgotuControl::tr
+                    ("%1: Unable to clear memory of this GPS tracker model. "
+                     "Instructions how to help with this can be found at "
+                     "https://answers.launchpad.net/igotu2gpx/+faq/480.")
+                    .arg(model.modelName()));
+        }
+
+        if (id.firmwareVersion() >= 0x0215) {
             bool purgeBlocks = false;
-            const unsigned blocks = 0x200;
             for (unsigned i = blocks - 1; i > 0; --i) {
                 emit purgeBlocksFinished(blocks - i - 1, blocks);
                 if (p->cancelRequested()) {
@@ -458,10 +482,8 @@ void IgotuControlPrivateWorker::purge()
             UnknownPurgeCommand1(connection.get(), 0x1e).sendAndReceive();
             UnknownPurgeCommand1(connection.get(), 0x1f).sendAndReceive();
             emit purgeBlocksFinished(blocks, blocks);
-            break; }
-        case ModelCommand::Gt200: {
+        } else {
             bool purgeBlocks = false;
-            const unsigned blocks = 0x100;
             for (unsigned i = blocks - 1; i > 0; --i) {
                 emit purgeBlocksFinished(blocks - i - 1, blocks);
                 if (purgeBlocks) {
@@ -495,15 +517,8 @@ void IgotuControlPrivateWorker::purge()
                                 ("Command timeout"));
                 }
             }
+            UnknownPurgeCommand2(connection.get()).sendAndReceive();
             emit purgeBlocksFinished(blocks, blocks);
-            break; }
-        default: {
-            throw IgotuError(IgotuControl::tr
-                    ("%1: Unable to clear memory of this GPS tracker model. "
-                     "Instructions how to help with this can be found at "
-                     "https://answers.launchpad.net/igotu2gpx/+faq/480.")
-                    .arg(model.modelName()));
-            break; }
         }
 
         NmeaSwitchCommand(connection.get(), true).sendAndReceive();

@@ -120,8 +120,7 @@ void PluginDialogPrivate::scanPlugins()
 #elif defined(Q_OS_WIN32)
     ignored << QLatin1String("igotu.dll");
 #elif defined(Q_OS_MACX)
-    // TODO: does this catch all dll links on Mac OS X?
-    ignored << QLatin1String("libigotu.dylib");
+    ignored << QLatin1String("libigotu.1.dylib");
 #endif
 
     QMapIterator<QString, QString> i(PluginLoader().pluginsWithErrors());
