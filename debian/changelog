@@ -1,3 +1,16 @@
+igotu2gpx (0.2.92-0) UNRELEASED; urgency=low
+
+  * Released the second release candidate of igotu2gpx 0.3.0.
+  * Changes since version 0.2.91:
+    - Support for GT-100
+    - SSL support for update notifications
+    - Dutch translation thanks to Peter Florijn
+    - French translation thanks to Inti Raymi
+    - Polish translation thanks to Jakub Kowalski
+
+
+ -- Michael Hofmann <mh21@piware.de>  Sat, 26 Sep 2009 01:23:14 +0200
+
 igotu2gpx (0.2.91-0) UNRELEASED; urgency=low
 
   * Released the first release candidate of igotu2gpx 0.3.0.
