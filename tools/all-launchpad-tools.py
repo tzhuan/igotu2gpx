@@ -392,6 +392,8 @@ requests welcome!''')
                     (self.releasedString(version),
                         '', self.repository(version)),
                     changelog=changelog)
+            milestone.is_active = False
+            milestone.lp_save()
 
         self.addFiles(release)
 
