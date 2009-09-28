@@ -367,7 +367,7 @@ void MainWindowPrivate::saveTracksRequested
 
     try {
         const QDateTime date = tracks.count() == 1 ?
-            tracks[0].at(0).dateTime() : QDateTime::currentDateTime();
+            tracks[0][0].dateTime() : QDateTime::currentDateTime();
         QString filePath = QFileDialog::getSaveFileName(p,
                 MainWindow::tr("Save GPS Tracks"),
                 date.toString(QLatin1String("yyyy-MM-dd-hh-mm-ss")) +

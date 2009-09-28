@@ -606,7 +606,7 @@ QString IgotuControl::device() const
 QString IgotuControl::defaultDevice()
 {
     const DataConnectionCreator * const creator =
-        IgotuControlPrivate::creators().at(0);
+        IgotuControlPrivate::creators().value(0);
     if (!creator)
         return QString();
     return creator->dataConnection() + QLatin1Char(':') +
