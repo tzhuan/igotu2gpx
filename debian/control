@@ -10,8 +10,9 @@ Homepage: http://mh21.de/igotu2gpx/
 Package: igotu2gpx
 Section: utils
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, marble-data | marble-data-kde4, lsb-release
-Description: Gives access to the i-gotU gps trackers
- Gives access to the i-gotU gps trackers via serial port (Windows) or libusb
- (Linux). It is possible to dump the internal flash memory and to export tracks
- and waypoints in gpx format.
+Depends: ${shlibs:Depends}, ${misc:Depends},
+ marble-data (>= 4:4.0.0) | marble-data-kde4, openssl, lsb-release
+Description: Gives access to the i-gotU GPS trackers
+ Gives access to the i-gotU GPS trackers via an USB connection. It is possible
+ to see the configuration of the GPS tracker, export tracks and waypoints in
+ gpx format and clear the memory of the tracker.
