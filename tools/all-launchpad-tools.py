@@ -33,7 +33,7 @@ class LaunchpadHelper:
         self.versionFile = os.path.join(self.configDir, 'version.txt')
         self.changelogFile = os.path.join(self.configDir, 'changelog.txt')
         self.releaseNotesFile = os.path.join(self.configDir, 'releasenotes.txt')
-        self.releaseExportFile = os.path.join(self.configDir, 'releases.txt')
+        self.releaseExportFile = os.path.join(self.configDir, 'release-data.txt')
         self.launchpad = None
         self.files = [{
             'file_type': 'Code Release Tarball',
@@ -285,6 +285,8 @@ requests welcome!''')
         if subprocess.call(['bzr', 'commit', '-m', 'Released %s.' %
             self.versionDescription(version)]) != 0:
             sys.exit('Could not commit release')
+        if subprocess.call(['bzr', 'tag', 'igotu2gpx-%s' % version]) != 0:
+            sys.exit('Could not tag release')
 
         # Translations
         cwd = os.getcwd()
@@ -339,7 +341,7 @@ requests welcome!''')
             sys.exit('Could not revert to previous version')
 
         print('To build ubuntu packages, use ppa.')
-        print('The tarball can be found at %s' % ('../igotu2gpx-%s.tar.gz' % version))
+        print('The tarball can be found at %s' % ('igotu2gpx-%s.tar.gz' % version))
         print('Compile the tarball on Windows and Mac OS X and place the resulting')
         print('zip and dmg file next to it. Then continue with upload.')
 
@@ -421,8 +423,11 @@ requests welcome!''')
         self.closeBugs(milestone)
 
         with open(self.releaseExportFile, 'w') as f: f.write(self.exportReleases())
-        print('Please upload %s to mh21.de:www/igotu2gpx' %
-                self.releaseExportFile)
+        if subprocess.call(['scp', self.releaseExportFile,
+            'mh21.de:www/igotu2gpx']) != 0:
+            sys.exit('Could not upload release information')
+        print('Please create a release announcement on launchpad, post to'
+                ' igotu2gpx-users and a-trip.com/forum')
 
 class Usage(Exception):
     def __init__(self, msg):
