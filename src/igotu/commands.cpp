@@ -124,6 +124,10 @@ QByteArray ModelCommand::sendAndReceive()
             name = IgotuCommand::tr("GT-120");
             id = Gt120;
             break;
+        case 0x17:
+            name = IgotuCommand::tr("GT-200e");
+            id = Gt200e;
+            break;
         }
     }
 

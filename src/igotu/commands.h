@@ -62,7 +62,8 @@ public:
         Unknown,
         Gt100,
         Gt120,
-        Gt200
+        Gt200,
+        Gt200e,
     };
 
     Model modelId() const;
