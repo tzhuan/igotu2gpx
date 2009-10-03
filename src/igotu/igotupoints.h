@@ -115,9 +115,9 @@ public:
     // isValid() and grouped into tracks
     QList<QList<IgotuPoint> > tracks() const;
 
-    QByteArray gpx(int utcOffset = 0) const;
+    QByteArray gpx(bool tracksAsSegments, int utcOffset) const;
     static QByteArray gpx(const QList<QList<IgotuPoint> > &tracks,
-            int utcOffset = 0);
+            bool tracksAsSegments, int utcOffset);
 
     bool isValid() const;
 

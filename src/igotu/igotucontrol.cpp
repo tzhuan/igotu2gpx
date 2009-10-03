@@ -100,6 +100,7 @@ public:
     IgotuControlPrivateWorker worker;
     QString device;
     int utcOffset;
+    bool tracksAsSegments;
 };
 
 // Put translations in the right context
@@ -545,6 +546,7 @@ IgotuControl::IgotuControl(QObject *parent) :
 {
     setDevice(defaultDevice());
     setUtcOffset(defaultUtcOffset());
+    setTracksAsSegments(defaultTracksAsSegments());
 
     connect(&d->worker, SIGNAL(infoStarted()),
              this, SIGNAL(infoStarted()));
@@ -623,9 +625,24 @@ int IgotuControl::utcOffset() const
     return d->utcOffset;
 }
 
+void IgotuControl::setTracksAsSegments(bool tracksAsSegments)
+{
+    d->tracksAsSegments = tracksAsSegments;
+}
+
+bool IgotuControl::tracksAsSegments() const
+{
+    return d->tracksAsSegments;
+}
+
 int IgotuControl::defaultUtcOffset()
 {
     return 0;
+}
+
+bool IgotuControl::defaultTracksAsSegments()
+{
+    return false;
 }
 
 bool IgotuControl::queuesEmpty()

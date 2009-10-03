@@ -56,6 +56,7 @@ public:
     QByteArray contents;
     bool details;
     bool raw;
+    bool exportAsSegments;
 };
 
 static QString dump(const QByteArray &data)
@@ -209,7 +210,8 @@ void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
         }
     } else {
         IgotuPoints igotuPoints(contents, count);
-        Messages::directOutput(igotuPoints.gpx(control->utcOffset()));
+        Messages::directOutput(igotuPoints.gpx(exportAsSegments,
+                    control->utcOffset()));
     }
     QCoreApplication::quit();
 }
@@ -273,10 +275,11 @@ void MainObject::info(const QByteArray &contents)
     d->control->info();
 }
 
-void MainObject::save(bool details, bool raw)
+void MainObject::save(bool details, bool raw, bool exportAsSegments)
 {
     d->details = details;
     d->raw = raw;
+    d->exportAsSegments = exportAsSegments;
 
     d->control->contents();
 }

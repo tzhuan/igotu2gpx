@@ -33,7 +33,7 @@ public:
     ~MainObject();
 
     void info(const QByteArray &contents = QByteArray());
-    void save(bool details, bool raw);
+    void save(bool details, bool raw, bool exportAsSegments);
     void purge();
 
 protected:

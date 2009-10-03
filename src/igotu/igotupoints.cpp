@@ -367,13 +367,13 @@ QString IgotuPoints::password() const
     return QString::fromUtf16(result.data(), result.size());
 }
 
-QByteArray IgotuPoints::gpx(int utcOffset) const
+QByteArray IgotuPoints::gpx(bool tracksAsSegments, int utcOffset) const
 {
-    return gpx(tracks(), utcOffset);
+    return gpx(tracks(), tracksAsSegments, utcOffset);
 }
 
 QByteArray IgotuPoints::gpx(const QList<QList<IgotuPoint> > &tracks,
-        int utcOffset)
+        bool tracksAsSegments, int utcOffset)
 {
     QByteArray result;
     QTextStream out(&result);
@@ -407,8 +407,11 @@ QByteArray IgotuPoints::gpx(const QList<QList<IgotuPoint> > &tracks,
         }
     }
 
-    Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
+    if (tracksAsSegments)
         out << xmlIndent(1) << "<trk>\n";
+    Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
+        if (!tracksAsSegments)
+            out << xmlIndent(1) << "<trk>\n";
         out << xmlIndent(2) << "<trkseg>\n";
         Q_FOREACH (const IgotuPoint &point, track)
             out << xmlIndent(3) << "<trkpt "
@@ -425,8 +428,11 @@ QByteArray IgotuPoints::gpx(const QList<QList<IgotuPoint> > &tracks,
                     << "</speed>\n"
                 << xmlIndent(3) << "</trkpt>\n";
         out << xmlIndent(2) << "</trkseg>\n";
-        out << xmlIndent(1) << "</trk>\n";
+        if (!tracksAsSegments)
+            out << xmlIndent(1) << "</trk>\n";
     }
+    if (tracksAsSegments)
+        out << xmlIndent(1) << "</trk>\n";
     out << "</gpx>\n";
 
     out.flush();

@@ -76,38 +76,6 @@ int main(int argc, char *argv[])
 
     po::options_description options("Options");
     options.add_options()
-        ("help",
-         Common::tr("output this help and exit").toLocal8Bit())
-        ("version",
-         Common::tr("output version information and exit").toLocal8Bit())
-
-        ("image,i",
-         po::value<QString>(&imagePath),
-         MainObject::tr("read memory contents from file "
-             "(saved by \"dump --raw\")").toLocal8Bit())
-        ("device,d",
-         po::value<QString>(&device),
-         MainObject::tr("connect to the specified device "
-             "(usb:<vendor>:<product> (Unix) or serial:<n> "
-             "(Windows))").toLocal8Bit())
-        ("gpx",
-         MainObject::tr("output in GPX format (this is the default)")
-         .toLocal8Bit())
-        ("details",
-         MainObject::tr("output a detailed representation of all track points")
-         .toLocal8Bit())
-        ("raw",
-         MainObject::tr("output the memory contents of the GPS "
-             "tracker (be sure to redirect output to a file)").toLocal8Bit())
-
-        ("verbose,v",
-         Common::tr("increase verbosity")
-         .toLocal8Bit())
-        ("utc-offset",
-         po::value<int>(&offset),
-         MainObject::tr("time zone offset in seconds")
-         .toLocal8Bit())
-
         ("action",
          po::value<QString>(&action),
          //: Do not translate the word before the colon
@@ -122,6 +90,44 @@ int main(int argc, char *argv[])
          //: Do not translate the word before the colon
          MainObject::tr("diff: show configuration differences relative to an image file")
          .toLocal8Bit())
+
+        ("device,d",
+         po::value<QString>(&device),
+         MainObject::tr("connect to the specified device "
+             "(usb:<vendor>:<product> (Unix) or serial:<n> "
+             "(Windows))").toLocal8Bit())
+        ("image,i",
+         po::value<QString>(&imagePath),
+         MainObject::tr("read memory contents from file "
+             "(saved by \"dump --raw\")").toLocal8Bit())
+
+        ("gpx",
+         MainObject::tr("output in GPX format (this is the default)")
+         .toLocal8Bit())
+        ("details",
+         MainObject::tr("output a detailed representation of all trackpoints")
+         .toLocal8Bit())
+        ("raw",
+         MainObject::tr("output the memory contents of the GPS "
+             "tracker (be sure to redirect output to a file)").toLocal8Bit())
+
+        ("segments",
+         MainObject::tr("for output in GPX format, group trackpoints into "
+             "segments instead of tracks")
+         .toLocal8Bit())
+        ("utc-offset",
+         po::value<int>(&offset),
+         MainObject::tr("time zone offset in seconds")
+         .toLocal8Bit())
+
+        ("help",
+         Common::tr("output this help and exit").toLocal8Bit())
+        ("version",
+         Common::tr("output version information and exit").toLocal8Bit())
+        ("verbose,v",
+         Common::tr("increase verbosity")
+         .toLocal8Bit())
+
     ;
     po::positional_options_description positionalOptions;
     positionalOptions.add("action", 1);
@@ -186,7 +192,8 @@ int main(int argc, char *argv[])
                         .arg(imagePath));
             mainObject.info(file.readAll().left(0x1000));
         } else if (action == QLatin1String("dump")) {
-            mainObject.save(variables.count("details"), variables.count("raw"));
+            mainObject.save(variables.count("details"), variables.count("raw"),
+                    variables.count("segments"));
         } else if (action == QLatin1String("clear")) {
             mainObject.purge();
         } else {

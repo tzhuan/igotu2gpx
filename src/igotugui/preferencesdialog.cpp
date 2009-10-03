@@ -29,6 +29,7 @@ using namespace igotu;
 #define UPDATE_PREF QLatin1String("Preferences/updateNotification")
 #define DEVICE_PREF QLatin1String("Preferences/device")
 #define OFFSET_PREF QLatin1String("Preferences/utcOffset")
+#define EXPORT_PREF QLatin1String("Preferences/tracksAsSegments")
 
 class PreferencesDialogPrivate : public QObject
 {
@@ -38,17 +39,20 @@ public Q_SLOTS:
     void on_device_textEdited(const QString &text);
     void on_utcOffset_currentIndexChanged(int index);
     void on_update_currentIndexChanged(int index);
+    void on_tracksAsSegments_currentIndexChanged(int index);
 
 public:
     static QString currentDevice();
     static int currentUtcOffset();
     static UpdateNotification::Type currentUpdateNotification();
+    static bool currentTracksAsSegments();
     void syncDialogToPreferences();
 
 private:
     void setCurrentDevice(const QString &device);
     void setCurrentUtcOffset(int offset);
     void setCurrentUpdateNotification(UpdateNotification::Type type);
+    void setCurrentTracksAsSegments(bool tracksAsSegments);
 
 public:
     PreferencesDialog *p;
@@ -66,6 +70,7 @@ void PreferencesDialogPrivate::on_buttonBox_clicked(QAbstractButton *button)
         setCurrentUtcOffset(IgotuControl::defaultUtcOffset());
         setCurrentUpdateNotification
             (UpdateNotification::defaultUpdateNotification());
+        setCurrentTracksAsSegments(IgotuControl::defaultTracksAsSegments());
         syncDialogToPreferences();
     }
 }
@@ -77,14 +82,26 @@ void PreferencesDialogPrivate::on_device_textEdited(const QString &text)
 
 void PreferencesDialogPrivate::on_utcOffset_currentIndexChanged(int index)
 {
-    const int seconds = index < -1 ? 0 : ui->utcOffset->itemData(index).toInt();
+    const int seconds = index <= -1 ?
+        IgotuControl::defaultUtcOffset() :
+        ui->utcOffset->itemData(index).toInt();
     setCurrentUtcOffset(seconds);
 }
 
 void PreferencesDialogPrivate::on_update_currentIndexChanged(int index)
 {
-    const int type = index < -1 ? 0 : ui->update->itemData(index).toInt();
+    const int type = index <= -1 ?
+        UpdateNotification::defaultUpdateNotification() :
+        ui->update->itemData(index).toInt();
     setCurrentUpdateNotification(UpdateNotification::Type(type));
+}
+
+void PreferencesDialogPrivate::on_tracksAsSegments_currentIndexChanged(int index)
+{
+    const bool tracksAsSegments = index <= -1 ?
+        IgotuControl::defaultTracksAsSegments() :
+        ui->tracksAsSegments->itemData(index).toBool();
+    setCurrentTracksAsSegments(tracksAsSegments);
 }
 
 void PreferencesDialogPrivate::setCurrentDevice(const QString &device)
@@ -140,6 +157,21 @@ UpdateNotification::Type PreferencesDialogPrivate::currentUpdateNotification()
              QSettings().value(UPDATE_PREF).toString().toAscii()));
 }
 
+void PreferencesDialogPrivate::setCurrentTracksAsSegments(bool tracksAsSegments)
+{
+    if (tracksAsSegments != IgotuControl::defaultTracksAsSegments())
+        QSettings().setValue(EXPORT_PREF, tracksAsSegments);
+    else
+        QSettings().remove(EXPORT_PREF);
+    emit p->tracksAsSegmentsChanged(tracksAsSegments);
+}
+
+bool PreferencesDialogPrivate::currentTracksAsSegments()
+{
+    return QSettings().value(EXPORT_PREF,
+            IgotuControl::defaultTracksAsSegments()).toBool();
+}
+
 void PreferencesDialogPrivate::syncDialogToPreferences()
 {
     ui->utcOffset->setCurrentIndex
@@ -147,6 +179,8 @@ void PreferencesDialogPrivate::syncDialogToPreferences()
     ui->device->setText(currentDevice());
     ui->update->setCurrentIndex(ui->update->findData
             (currentUpdateNotification()));
+    ui->tracksAsSegments->setCurrentIndex(ui->tracksAsSegments->findData
+            (currentTracksAsSegments()));
 }
 
 // PreferencesDialog ===========================================================
@@ -195,6 +229,9 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
     d->ui->update->addItem(tr("Development snapshots"),
             UpdateNotification::DevelopmentSnapshots);
 
+    d->ui->tracksAsSegments->addItem(tr("Tracks"), false);
+    d->ui->tracksAsSegments->addItem(tr("Track segments"), true);
+
     d->syncDialogToPreferences();
 
     connectSlotsByNameToPrivate(this, d.get());
@@ -217,6 +254,11 @@ int PreferencesDialog::currentUtcOffset()
 UpdateNotification::Type PreferencesDialog::currentUpdateNotification()
 {
     return PreferencesDialogPrivate::currentUpdateNotification();
+}
+
+bool PreferencesDialog::currentTracksAsSegments()
+{
+    return PreferencesDialogPrivate::currentTracksAsSegments();
 }
 
 #include "preferencesdialog.moc"

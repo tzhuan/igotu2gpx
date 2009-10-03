@@ -17,7 +17,7 @@
 
 .SH NAME
 .PP
-igotu2gpx \- command line interface ot the i-gotU gps trackers
+igotu2gpx \- command line interface to the i-gotU GPS trackers
 
 .SH SYNOPSIS
 .PP
@@ -38,7 +38,7 @@ show GPS tracker configuration (info), output trackpoints (dump),
 clear memory of the GPS tracker (clear) or show configuration differences
 relative to an image file (diff)
 .TP
-\fB\-u\fR, \fB\-\-device\fR \fIprotocol:id\fR
+\fB\-d\fR, \fB\-\-device\fR \fIprotocol:id\fR
 connect to the specified device (usb:<vendor>:<product> (Unix) or serial:<n>
 (Windows))
 .TP
@@ -55,13 +55,19 @@ output a detailed representation of all track points
 output the memory contents of the GPS tracker (be sure to redirect output to a
 file)
 .TP
+\fB\-\-segments\fR
+for output in GPX format, group trackpoints into segments instead of tracks
+.TP
 \fB\-\-utc\-offset\fR \fIseconds\fR
 time zone offset in seconds
 .TP
 \fB\-\-help\fR
 help message
 .TP
-\fB\-\-verbose\fR
+\fB\-\-version\fR
+version information
+.TP
+\fB\-d\fR, \fB\-\-verbose\fR
 show USB and data transfer debug messages
 
 .SH EXAMPLES

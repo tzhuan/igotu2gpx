@@ -37,3 +37,6 @@ unix {
     INSTALLS *= desktopfile
 }
 
+manual.files = igotugui.1
+manual.path = $$MANDIR/man1
+INSTALLS *= manual

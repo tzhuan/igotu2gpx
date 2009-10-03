@@ -195,10 +195,10 @@ void MainWindowPrivate::on_actionPreferences_triggered()
                 control, SLOT(setDevice(QString)));
         QObject::connect(preferences, SIGNAL(utcOffsetChanged(int)),
                 control, SLOT(setUtcOffset(int)));
-        QObject::connect(preferences,
-                SIGNAL(updateNotificationChanged(UpdateNotification::Type)),
-                update,
-                SLOT(setUpdateNotification(UpdateNotification::Type)));
+        QObject::connect(preferences, SIGNAL(updateNotificationChanged(UpdateNotification::Type)),
+                update, SLOT(setUpdateNotification(UpdateNotification::Type)));
+        QObject::connect(preferences, SIGNAL(tracksAsSegmentsChanged(bool)),
+                control, SLOT(setTracksAsSegments(bool)));
 
         preferences->show();
     } else {
@@ -383,7 +383,7 @@ void MainWindowPrivate::saveTracksRequested
                     .arg(file.errorString()));
 
         const QByteArray gpxData = IgotuPoints::gpx(tracks,
-                control->utcOffset());
+                control->tracksAsSegments(), control->utcOffset());
         if (file.write(gpxData) != gpxData.length())
             throw IgotuError(MainWindow::tr("Unable to save file: %1")
                     .arg(file.errorString()));
@@ -436,6 +436,7 @@ MainWindow::MainWindow() :
     d->control->setUtcOffset(PreferencesDialog::currentUtcOffset());
     d->update->setUpdateNotification
         (PreferencesDialog::currentUpdateNotification());
+    d->control->setTracksAsSegments(PreferencesDialog::currentTracksAsSegments());
 
     QMultiMap<int, TrackVisualizerCreator*> mainVisualizerMap;
     QMultiMap<int, TrackVisualizerCreator*> dockVisualizerMap;

@@ -45,6 +45,9 @@ public:
     int utcOffset() const;
     static int defaultUtcOffset();
 
+    bool tracksAsSegments() const;
+    static bool defaultTracksAsSegments();
+
     // may throw
     void info();
     // may throw
@@ -65,6 +68,7 @@ public:
 public Q_SLOTS:
     void setDevice(const QString &device);
     void setUtcOffset(int seconds);
+    void setTracksAsSegments(bool tracksAsSegments);
 
 Q_SIGNALS:
     void infoStarted();

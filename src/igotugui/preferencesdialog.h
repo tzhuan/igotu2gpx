@@ -40,6 +40,7 @@ public:
     static QString currentDevice();
     static int currentUtcOffset();
     static UpdateNotification::Type currentUpdateNotification();
+    static bool currentTracksAsSegments();
 
 protected:
     boost::scoped_ptr<PreferencesDialogPrivate> d;
@@ -48,6 +49,7 @@ Q_SIGNALS:
     void deviceChanged(const QString &device);
     void utcOffsetChanged(int seconds);
     void updateNotificationChanged(UpdateNotification::Type type);
+    void tracksAsSegmentsChanged(bool tracksAsSegments);
 };
 
 #endif

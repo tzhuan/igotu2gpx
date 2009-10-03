@@ -1,0 +1,61 @@
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH IGOTUGUI 1 "October 03, 2009"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+
+.SH NAME
+.PP
+igotugui \- GUI the i-gotU GPS trackers
+
+.SH SYNOPSIS
+.PP
+.B igotugui [\fIOPTIONS\fR]
+
+.SH DESCRIPTION
+.\" TeX users may be more comfortable with the \fB<whatever>\fP and
+.\" \fI<whatever>\fP escape sequences to invoke bold face and italics,
+.\" respectively.
+.PP
+\fBigotugui\fP gives access to the i-gotU USB GPS trackers via serial port
+(Windows) or libusb (Linux) from an easy to use GUI. It is possible to show the
+configuration of a GPS tracker, export tracks and waypoints in GPX format and
+clear the internal flash memory.
+.TP
+\fB\-\-help\fR
+help message
+.TP
+\fB\-\-version\fR
+version information
+.TP
+\fB\-d\fR, \fB\-\-verbose\fR
+show USB and data transfer debug messages
+
+.SH AUTHOR
+.PP
+igotugui was written by Michael Hofmann <mh21@piware.de>.
+
+.SH "REPORTING BUGS"
+.PP
+Report bugs at https://bugs.launchpad.net/igotu2gpx/.
+
+.SH COPYRIGHT
+.PP
+Copyright \(co 2009 Michael Hofmann <mh21@piware.de>.
+.PP
+This is free software. You may redistribute copies of it under the terms of the
+GNU General Public License <http://www.gnu.org/licenses/gpl.html>.
+There is NO WARRANTY, to the extent permitted by law.
+.SH SEE ALSO
+http://mh21.de/igotu2gpx/
