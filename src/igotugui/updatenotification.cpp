@@ -210,6 +210,7 @@ void UpdateNotificationPrivate::requestReleases(const QString &os)
         path += '?' + url.encodedQuery();
 
     QHttpRequestHeader header(QLatin1String("GET"), QString::fromAscii(path));
+    header.setValue(QLatin1String("Host"), url.host() + QLatin1Char(':') + QString::number(url.port(443)));
     header.setValue(QLatin1String("User-Agent"), QLatin1String("Igotu2gpx/") +
             QLatin1String(IGOTU_VERSION_STR));
     http->request(header);
