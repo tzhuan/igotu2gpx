@@ -251,8 +251,15 @@ QStringList Paths::pluginDirectories()
            (QStringList() << QLatin1String("/lib") + DIRECTORY
                           << QLatin1String("/PlugIns"),
             QStringList());
-    result << QLatin1String("/usr/local/lib") + DIRECTORY;
-    result << QLatin1String("/usr/lib") + DIRECTORY;
+    if (sizeof(quintptr) == 8) {
+        result << QDir(QLatin1String("/usr/local/lib64") + DIRECTORY).canonicalPath();
+        result << QDir(QLatin1String("/usr/lib64") + DIRECTORY).canonicalPath();
+    } else {
+        result << QDir(QLatin1String("/usr/local/lib32") + DIRECTORY).canonicalPath();
+        result << QDir(QLatin1String("/usr/lib32") + DIRECTORY).canonicalPath();
+    }
+    result << QDir(QLatin1String("/usr/local/lib") + DIRECTORY).canonicalPath();
+    result << QDir(QLatin1String("/usr/lib") + DIRECTORY).canonicalPath();
 #elif defined(Q_OS_WIN)
     result << windowsConfigPath(CSIDL_APPDATA) + DIRECTORY +
             QLatin1String("/lib");
