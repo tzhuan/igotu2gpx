@@ -17,6 +17,7 @@
  ******************************************************************************/
 
 #include "igotu/dataconnection.h"
+#include "igotu/fileexporter.h"
 #include "igotu/pluginloader.h"
 #include "igotu/utils.h"
 
@@ -106,6 +107,12 @@ void PluginDialogPrivate::scanPlugins()
             add(object, PluginDialog::tr("Connection"),
                     creator->dataConnection(), QString(), QString(),
                     QString::number(creator->connectionPriority()));
+            added = true;
+        } else if (const FileExporter * const exporter =
+                qobject_cast<FileExporter*>(object)) {
+            add(object, PluginDialog::tr("Exporter"),
+                    exporter->formatName(), QString(), QString(),
+                    QString::number(exporter->exporterPriority()));
             added = true;
         }
         if (!added) {

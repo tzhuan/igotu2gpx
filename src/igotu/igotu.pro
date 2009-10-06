@@ -22,6 +22,7 @@ HEADERS *= \
     commands.h \
     dataconnection.h \
     exception.h \
+    fileexporter.h \
     global.h \
     igotucommand.h \
     igotucontrol.h \

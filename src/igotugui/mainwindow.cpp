@@ -18,6 +18,7 @@
 
 #include "igotu/commonmessages.h"
 #include "igotu/exception.h"
+#include "igotu/fileexporter.h"
 #include "igotu/igotucontrol.h"
 #include "igotu/igotupoints.h"
 #include "igotu/paths.h"
@@ -84,6 +85,12 @@ public:
     void stopBackgroundAction();
     void abortBackgroundAction(const QString &text);
 
+private:
+    QString savedTrackFileName(bool raw, const IgotuPoint &point,
+            FileExporter **currentExporter);
+    void saveTracks(const QList<QList<IgotuPoint> > &tracks);
+
+public:
     MainWindow *p;
 
     boost::scoped_ptr<IgotuPoints> lastTrackPoints;
@@ -94,6 +101,7 @@ public:
     QPointer<PreferencesDialog> preferences;
     PluginLoader *pluginLoader;
     QList<TrackVisualizer*> visualizers;
+    QList<FileExporter*> exporters;
 };
 
 // Put translations in the right context
@@ -150,7 +158,7 @@ void MainWindowPrivate::on_actionReload_triggered()
 void MainWindowPrivate::on_actionSave_triggered()
 {
     if (lastTrackPoints)
-        saveTracksRequested(lastTrackPoints->tracks());
+        saveTracks(QList<QList<IgotuPoint> >());
 }
 
 void MainWindowPrivate::on_actionPurge_triggered()
@@ -362,29 +370,78 @@ void MainWindowPrivate::trackActivated(const QList<IgotuPoint> &track)
 void MainWindowPrivate::saveTracksRequested
         (const QList<QList<igotu::IgotuPoint> > &tracks)
 {
-    if (tracks.isEmpty())
-        return;
+    if (!tracks.isEmpty())
+        saveTracks(tracks);
+}
 
+QString MainWindowPrivate::savedTrackFileName(bool raw, const IgotuPoint &point,
+        FileExporter **currentExporter)
+{
+    const QDateTime date = point.isValid() ?
+        point.dateTime() : QDateTime::currentDateTime();
+
+    QList<FileExporter*> selectedExporters;
+    Q_FOREACH (FileExporter *exporter, exporters)
+        if (raw || exporter->mode().testFlag(FileExporter::TrackExport))
+            selectedExporters.append(exporter);
+    if (selectedExporters.isEmpty()) {
+        qWarning("No file exporters found");
+        return QString();
+    }
+
+    QStringList filters;
+    QStringList filterExtensions;
+    Q_FOREACH (FileExporter *exporter, selectedExporters) {
+            filters.append(exporter->fileType());
+            filterExtensions.append(exporter->fileExtension());
+    }
+    QString selectedFilter;
+
+    QString fileTemplate =
+        date.toString(QLatin1String("yyyy-MM-dd-hh-mm-ss")) +
+        QLatin1Char('.') + selectedExporters.at(0)->fileExtension();
+
+    const QString filePath = QFileDialog::getSaveFileName(p,
+            MainWindow::tr("Save GPS Tracks"),
+            fileTemplate, filters.join(QLatin1String(";;")), &selectedFilter);
+
+    if (filePath.isEmpty())
+        return filePath;
+
+    // There is a bug in QGtkStyle for Qt < 4.6.0 that will not return the
+    // selected filter, so just guess it from the filename
+    // const int index = filters.indexOf(selectedFilter);
+    const int index = filterExtensions.indexOf(QFileInfo(filePath).suffix());
+    *currentExporter = selectedExporters.at(index < 0 ? 0 : index);
+
+    return filePath;
+}
+
+void MainWindowPrivate::saveTracks
+        (const QList<QList<IgotuPoint> > &tracks)
+{
     try {
-        const QDateTime date = tracks.count() == 1 ?
-            tracks[0][0].dateTime() : QDateTime::currentDateTime();
-        QString filePath = QFileDialog::getSaveFileName(p,
-                MainWindow::tr("Save GPS Tracks"),
-                date.toString(QLatin1String("yyyy-MM-dd-hh-mm-ss")) +
-                QLatin1String(".gpx"),
-                MainWindow::tr("GPX files (*.gpx)"));
-
+        FileExporter *exporter;
+        const QString filePath = savedTrackFileName(tracks.isEmpty(),
+                tracks.value(0).value(0), &exporter);
         if (filePath.isEmpty())
             return;
+
+        Q_ASSERT(exporter);
 
         QFile file(filePath);
         if (!file.open(QIODevice::WriteOnly))
             throw IgotuError(MainWindow::tr("Unable to create file: %1")
                     .arg(file.errorString()));
 
-        const QByteArray gpxData = IgotuPoints::gpx(tracks,
+        QByteArray data;
+        if (tracks.isEmpty())
+            data = exporter->save(*lastTrackPoints,
                 control->tracksAsSegments(), control->utcOffset());
-        if (file.write(gpxData) != gpxData.length())
+        else
+            data = exporter->save(tracks,
+                control->tracksAsSegments(), control->utcOffset());
+        if (file.write(data) != data.length())
             throw IgotuError(MainWindow::tr("Unable to save file: %1")
                     .arg(file.errorString()));
     } catch (const std::exception &e) {
@@ -488,6 +545,12 @@ MainWindow::MainWindow() :
                 d.get(),
                 SLOT(trackActivated(QList<igotu::IgotuPoint>)));
     }
+
+    QMultiMap<int, FileExporter*> fileExporterMap;
+    Q_FOREACH (FileExporter * const exporter,
+            PluginLoader().availablePlugins<FileExporter>())
+        fileExporterMap.insert(exporter->exporterPriority(), exporter);
+    d->exporters = fileExporterMap.values();
 
     // Progress bar
     d->progress = new QProgressBar(this);

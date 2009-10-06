@@ -19,6 +19,7 @@
 #include "igotu/exception.h"
 #include "igotu/igotupoints.h"
 #include "igotu/paths.h"
+#include "igotu/utils.h"
 
 #include "trackvisualizer.h"
 
@@ -57,8 +58,6 @@ Q_SIGNALS:
 
 private:
     void initMarble();
-    QByteArray pointsToKml(const QList<IgotuPoint> &wayPoints,
-            const QList<QList<IgotuPoint> > &tracks);
 
 private:
     QLayout *verticalLayout;
@@ -142,7 +141,6 @@ void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points,
     }
     initMarble();
 
-    const QList<IgotuPoint> wayPoints = points.wayPoints();
     const QList<QList<IgotuPoint> > trackPoints = points.tracks();
 
     kmlFile.reset(new QTemporaryFile(QDir::tempPath() +
@@ -150,7 +148,7 @@ void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points,
     if (!kmlFile->open())
         throw IgotuError(tr("Unable to create temporary kml file: %1")
                 .arg(kmlFile->errorString()));
-    kmlFile->write(pointsToKml(wayPoints, trackPoints));
+    kmlFile->write(pointsToKml(trackPoints, false));
     kmlFile->flush();
 #if MARBLE_VERSION < 0x000800
     tracks->addPlaceMarkFile(kmlFile->fileName());
@@ -180,81 +178,6 @@ void MarbleVisualizer::highlightTrack(const QList<IgotuPoint> &track)
 
     tracks->setCenterLongitude(track.at(0).longitude());
     tracks->setCenterLatitude(track.at(0).latitude());
-}
-
-QByteArray MarbleVisualizer::pointsToKml(const QList<IgotuPoint> &wayPoints,
-        const QList<QList<IgotuPoint> > &tracks)
-{
-    QByteArray result;
-    QTextStream out(&result);
-    out.setCodec("UTF-8");
-    out.setRealNumberNotation(QTextStream::FixedNotation);
-    out.setRealNumberPrecision(6);
-
-    out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-           "<kml xmlns=\"http://earth.google.com/kml/2.2\">\n"
-           "<Document>\n"
-           "<Style id=\"line\">\n"
-           "    <LineStyle>\n"
-           "    <color>73FF0000</color>\n"
-           "    <width>5</width>\n"
-           "    </LineStyle>\n"
-           "</Style>\n";
-
-    unsigned wayPointCounter = 1;
-    Q_FOREACH (const IgotuPoint &point, wayPoints) {
-        out << "<Placemark>\n"
-               "<name>"
-            << tr("Waypoint %1").arg(wayPointCounter++)
-            << "</name>\n"
-               "<Point>\n"
-               "<coordinates>\n";
-        out << point.longitude() << ',' << point.latitude() << '\n';
-        out << "</coordinates>\n"
-               "</Point>\n"
-               "</Placemark>\n";
-    }
-
-    unsigned trackCounter = 1;
-    Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
-        if (track.isEmpty())
-            continue;
-        out << "<Placemark>\n"
-               "<name>" << tr("Track %1").arg(trackCounter++) << "</name>\n"
-               "<Point>\n"
-               "<coordinates>\n";
-        out << track.at(0).longitude() << ',' << track.at(0).latitude() << '\n';
-        out << "</coordinates>\n"
-               "</Point>\n"
-               "</Placemark>\n";
-    }
-
-    out << "<Folder>\n";
-    Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
-        if (track.isEmpty())
-            continue;
-        out << "<Placemark>\n"
-               "<styleUrl>#line</styleUrl>\n";
-
-        out << "<LineString>\n"
-               "<tessellate>1</tessellate>\n"
-               "<coordinates>\n";
-        Q_FOREACH (const IgotuPoint &point, track)
-            out << point.longitude() << ',' << point.latitude() << '\n';
-        out << "</coordinates>\n"
-               "</LineString>\n";
-
-        out << "</Placemark>\n";
-    }
-
-    out << "</Folder>\n";
-
-    out << "</Document>\n"
-           "</kml>\n";
-
-    out.flush();
-
-    return result;
 }
 
 // MarbleVisualizerCreator =====================================================

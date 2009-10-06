@@ -19,10 +19,12 @@
 #include "igotu/commands.h"
 #include "igotu/commonmessages.h"
 #include "igotu/exception.h"
+#include "igotu/fileexporter.h"
 #include "igotu/igotupoints.h"
 #include "igotu/messages.h"
 #include "igotu/optionutils.h"
 #include "igotu/paths.h"
+#include "igotu/pluginloader.h"
 
 #include "mainobject.h"
 
@@ -43,7 +45,7 @@ using namespace igotu;
 namespace po = boost::program_options;
 
 po::variables_map variables;
-QString imagePath, device;
+QString imagePath, device, format;
 
 // Put translations in the right context
 //
@@ -69,7 +71,14 @@ int main(int argc, char *argv[])
         app.installTranslator(translator.get());
     }
 
-    // TODO Command line parsing needs localization
+    QMultiMap<int, QString> exporterMap;
+    Q_FOREACH (const FileExporter * const exporter,
+            PluginLoader().availablePlugins<FileExporter>())
+        exporterMap.insert(exporter->exporterPriority(),
+                //: Used for command line help
+                //: %1 is the file format name, %2 the description
+                MainObject::tr("%1: %2").arg(exporter->formatName(),
+                    exporter->formatDescription()));
 
     QString action;
     int offset = 0;
@@ -99,21 +108,15 @@ int main(int argc, char *argv[])
         ("image,i",
          po::value<QString>(&imagePath),
          MainObject::tr("read memory contents from file "
-             "(saved by \"dump --raw\")").toLocal8Bit())
+             "(saved by \"dump -f raw\")").toLocal8Bit())
 
-        ("gpx",
-         MainObject::tr("output in GPX format (this is the default)")
-         .toLocal8Bit())
-        ("details",
-         MainObject::tr("output a detailed representation of all trackpoints")
-         .toLocal8Bit())
-        ("raw",
-         MainObject::tr("output the memory contents of the GPS "
-             "tracker (be sure to redirect output to a file)").toLocal8Bit())
+        ("format,f",
+         po::value<QString>(&format),
+         MainObject::tr("use the specified output format:").toLocal8Bit() + '\n'
+         + QStringList(exporterMap.values()).join(QLatin1String("\n")).toLocal8Bit())
 
         ("segments",
-         MainObject::tr("for output in GPX format, group trackpoints into "
-             "segments instead of tracks")
+         MainObject::tr("group trackpoints into segments instead of tracks")
          .toLocal8Bit())
         ("utc-offset",
          po::value<int>(&offset),
@@ -179,7 +182,7 @@ int main(int argc, char *argv[])
 
         Messages::setVerbose(variables.count("verbose"));
 
-        MainObject mainObject(device, offset);
+        MainObject mainObject(device, variables.count("segments"), offset);
 
         if (action == QLatin1String("info")) {
             mainObject.info();
@@ -192,8 +195,7 @@ int main(int argc, char *argv[])
                         .arg(imagePath));
             mainObject.info(file.readAll().left(0x1000));
         } else if (action == QLatin1String("dump")) {
-            mainObject.save(variables.count("details"), variables.count("raw"),
-                    variables.count("segments"));
+            mainObject.save(format);
         } else if (action == QLatin1String("clear")) {
             mainObject.purge();
         } else {

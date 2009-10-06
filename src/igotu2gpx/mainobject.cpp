@@ -18,9 +18,11 @@
 
 #include "igotu/commonmessages.h"
 #include "igotu/exception.h"
+#include "igotu/fileexporter.h"
 #include "igotu/igotucontrol.h"
 #include "igotu/igotupoints.h"
 #include "igotu/messages.h"
+#include "igotu/pluginloader.h"
 #include "igotu/utils.h"
 
 #include "mainobject.h"
@@ -54,9 +56,8 @@ public:
 
     IgotuControl *control;
     QByteArray contents;
-    bool details;
-    bool raw;
-    bool exportAsSegments;
+    QString format;
+    QList<FileExporter*> exporters;
 };
 
 static QString dump(const QByteArray &data)
@@ -164,55 +165,20 @@ void MainObjectPrivate::on_control_contentsBlocksFinished(uint num, uint total)
 void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
         uint count)
 {
-    if (raw) {
-        Messages::directOutput(contents);
-    } else if (details) {
-        IgotuPoints igotuPoints(contents, count);
-        unsigned index = 0;
-        Q_FOREACH (const IgotuPoint &igotuPoint, igotuPoints.points()) {
-            // These shouldn't be localized, just in case somebody wants to
-            // parse them?
-            Messages::textOutput(QString::fromLatin1("Record %1")
-                    .arg(++index));
-            if (igotuPoint.isWayPoint())
-                Messages::textOutput(QString::fromLatin1("  Waypoint"));
-            if (igotuPoint.isTrackStart())
-                Messages::textOutput(QString::fromLatin1("  Track start"));
-            Messages::textOutput(QString::fromLatin1("  Date %1")
-                    .arg(igotuPoint.dateTimeString(control->utcOffset())));
-            Messages::textOutput(QString::fromLatin1("  Latitude %1")
-                    .arg(igotuPoint.latitude(), 0, 'f', 6));
-            Messages::textOutput(QString::fromLatin1("  Longitude %1")
-                    .arg(igotuPoint.longitude(), 0, 'f', 6));
-            Messages::textOutput(QString::fromLatin1("  Elevation %1 m")
-                    .arg(igotuPoint.elevation(), 0, 'f', 1));
-            Messages::textOutput(QString::fromLatin1("  Speed %1 km/h")
-                    .arg(igotuPoint.speed(), 0, 'f', 1));
-            Messages::textOutput(QString::fromLatin1("  Course %1 degrees")
-                    .arg(igotuPoint.course(), 0, 'f', 2));
-            Messages::textOutput(QString::fromLatin1("  EHPE %1 m")
-                    .arg(igotuPoint.ehpe(), 0, 'f', 2));
-            QString satellites = QLatin1String("  Satellites:");
-            Q_FOREACH (unsigned satellite, igotuPoint.satellites())
-                satellites += QString::fromLatin1(" %1").arg(satellite);
-            Messages::textOutput(satellites);
-            Messages::textOutput(QString::fromLatin1("  Flags 0x%1")
-                    .arg(igotuPoint.flags(), 2, 16, QLatin1Char('0')));
-            Messages::textOutput(QString::fromLatin1("  Timeout %1 s")
-                    .arg(igotuPoint.timeout()));
-            Messages::textOutput(QString::fromLatin1("  MSVs_QCN %1")
-                    .arg(igotuPoint.msvsQcn()));
-            Messages::textOutput(QString::fromLatin1
-                    ("  Weight criteria 0x%1").arg
-                    (igotuPoint.weightCriteria(), 2, 16, QLatin1Char('0')));
-            Messages::textOutput(QString::fromLatin1("  Sleep time %1")
-                    .arg(igotuPoint.sleepTime()));
+    FileExporter *selected = exporters.value(0);
+    Q_FOREACH (FileExporter *exporter, exporters) {
+        if (format == exporter->formatName()) {
+            selected = exporter;
+            break;
         }
-    } else {
-        IgotuPoints igotuPoints(contents, count);
-        Messages::directOutput(igotuPoints.gpx(exportAsSegments,
-                    control->utcOffset()));
     }
+
+    if (selected)
+        Messages::directOutput(selected->save(IgotuPoints(contents, count),
+                    control->tracksAsSegments(), control->utcOffset()));
+    else
+        qWarning("No file exporters found");
+
     QCoreApplication::quit();
 }
 
@@ -248,10 +214,16 @@ void MainObjectPrivate::on_control_purgeFailed(const QString &message)
 
 // MainObject ==================================================================
 
-MainObject::MainObject(const QString &device, int utcOffset) :
+MainObject::MainObject(const QString &device, bool tracksAsSegments, int utcOffset) :
     d(new MainObjectPrivate)
 {
     d->p = this;
+
+    QMultiMap<int, FileExporter*> exporterMap;
+    Q_FOREACH (FileExporter * const exporter,
+            PluginLoader().availablePlugins<FileExporter>())
+        exporterMap.insert(exporter->exporterPriority(), exporter);
+    d->exporters = exporterMap.values();
 
     d->control = new IgotuControl(this);
     d->control->setObjectName(QLatin1String("control"));
@@ -262,6 +234,7 @@ MainObject::MainObject(const QString &device, int utcOffset) :
         d->control->setDevice(device);
 
     d->control->setUtcOffset(utcOffset);
+    d->control->setTracksAsSegments(tracksAsSegments);
 }
 
 MainObject::~MainObject()
@@ -275,11 +248,9 @@ void MainObject::info(const QByteArray &contents)
     d->control->info();
 }
 
-void MainObject::save(bool details, bool raw, bool exportAsSegments)
+void MainObject::save(const QString &format)
 {
-    d->details = details;
-    d->raw = raw;
-    d->exportAsSegments = exportAsSegments;
+    d->format = format;
 
     d->control->contents();
 }

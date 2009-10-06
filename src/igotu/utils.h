@@ -20,12 +20,16 @@
 #define _IGOTU2GPX_SRC_IGOTU_UTILS_H_
 
 #include "global.h"
+#include "igotupoints.h"
 
 class QMetaObject;
 class QObject;
 
 namespace igotu
 {
+
+IGOTU_EXPORT QByteArray pointsToKml(const QList<QList<IgotuPoint> > &tracks,
+        bool tracksAsSegments);
 
 IGOTU_EXPORT void connectSlotsByNameToPrivate(QObject *publicObject, QObject
         *privateObject);

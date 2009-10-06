@@ -22,6 +22,7 @@
 #include "preferencesdialog.h"
 #include "ui_preferencesdialog.h"
 
+#include <QPushButton>
 #include <QSettings>
 
 using namespace igotu;
@@ -231,6 +232,8 @@ PreferencesDialog::PreferencesDialog(QWidget *parent) :
 
     d->ui->tracksAsSegments->addItem(tr("Tracks"), false);
     d->ui->tracksAsSegments->addItem(tr("Track segments"), true);
+
+    d->ui->buttonBox->button(QDialogButtonBox::Close)->setDefault(true);
 
     d->syncDialogToPreferences();
 

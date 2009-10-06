@@ -27,6 +27,11 @@
 namespace igotu
 {
 
+IgotuPoint::IgotuPoint() :
+    record(QByteArray(32, char(0xff)))
+{
+}
+
 IgotuPoint::IgotuPoint(const QByteArray &record) :
     record(record)
 {
@@ -250,6 +255,11 @@ IgotuPoints::~IgotuPoints()
 {
 }
 
+QByteArray IgotuPoints::memoryDump() const
+{
+    return dump;
+}
+
 QList<IgotuPoint> IgotuPoints::points() const
 {
     QList<IgotuPoint> result;
@@ -365,79 +375,6 @@ QString IgotuPoints::password() const
         result[i] = qFromLittleEndian<ushort>
             (reinterpret_cast<const uchar*>(dump.data() + 0x0803 + i * 2));
     return QString::fromUtf16(result.data(), result.size());
-}
-
-QByteArray IgotuPoints::gpx(bool tracksAsSegments, int utcOffset) const
-{
-    return gpx(tracks(), tracksAsSegments, utcOffset);
-}
-
-QByteArray IgotuPoints::gpx(const QList<QList<IgotuPoint> > &tracks,
-        bool tracksAsSegments, int utcOffset)
-{
-    QByteArray result;
-    QTextStream out(&result);
-    out.setCodec("UTF-8");
-    out.setRealNumberNotation(QTextStream::FixedNotation);
-    out.setRealNumberPrecision(6);
-
-    out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-           "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" "
-           "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-           "xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 "
-           "http://www.topografix.com/GPX/1/1/gpx.xsd\" "
-           "creator=\"igotu2gpx\" "
-           "version=\"1.1\">\n";
-
-    Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
-        Q_FOREACH (const IgotuPoint &point, track) {
-            if (!point.isWayPoint())
-                continue;
-            out << xmlIndent(1) << "<wpt "
-                << qSetRealNumberPrecision(6)
-                << "lat=\"" << point.latitude() << "\" "
-                << "lon=\"" << point.longitude() << "\">\n"
-                << qSetRealNumberPrecision(2)
-                << xmlIndent(2) << "<ele>" << point.elevation() << "</ele>\n"
-                << xmlIndent(2) << "<time>" << point.dateTimeString(utcOffset)
-                    << "</time>\n"
-                << xmlIndent(2) << "<sat>" << point.satellites().count()
-                    << "</sat>\n"
-                << xmlIndent(1) << "</wpt>\n";
-        }
-    }
-
-    if (tracksAsSegments)
-        out << xmlIndent(1) << "<trk>\n";
-    Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
-        if (!tracksAsSegments)
-            out << xmlIndent(1) << "<trk>\n";
-        out << xmlIndent(2) << "<trkseg>\n";
-        Q_FOREACH (const IgotuPoint &point, track)
-            out << xmlIndent(3) << "<trkpt "
-                << qSetRealNumberPrecision(6)
-                << "lat=\"" << point.latitude() << "\" "
-                << "lon=\"" << point.longitude() << "\">\n"
-                << qSetRealNumberPrecision(2)
-                << xmlIndent(4) << "<ele>" << point.elevation() << "</ele>\n"
-                << xmlIndent(4) << "<time>" << point.dateTimeString(utcOffset)
-                    << "</time>\n"
-                << xmlIndent(4) << "<sat>" << point.satellites().count()
-                    << "</sat>\n"
-                << xmlIndent(4) << "<speed>" << point.speed() / 3.6
-                    << "</speed>\n"
-                << xmlIndent(3) << "</trkpt>\n";
-        out << xmlIndent(2) << "</trkseg>\n";
-        if (!tracksAsSegments)
-            out << xmlIndent(1) << "</trk>\n";
-    }
-    if (tracksAsSegments)
-        out << xmlIndent(1) << "</trk>\n";
-    out << "</gpx>\n";
-
-    out.flush();
-
-    return result;
 }
 
 } // namespace igotu

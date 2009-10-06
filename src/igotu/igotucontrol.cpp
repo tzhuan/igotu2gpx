@@ -367,11 +367,11 @@ void IgotuControlPrivateWorker::contents()
         if (connection) {
             NmeaSwitchCommand(connection.get(), false).sendAndReceive();
 
-            ModelCommand model(connection.get());
-            model.sendAndReceive();
+            IdentificationCommand id(connection.get());
+            id.sendAndReceive();
 
             CountCommand countCommand(connection.get(),
-                    model.modelId() == ModelCommand::Gt120);
+                    id.firmwareVersion() >= 0x0215);
             countCommand.sendAndReceive();
             count = countCommand.trackPointCount();
             const unsigned blocks = 1 + (count + 0x7f) / 0x80;

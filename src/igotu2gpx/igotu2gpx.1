@@ -43,17 +43,11 @@ connect to the specified device (usb:<vendor>:<product> (Unix) or serial:<n>
 (Windows))
 .TP
 \fB\-i\fR, \fB\-\-image\fR \fIfile\fR
-read memory contents from file (saved by "dump \-\-raw")
+read memory contents from file (saved by "dump \-f raw")
 .TP
-\fB\-\-gpx\fR
-output in GPX format (this is the default)
-.TP
-\fB\-\-details\fR
-output a detailed representation of all track points
-.TP
-\fB\-\-raw\fR
-output the memory contents of the GPS tracker (be sure to redirect output to a
-file)
+\fB\-f\fR, \fB\-\-format\fR \fIformat\fR
+use the specified output format: GPS exchange format (gpx), Google Earth (kml),
+raw dump of the flash memory (raw) or track point details (details)
 .TP
 \fB\-\-segments\fR
 for output in GPX format, group trackpoints into segments instead of tracks
@@ -91,14 +85,14 @@ Remove all trackpoints from the GPS tracker:
 Dump the complete flash memory of a GPS tracker to a file, and use it later
 to display a detailed listing of all trackpoints:
 .nf
-    igotu2gpx dump --raw > flashimage.raw
-    igotu2gpx info --details --image flashimage.raw
+    igotu2gpx dump -f raw > flashimage.raw
+    igotu2gpx dump -f details --image flashimage.raw
 .fi
 .PP
 Dump the configuration of a GPS tracker to a file, and use it later
 to display the changes made by @trip PC:
 .nf
-    igotu2gpx dump --raw > flashimage.raw
+    igotu2gpx dump -f raw > flashimage.raw
     # configuration changes in @trip PC ...
     igotu2gpx diff --image flashimage.raw
 .fi

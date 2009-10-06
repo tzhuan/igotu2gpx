@@ -17,12 +17,17 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
+#include "commonmessages.h"
 #include "utils.h"
 
 #include <QMetaProperty>
 
 namespace igotu
 {
+
+// Put translations in the right context
+//
+// TRANSLATOR igotu::Common
 
 // copied and modified from qobject.cpp
 void connectSlotsByNameToPrivate(QObject *publicObject, QObject *privateObject)
@@ -101,6 +106,103 @@ const char *enumValueToKey(const QMetaObject &metaObject,
     if (!key)
         return metaEnum.key(0);
     return key;
+}
+
+QByteArray pointsToKml(const QList<QList<IgotuPoint> > &tracks, bool tracksAsSegments)
+{
+    QByteArray result;
+    QTextStream out(&result);
+    out.setCodec("UTF-8");
+    out.setRealNumberNotation(QTextStream::FixedNotation);
+    out.setRealNumberPrecision(6);
+
+    out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+           "<kml xmlns=\"http://earth.google.com/kml/2.2\">\n"
+           "<Document>\n"
+           "<Style id=\"line\">\n"
+           "    <LineStyle>\n"
+           "    <color>73FF0000</color>\n"
+           "    <width>5</width>\n"
+           "    </LineStyle>\n"
+           "</Style>\n";
+
+    unsigned counter = 1;
+//    out << "<Folder>\n"; Bug in Marble? Points are not displayed if placed in folders
+    Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
+        Q_FOREACH (const IgotuPoint &point, track) {
+            if (!point.isWayPoint())
+                continue;
+            out << "<Placemark>\n"
+                "<name>"
+                << Common::tr("Waypoint %1").arg(counter++)
+                << "</name>\n"
+                "<Point>\n"
+                "<coordinates>\n";
+            out << point.longitude() << ',' << point.latitude() << '\n';
+            out << "</coordinates>\n"
+                "</Point>\n"
+                "</Placemark>\n";
+        }
+    }
+//    out << "</Folder>\n";
+
+    counter = 1;
+//    out << "<Folder>\n";
+    Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
+        if (track.isEmpty())
+            continue;
+        out << "<Placemark>\n"
+               "<name>" << Common::tr("Track %1").arg(counter++) << "</name>\n"
+               "<Point>\n"
+               "<coordinates>\n";
+        out << track.at(0).longitude() << ',' << track.at(0).latitude() << '\n';
+        out << "</coordinates>\n"
+               "</Point>\n"
+               "</Placemark>\n";
+        if (tracksAsSegments)
+            break;
+    }
+//    out << "</Folder>\n";
+
+    counter = 1;
+    out << "<Folder>\n";
+    if (tracksAsSegments)
+        out << "<Placemark>\n"
+               "<name>" << Common::tr("Track %1").arg(counter++) << "</name>\n"
+               "<styleUrl>#line</styleUrl>\n"
+               "<MultiGeometry>\n";
+
+    Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
+        if (track.isEmpty())
+            continue;
+        if (!tracksAsSegments)
+            out << "<Placemark>\n"
+                   "<name>" << Common::tr("Track %1").arg(counter++) << "</name>\n"
+                   "<styleUrl>#line</styleUrl>\n";
+
+        out << "<LineString>\n"
+               "<tessellate>1</tessellate>\n"
+               "<coordinates>\n";
+        Q_FOREACH (const IgotuPoint &point, track)
+            out << point.longitude() << ',' << point.latitude() << '\n';
+        out << "</coordinates>\n"
+               "</LineString>\n";
+
+        if (!tracksAsSegments)
+            out << "</Placemark>\n";
+    }
+
+    if (tracksAsSegments)
+        out << "</MultiGeometry>\n"
+               "</Placemark>\n";
+    out << "</Folder>\n";
+
+    out << "</Document>\n"
+           "</kml>\n";
+
+    out.flush();
+
+    return result;
 }
 
 } // namespace igotu

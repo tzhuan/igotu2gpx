@@ -36,6 +36,7 @@ class IGOTU_EXPORT IgotuPoint
 {
     Q_DECLARE_TR_FUNCTIONS(igotu::IgotuPoint)
 public:
+    IgotuPoint();
     IgotuPoint(const QByteArray &record);
     ~IgotuPoint();
 
@@ -115,9 +116,7 @@ public:
     // isValid() and grouped into tracks
     QList<QList<IgotuPoint> > tracks() const;
 
-    QByteArray gpx(bool tracksAsSegments, int utcOffset) const;
-    static QByteArray gpx(const QList<QList<IgotuPoint> > &tracks,
-            bool tracksAsSegments, int utcOffset);
+    QByteArray memoryDump() const;
 
     bool isValid() const;
 
