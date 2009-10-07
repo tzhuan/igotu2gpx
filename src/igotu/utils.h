@@ -28,6 +28,8 @@ class QObject;
 namespace igotu
 {
 
+IGOTU_EXPORT unsigned colorTableEntry(unsigned index);
+
 IGOTU_EXPORT QByteArray pointsToKml(const QList<QList<IgotuPoint> > &tracks,
         bool tracksAsSegments);
 

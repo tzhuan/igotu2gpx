@@ -108,6 +108,82 @@ const char *enumValueToKey(const QMetaObject &metaObject,
     return key;
 }
 
+// QColor/QRgb is in QtGui
+static unsigned Ahsv(double hue, double s, double v, double a)
+{
+    double r, g, b;
+
+    if (s == 0) {
+        // achromatic (grey)
+        r = g = b = v;
+    } else {
+        hue *= 6;
+        const unsigned sector = floor(hue);
+        const double f = hue - sector;
+        const double p = v * (1 - s);
+        if (sector & 1) {
+            const double q = v * (1 - s * f);
+            switch (sector) {
+            case 1:
+                r = q;
+                g = v;
+                b = p;
+                break;
+            case 3:
+                r = p;
+                g = q;
+                b = v;
+                break;
+            default: // 5
+                r = v;
+                g = p;
+                b = q;
+                break;
+            }
+        } else {
+            const double t = v * (1 - s * (1 - f));
+            switch (sector) {
+            case 0:
+                r = v;
+                g = t;
+                b = p;
+                break;
+            case 2:
+                r = p;
+                g = v;
+                b = t;
+                break;
+            default: // 4
+                r = t;
+                g = p;
+                b = v;
+                break;
+            }
+        }
+    }
+    return (qRound(a * 0xff) << 24) +
+           (qRound(r * 0xff) << 16) +
+           (qRound(g * 0xff) << 8) +
+            qRound(b * 0xff);
+}
+
+static QByteArray kmlColor(unsigned color)
+{
+    const unsigned kmlColor =
+        (color & 0xff000000) +
+       ((color & 0x00ff0000) >> 16) +
+        (color & 0x0000ff00) +
+       ((color & 0x000000ff) << 16);
+    return QByteArray::number(kmlColor, 16).rightJustified(8, '0');
+}
+
+unsigned colorTableEntry(unsigned index)
+{
+    const static unsigned hueBases[4] = { 16, 18, 17, 19 };
+    double hue = ((hueBases[(index / 6) % 4] + (index % 6) * 4) % 24) / 24.0;
+    return Ahsv(hue, 1.0, 1.0, .65);
+}
+
 QByteArray pointsToKml(const QList<QList<IgotuPoint> > &tracks, bool tracksAsSegments)
 {
     QByteArray result;
@@ -118,13 +194,17 @@ QByteArray pointsToKml(const QList<QList<IgotuPoint> > &tracks, bool tracksAsSeg
 
     out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
            "<kml xmlns=\"http://earth.google.com/kml/2.2\">\n"
-           "<Document>\n"
-           "<Style id=\"line\">\n"
-           "    <LineStyle>\n"
-           "    <color>73FF0000</color>\n"
-           "    <width>5</width>\n"
-           "    </LineStyle>\n"
-           "</Style>\n";
+           "<Document>\n";
+
+    const unsigned styleCount = tracksAsSegments ? 1 : tracks.count();
+    for (unsigned i = 0; i < styleCount; ++i) {
+        out << "<Style id=\"line" << i + 1 << "\">\n"
+               "    <LineStyle>\n"
+               "    <color>" << kmlColor(colorTableEntry(i)) << "</color>\n"
+               "    <width>5</width>\n"
+               "    </LineStyle>\n"
+               "</Style>\n";
+    }
 
     unsigned counter = 1;
 //    out << "<Folder>\n"; Bug in Marble? Points are not displayed if placed in folders
@@ -134,7 +214,7 @@ QByteArray pointsToKml(const QList<QList<IgotuPoint> > &tracks, bool tracksAsSeg
                 continue;
             out << "<Placemark>\n"
                 "<name>"
-                << Common::tr("Waypoint %1").arg(counter++)
+                << Common::tr("Waypoint %1").arg(counter)
                 << "</name>\n"
                 "<Point>\n"
                 "<coordinates>\n";
@@ -142,6 +222,7 @@ QByteArray pointsToKml(const QList<QList<IgotuPoint> > &tracks, bool tracksAsSeg
             out << "</coordinates>\n"
                 "</Point>\n"
                 "</Placemark>\n";
+            ++counter;
         }
     }
 //    out << "</Folder>\n";
@@ -152,7 +233,7 @@ QByteArray pointsToKml(const QList<QList<IgotuPoint> > &tracks, bool tracksAsSeg
         if (track.isEmpty())
             continue;
         out << "<Placemark>\n"
-               "<name>" << Common::tr("Track %1").arg(counter++) << "</name>\n"
+               "<name>" << Common::tr("Track %1").arg(counter) << "</name>\n"
                "<Point>\n"
                "<coordinates>\n";
         out << track.at(0).longitude() << ',' << track.at(0).latitude() << '\n';
@@ -161,6 +242,7 @@ QByteArray pointsToKml(const QList<QList<IgotuPoint> > &tracks, bool tracksAsSeg
                "</Placemark>\n";
         if (tracksAsSegments)
             break;
+        ++counter;
     }
 //    out << "</Folder>\n";
 
@@ -168,8 +250,8 @@ QByteArray pointsToKml(const QList<QList<IgotuPoint> > &tracks, bool tracksAsSeg
     out << "<Folder>\n";
     if (tracksAsSegments)
         out << "<Placemark>\n"
-               "<name>" << Common::tr("Track %1").arg(counter++) << "</name>\n"
-               "<styleUrl>#line</styleUrl>\n"
+               "<name>" << Common::tr("Track %1").arg(counter) << "</name>\n"
+               "<styleUrl>#line" << counter << "</styleUrl>\n"
                "<MultiGeometry>\n";
 
     Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
@@ -177,8 +259,8 @@ QByteArray pointsToKml(const QList<QList<IgotuPoint> > &tracks, bool tracksAsSeg
             continue;
         if (!tracksAsSegments)
             out << "<Placemark>\n"
-                   "<name>" << Common::tr("Track %1").arg(counter++) << "</name>\n"
-                   "<styleUrl>#line</styleUrl>\n";
+                   "<name>" << Common::tr("Track %1").arg(counter) << "</name>\n"
+                   "<styleUrl>#line" << counter << "</styleUrl>\n";
 
         out << "<LineString>\n"
                "<tessellate>1</tessellate>\n"
@@ -190,6 +272,8 @@ QByteArray pointsToKml(const QList<QList<IgotuPoint> > &tracks, bool tracksAsSeg
 
         if (!tracksAsSegments)
             out << "</Placemark>\n";
+
+        ++counter;
     }
 
     if (tracksAsSegments)

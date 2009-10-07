@@ -18,12 +18,16 @@
 
 #include "igotu/exception.h"
 #include "igotu/igotupoints.h"
+#include "igotu/utils.h"
 
 #include "trackvisualizer.h"
 
 #include <QAction>
+#include <QApplication>
 #include <QHeaderView>
 #include <QLayout>
+#include <QPainter>
+#include <QPen>
 #include <QTreeWidget>
 
 using namespace igotu;
@@ -74,6 +78,7 @@ static QString formatCoordinates(const IgotuPoint &point)
     const int longitudeSeconds = qRound(qAbs(longitude * 3600));
     const double latitude = point.latitude();
     const int latitudeSeconds = qRound(qAbs(latitude * 3600));
+    // \xc2\xb0: degrees
     return QString::fromUtf8("%1\xc2\xb0%2'%3\"%4, %5\xc2\xb0%6'%7\"%8")
         .arg(longitudeSeconds / 3600)
         .arg((longitudeSeconds / 60) % 60)
@@ -84,6 +89,21 @@ static QString formatCoordinates(const IgotuPoint &point)
         .arg(latitudeSeconds % 60)
         .arg(latitude < 0 ? ListVisualizer::tr("S") : ListVisualizer::tr("N"));
 
+}
+
+static QPixmap colorPixmap(unsigned index)
+{
+    const int iconSize = QApplication::style()->pixelMetric
+        (QStyle::PM_ListViewIconSize);
+
+    QPixmap icon(iconSize, iconSize);
+    icon.fill(Qt::transparent);
+
+    QPainter painter(&icon);
+    painter.setPen(QPen(QColor::fromRgba(colorTableEntry(index)), 5));
+    painter.drawLine(0, iconSize / 2, iconSize, iconSize / 2);
+
+    return icon;
 }
 
 // ListVisualizer ==============================================================
@@ -129,6 +149,7 @@ void ListVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset)
 {
     QList<QTreeWidgetItem*> items;
     const QList<QList<IgotuPoint> > tracks = points.tracks();
+    unsigned counter = 0;
     Q_FOREACH (const QList<IgotuPoint> &track, tracks) {
         if (track.isEmpty())
             continue;
@@ -144,6 +165,8 @@ void ListVisualizer::setTracks(const igotu::IgotuPoints &points, int utcOffset)
         }
         QTreeWidgetItem * const item = new QTreeWidgetItem((QTreeWidget*)NULL,
                 data);
+        if (mode == TrackVisualizerCreator::DockWidgetAppearance)
+            item->setIcon(0, QIcon(colorPixmap(counter++)));
         item->setData(0, Qt::UserRole, QVariant::fromValue(track));
         items.append(item);
     }
