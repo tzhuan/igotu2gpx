@@ -29,6 +29,7 @@
 #include <QSslSocket>
 #include <QTemporaryFile>
 #include <QUrl>
+#include <QUuid>
 
 using namespace igotu;
 
@@ -39,6 +40,7 @@ public:
     QString releaseUrl() const;
     QDateTime lastCheck() const;
     QString ignoredVersion() const;
+    QString uuid() const;
     bool newerVersion(const QString &oldVersion, const QString &newVersion) const;
 
     void requestReleases(const QString &os);
@@ -61,6 +63,7 @@ public:
 #define NOTIFY_URL QLatin1String("Updates/releaseUrl")
 #define NOTIFY_LAST QLatin1String("Updates/lastCheck")
 #define NOTIFY_IGNORE QLatin1String("Updates/ignoreVersion")
+#define NOTIFY_UUID QLatin1String("Updates/uuid")
 
 #define DEFAULT_RELEASE_URL QLatin1String("https://mh21.de/igotu2gpx/releases.txt")
 
@@ -171,6 +174,14 @@ QString UpdateNotificationPrivate::ignoredVersion() const
     return QSettings().value(NOTIFY_IGNORE).toString();
 }
 
+QString UpdateNotificationPrivate::uuid() const
+{
+    QSettings settings;
+    if (!settings.contains(NOTIFY_UUID))
+        settings.setValue(NOTIFY_UUID, QUuid::createUuid().toString().mid(1, 36));
+    return settings.value(NOTIFY_UUID).toString();
+}
+
 bool UpdateNotificationPrivate::newerVersion(const QString &oldVersion,
         const QString &newVersion) const
 {
@@ -178,14 +189,22 @@ bool UpdateNotificationPrivate::newerVersion(const QString &oldVersion,
     QStringList newParts = newVersion.split(QLatin1Char('.'));
     if (oldParts.value(0).toUInt() < newParts.value(0).toUInt())
         return true;
+    if (oldParts.value(0).toUInt() > newParts.value(0).toUInt())
+        return false;
     if (oldParts.value(1).toUInt() < newParts.value(1).toUInt())
         return true;
+    if (oldParts.value(1).toUInt() > newParts.value(1).toUInt())
+        return false;
     oldParts = oldParts.value(2).split(QLatin1Char('+'));
     newParts = newParts.value(2).split(QLatin1Char('+'));
     if (oldParts.value(0).toUInt() < newParts.value(0).toUInt())
         return true;
+    if (oldParts.value(0).toUInt() > newParts.value(0).toUInt())
+        return false;
     if (oldParts.value(1) < newParts.value(1))
         return true;
+    if (oldParts.value(1) > newParts.value(1))
+        return false;
     return false;
 }
 
@@ -201,6 +220,8 @@ void UpdateNotificationPrivate::requestReleases(const QString &os)
 
     url.addQueryItem(QLatin1String("os"), os);
     url.addQueryItem(QLatin1String("version"), QLatin1String(IGOTU_VERSION_STR));
+    url.addQueryItem(QLatin1String("uuid"), uuid());
+
     http->setHost(url.host(),
             url.scheme().toLower() == QLatin1String("https") ?
             QHttp::ConnectionModeHttps : QHttp::ConnectionModeHttp,
