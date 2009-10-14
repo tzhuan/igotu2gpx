@@ -39,16 +39,20 @@ public:
     ListVisualizer(TrackVisualizerCreator::AppearanceMode mode,
             QWidget *parent = NULL);
 
+    virtual Flags flags() const;
     virtual void setTracks(const igotu::IgotuPoints &points, int utcOffset);
     virtual QString tabTitle() const;
     virtual void highlightTrack(const QList<IgotuPoint> &track);
+    virtual void saveSelectedTracks();
 
 Q_SIGNALS:
     void saveTracksRequested(const QList<QList<igotu::IgotuPoint> > &tracks);
     void trackActivated(const QList<igotu::IgotuPoint> &tracks);
+    void trackSelectionChanged(bool selected);
 
 private Q_SLOTS:
     void on_trackList_activated(const QModelIndex &index);
+    void on_trackList_itemSelectionChanged();
     void on_saveTracksAction_activated();
 
 private:
@@ -65,7 +69,8 @@ class ListVisualizerCreator :
 public:
     virtual QString trackVisualizer() const;
     virtual int visualizerPriority() const;
-    AppearanceModes supportedVisualizerAppearances() const;
+    virtual AppearanceModes supportedVisualizerAppearances() const;
+
     virtual TrackVisualizer *createTrackVisualizer(AppearanceMode mode,
             QWidget *parent = NULL) const;
 };
@@ -203,6 +208,16 @@ void ListVisualizer::highlightTrack(const QList<igotu::IgotuPoint> &track)
     }
 }
 
+TrackVisualizer::Flags ListVisualizer::flags() const
+{
+    return HasTrackSelection;
+}
+
+void ListVisualizer::saveSelectedTracks()
+{
+    on_saveTracksAction_activated();
+}
+
 void ListVisualizer::on_trackList_activated(const QModelIndex &index)
 {
     if (!index.isValid())
@@ -211,6 +226,11 @@ void ListVisualizer::on_trackList_activated(const QModelIndex &index)
     const QList<IgotuPoint> track = index.sibling(index.row(),
             0).data(Qt::UserRole).value<QList<IgotuPoint> >();
     emit trackActivated(track);
+}
+
+void ListVisualizer::on_trackList_itemSelectionChanged()
+{
+    emit trackSelectionChanged(!trackList->selectedItems().isEmpty());
 }
 
 void ListVisualizer::on_saveTracksAction_activated()

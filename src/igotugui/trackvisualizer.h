@@ -37,14 +37,22 @@ public:
     {
     }
 
+    enum Flag {
+        HasTrackSelection    = 0x01,
+    };
+    Q_DECLARE_FLAGS(Flags, Flag)
+    virtual Flags flags() const = 0;
+
     virtual void setTracks(const igotu::IgotuPoints &points, int utcOffset) = 0;
     virtual QString tabTitle() const = 0;
     virtual void highlightTrack(const QList<igotu::IgotuPoint> &track) = 0;
+    virtual void saveSelectedTracks() = 0;
 
     // Implementations also need:
     // Q_SIGNALS:
     // void saveTracksRequested(const QList<QList<igotu::IgotuPoint> > &tracks);
     // void trackActivated(const QList<igotu::IgotuPoint> &track);
+    // void trackSelectionChanged(bool selected);
 };
 
 class TrackVisualizerCreator
@@ -59,17 +67,18 @@ public:
         MainWindowAppearance = 0x02,
     };
     Q_DECLARE_FLAGS(AppearanceModes, AppearanceMode)
+    virtual AppearanceModes supportedVisualizerAppearances() const = 0;
 
     virtual QString trackVisualizer() const = 0;
     // lower is better
     virtual int visualizerPriority() const = 0;
-    virtual AppearanceModes supportedVisualizerAppearances() const = 0;
 
     virtual TrackVisualizer *createTrackVisualizer(AppearanceMode mode,
             QWidget *parent = NULL) const = 0;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(TrackVisualizerCreator::AppearanceModes)
+Q_DECLARE_OPERATORS_FOR_FLAGS(TrackVisualizer::Flags)
 
 Q_DECLARE_INTERFACE(TrackVisualizerCreator,
         "de.mh21.igotu2gpx.trackvisualizer/1.0")

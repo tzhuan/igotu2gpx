@@ -90,6 +90,8 @@ QString IconStoragePrivate::fileName(IconStorage::IconName name)
         return QLatin1String("actions//process-stop");
     case IconStorage::SaveIcon:
         return QLatin1String("actions//document-save");
+    case IconStorage::ConfigureIcon:
+        return QLatin1String("actions//document-properties");
     case IconStorage::QuitIcon:
         return QLatin1String("actions//application-exit");
     case IconStorage::GuiIcon:

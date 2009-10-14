@@ -48,13 +48,16 @@ class MarbleVisualizer: public TrackVisualizer
 public:
     MarbleVisualizer(QWidget *parent = NULL);
 
+    virtual Flags flags() const;
     virtual void setTracks(const igotu::IgotuPoints &points, int utcOffset);
     virtual QString tabTitle() const;
     virtual void highlightTrack(const QList<IgotuPoint> &track);
+    virtual void saveSelectedTracks();
 
 Q_SIGNALS:
     void saveTracksRequested(const QList<QList<igotu::IgotuPoint> > &tracks);
     void trackActivated(const QList<igotu::IgotuPoint> &tracks);
+    // void trackSelectionChanged(bool selected); // no selection supported
 
 private:
     void initMarble();
@@ -75,6 +78,7 @@ public:
     virtual QString trackVisualizer() const;
     virtual int visualizerPriority() const;
     virtual AppearanceModes supportedVisualizerAppearances() const;
+
     virtual TrackVisualizer *createTrackVisualizer(AppearanceMode mode,
             QWidget *parent = NULL) const;
 };
@@ -171,6 +175,11 @@ QString MarbleVisualizer::tabTitle() const
     return tr("Map");
 }
 
+TrackVisualizer::Flags MarbleVisualizer::flags() const
+{
+    return 0;
+}
+
 void MarbleVisualizer::highlightTrack(const QList<IgotuPoint> &track)
 {
     if (track.isEmpty())
@@ -178,6 +187,11 @@ void MarbleVisualizer::highlightTrack(const QList<IgotuPoint> &track)
 
     tracks->setCenterLongitude(track.at(0).longitude());
     tracks->setCenterLatitude(track.at(0).latitude());
+}
+
+void MarbleVisualizer::saveSelectedTracks()
+{
+    qWarning("Visualizer does not support track selection");
 }
 
 // MarbleVisualizerCreator =====================================================

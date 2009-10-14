@@ -36,7 +36,9 @@
     <addaction name="actionReload"/>
     <addaction name="actionPurge"/>
     <addaction name="actionCancel"/>
-    <addaction name="actionSave"/>
+    <addaction name="actionSaveAll"/>
+    <addaction name="actionSaveSelected"/>
+    <addaction name="actionConfigureTracker"/>
     <addaction name="separator"/>
     <addaction name="actionPreferences"/>
     <addaction name="separator"/>
@@ -66,7 +68,8 @@
    <addaction name="actionReload"/>
    <addaction name="actionPurge"/>
    <addaction name="actionCancel"/>
-   <addaction name="actionSave"/>
+   <addaction name="actionSaveAll"/>
+   <addaction name="actionConfigureTracker"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="dockWidget">
@@ -122,7 +125,7 @@
     <string>Connect to the GPS tracker and download tracks</string>
    </property>
   </action>
-  <action name="actionSave">
+  <action name="actionSaveAll">
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -133,7 +136,7 @@
     <string>Save</string>
    </property>
    <property name="toolTip">
-    <string>Save All GPS Tracks</string>
+    <string>Save all GPS tracks</string>
    </property>
   </action>
   <action name="actionPurge">
@@ -169,6 +172,31 @@
   <action name="actionDebug">
    <property name="text">
     <string>Debug Information</string>
+   </property>
+  </action>
+  <action name="actionConfigureTracker">
+   <property name="text">
+    <string>Configure Tracker...</string>
+   </property>
+   <property name="iconText">
+    <string>Configure</string>
+   </property>
+   <property name="toolTip">
+    <string>Change the settings of the GPS tracker</string>
+   </property>
+  </action>
+  <action name="actionSaveSelected">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Save Selected Tracks...</string>
+   </property>
+   <property name="iconText">
+    <string>Save</string>
+   </property>
+   <property name="toolTip">
+    <string>Save the selected GPS tracks</string>
    </property>
   </action>
  </widget>

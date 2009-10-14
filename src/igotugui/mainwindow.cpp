@@ -53,7 +53,8 @@ public Q_SLOTS:
     void on_actionAboutPlugins_triggered();
     void on_actionDebug_triggered();
     void on_actionReload_triggered();
-    void on_actionSave_triggered();
+    void on_actionSaveAll_triggered();
+    void on_actionSaveSelected_triggered();
     void on_actionPurge_triggered();
     void on_actionCancel_triggered();
     void on_actionPreferences_triggered();
@@ -78,6 +79,7 @@ public Q_SLOTS:
 
     void trackActivated(const QList<igotu::IgotuPoint> &track);
     void saveTracksRequested(const QList<QList<igotu::IgotuPoint> > &tracks);
+    void trackSelectionChanged(bool selected);
 
 public:
     void startBackgroundAction(const QString &text);
@@ -155,10 +157,21 @@ void MainWindowPrivate::on_actionReload_triggered()
     control->info();
 }
 
-void MainWindowPrivate::on_actionSave_triggered()
+void MainWindowPrivate::on_actionSaveAll_triggered()
 {
     if (lastTrackPoints)
         saveTracks(QList<QList<IgotuPoint> >());
+}
+
+void MainWindowPrivate::on_actionSaveSelected_triggered()
+{
+    Q_FOREACH (TrackVisualizer * const visualizer, visualizers) {
+        if (visualizer->flags().testFlag(TrackVisualizer::HasTrackSelection)) {
+            visualizer->saveSelectedTracks();
+            return;
+        }
+    }
+    qWarning("No visualizer with track selection found");
 }
 
 void MainWindowPrivate::on_actionPurge_triggered()
@@ -280,7 +293,7 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
 {
     try {
         lastTrackPoints.reset(new IgotuPoints(contents, count));
-        ui->actionSave->setEnabled(count > 0);
+        ui->actionSaveAll->setEnabled(count > 0);
 
         QString errorMessage;
         Q_FOREACH (TrackVisualizer *visualizer, visualizers) {
@@ -335,6 +348,7 @@ void MainWindowPrivate::startBackgroundAction(const QString &text)
     ui->actionCancel->setEnabled(true);
     ui->actionReload->setEnabled(false);
     ui->actionPurge->setEnabled(false);
+    ui->actionConfigureTracker->setEnabled(false);
     p->statusBar()->showMessage(text);
     updateBackgroundAction(0, 1);
     progress->show();
@@ -356,6 +370,7 @@ void MainWindowPrivate::abortBackgroundAction(const QString &text)
     ui->actionCancel->setEnabled(false);
     ui->actionReload->setEnabled(true);
     ui->actionPurge->setEnabled(true);
+    ui->actionConfigureTracker->setEnabled(true);
     progress->hide();
     p->statusBar()->showMessage(text);
 }
@@ -372,6 +387,11 @@ void MainWindowPrivate::saveTracksRequested
 {
     if (!tracks.isEmpty())
         saveTracks(tracks);
+}
+
+void MainWindowPrivate::trackSelectionChanged(bool selected)
+{
+    ui->actionSaveSelected->setEnabled(selected);
 }
 
 QString MainWindowPrivate::savedTrackFileName(bool raw, const IgotuPoint &point,
@@ -471,8 +491,10 @@ MainWindow::MainWindow() :
         (IconStorage::get(IconStorage::PurgeIcon));
     d->ui->actionCancel->setIcon
         (IconStorage::get(IconStorage::CancelIcon));
-    d->ui->actionSave->setIcon
+    d->ui->actionSaveAll->setIcon
         (IconStorage::get(IconStorage::SaveIcon));
+    d->ui->actionConfigureTracker->setIcon
+        (IconStorage::get(IconStorage::ConfigureIcon));
     d->ui->actionQuit->setIcon
         (IconStorage::get(IconStorage::QuitIcon));
     d->ui->actionAbout->setIcon
@@ -535,15 +557,22 @@ MainWindow::MainWindow() :
             addDockWidget(Qt::LeftDockWidgetArea, dockWidget);
         }
     }
-    for (unsigned i = 0; i < unsigned(d->visualizers.size()); ++i) {
-        connect(d->visualizers[i],
+    Q_FOREACH(TrackVisualizer * const visualizer, d->visualizers) {
+        connect(visualizer,
                 SIGNAL(saveTracksRequested(QList<QList<igotu::IgotuPoint>>)),
                 d.get(),
                 SLOT(saveTracksRequested(QList<QList<igotu::IgotuPoint>>)));
-        connect(d->visualizers[i],
+        connect(visualizer,
                 SIGNAL(trackActivated(QList<igotu::IgotuPoint>)),
                 d.get(),
                 SLOT(trackActivated(QList<igotu::IgotuPoint>)));
+    }
+    Q_FOREACH(TrackVisualizer * const visualizer, d->visualizers) {
+        if (visualizer->flags().testFlag(TrackVisualizer::HasTrackSelection)) {
+            connect(visualizer, SIGNAL(trackSelectionChanged(bool)),
+                    d.get(), SLOT(trackSelectionChanged(bool)));
+            break;
+        }
     }
 
     QMultiMap<int, FileExporter*> fileExporterMap;

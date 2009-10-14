@@ -29,6 +29,7 @@ public:
         PurgeIcon,
         CancelIcon,
         SaveIcon,
+        ConfigureIcon,
         QuitIcon,
         GuiIcon,
     };
