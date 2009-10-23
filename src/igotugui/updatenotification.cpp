@@ -193,14 +193,18 @@ void UpdateNotificationPrivate::requestReleases(const QString &os)
 {
     QUrl url = releaseUrl();
 
-    if (url.scheme().toLower() != QLatin1String("https")) {
-        qWarning("Update information needs to be retrieved over https connection");
+    if (url.scheme().toLower() != QLatin1String("https") &&
+        url.scheme().toLower() != QLatin1String("http")) {
+        qWarning("Update information needs to be retrieved over http(s) connection");
         return;
     }
 
     url.addQueryItem(QLatin1String("os"), os);
     url.addQueryItem(QLatin1String("version"), QLatin1String(IGOTU_VERSION_STR));
-    http->setHost(url.host(), QHttp::ConnectionModeHttps, url.port(0));
+    http->setHost(url.host(),
+            url.scheme().toLower() == QLatin1String("https") ?
+            QHttp::ConnectionModeHttps : QHttp::ConnectionModeHttp,
+            url.port(0));
     if (!url.userName().isEmpty())
         http->setUser(url.userName(), url.password());
     QByteArray path = QUrl::toPercentEncoding(url.path(), "!$&'()*+,;=:@/");
@@ -210,7 +214,9 @@ void UpdateNotificationPrivate::requestReleases(const QString &os)
         path += '?' + url.encodedQuery();
 
     QHttpRequestHeader header(QLatin1String("GET"), QString::fromAscii(path));
-    header.setValue(QLatin1String("Host"), url.host() + QLatin1Char(':') + QString::number(url.port(443)));
+    header.setValue(QLatin1String("Host"), url.host() + QLatin1Char(':') +
+            QString::number(url.port
+                (url.scheme().toLower() == QLatin1String("https") ? 443 : 80)));
     header.setValue(QLatin1String("User-Agent"), QLatin1String("Igotu2gpx/") +
             QLatin1String(IGOTU_VERSION_STR));
     http->request(header);
