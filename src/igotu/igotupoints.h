@@ -78,30 +78,6 @@ private:
     QByteArray record;
 };
 
-class IGOTU_EXPORT ScheduleTableEntry
-{
-    Q_DECLARE_TR_FUNCTIONS(igotu::ScheduleTableEntry)
-public:
-    ScheduleTableEntry(const QByteArray &entry);
-    ~ScheduleTableEntry();
-
-    bool isValid() const;
-
-    // in s
-    unsigned logInterval() const;
-    // in s
-    unsigned changedLogInterval() const;
-    // in km/h
-    double intervalChangeSpeed() const;
-    bool isIntervalChangeEnabled() const;
-
-    QTime startTime() const;
-    QTime endTime() const;
-
-private:
-    QByteArray entry;
-};
-
 class IGOTU_EXPORT IgotuPoints
 {
     Q_DECLARE_TR_FUNCTIONS(igotu::IgotuPoints)
@@ -115,24 +91,6 @@ public:
     QList<IgotuPoint> wayPoints() const;
     // isValid() and grouped into tracks
     QList<QList<IgotuPoint> > tracks() const;
-
-    QByteArray memoryDump() const;
-
-    bool isValid() const;
-
-    unsigned securityVersion() const;
-    bool isPasswordEnabled() const;
-    QString password() const;
-
-    bool isScheduleTableEnabled() const;
-    // one-based
-    QList<unsigned> scheduleTablePlans() const;
-    QList<ScheduleTableEntry> scheduleTableEntries(unsigned plan) const;
-    QDate firstScheduleDate() const;
-    unsigned dateOffset() const;
-
-    bool isButtonEnabled() const;
-    bool ledsEnabled() const;
 
 private:
     QByteArray dump;

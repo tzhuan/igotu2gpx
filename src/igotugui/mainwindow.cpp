@@ -20,11 +20,13 @@
 #include "igotu/exception.h"
 #include "igotu/fileexporter.h"
 #include "igotu/igotucontrol.h"
-#include "igotu/igotupoints.h"
+#include "igotu/igotudata.h"
+#include "igotu/messages.h"
 #include "igotu/paths.h"
 #include "igotu/pluginloader.h"
 #include "igotu/utils.h"
 
+#include "configurationdialog.h"
 #include "iconstorage.h"
 #include "mainwindow.h"
 #include "plugindialog.h"
@@ -56,6 +58,7 @@ public Q_SLOTS:
     void on_actionSaveAll_triggered();
     void on_actionSaveSelected_triggered();
     void on_actionPurge_triggered();
+    void on_actionConfigureTracker_triggered();
     void on_actionCancel_triggered();
     void on_actionPreferences_triggered();
     void on_actionQuit_triggered();
@@ -73,6 +76,11 @@ public Q_SLOTS:
     void on_control_purgeBlocksFinished(uint num, uint total);
     void on_control_purgeFinished();
     void on_control_purgeFailed(const QString &message);
+
+    void on_control_writeStarted();
+    void on_control_writeBlocksFinished(uint num, uint total);
+    void on_control_writeFinished(const QString &message);
+    void on_control_writeFailed(const QString &message);
 
     void on_update_newVersionAvailable(const QString &version,
             const QString &name, const QUrl &url);
@@ -95,7 +103,7 @@ private:
 public:
     MainWindow *p;
 
-    boost::scoped_ptr<IgotuPoints> lastTrackPoints;
+    boost::scoped_ptr<IgotuData> lastTrackPoints;
     boost::scoped_ptr<Ui::MainWindow> ui;
     IgotuControl *control;
     UpdateNotification *update;
@@ -171,16 +179,14 @@ void MainWindowPrivate::on_actionSaveSelected_triggered()
             return;
         }
     }
-    qWarning("No visualizer with track selection found");
+    qCritical("No visualizer with track selection found");
 }
 
 void MainWindowPrivate::on_actionPurge_triggered()
 {
     QPointer<QMessageBox> messageBox(new QMessageBox(QMessageBox::Question,
                 MainWindow::tr("Clear Memory"), MainWindow::tr
-                ("This function is highly experimental and may brick your GPS "
-                 "tracker! Only use it if your GPS tracker has been identified "
-                 "correctly. Do you really want to remove all tracks from the "
+                ("Do you really want to remove all tracks from the "
                  "GPS tracker?"),
                 QMessageBox::Cancel, p));
     QPushButton * const purgeButton = messageBox->addButton
@@ -199,6 +205,17 @@ void MainWindowPrivate::on_actionPurge_triggered()
         control->purge();
 
     delete messageBox;
+}
+
+void MainWindowPrivate::on_actionConfigureTracker_triggered()
+{
+    RETURN_IF_FAIL(lastTrackPoints);
+    QPointer<ConfigurationDialog> dialog
+        (new ConfigurationDialog(lastTrackPoints->config(), p));
+    if (dialog->exec() == QDialog::Accepted)
+        control->write(dialog->config());
+
+    delete dialog;
 }
 
 void MainWindowPrivate::on_actionCancel_triggered()
@@ -292,13 +309,13 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
         uint count)
 {
     try {
-        lastTrackPoints.reset(new IgotuPoints(contents, count));
+        lastTrackPoints.reset(new IgotuData(contents, count));
         ui->actionSaveAll->setEnabled(count > 0);
 
         QString errorMessage;
         Q_FOREACH (TrackVisualizer *visualizer, visualizers) {
             try {
-                visualizer->setTracks(*lastTrackPoints, control->utcOffset());
+                visualizer->setTracks(lastTrackPoints->points(), control->utcOffset());
             } catch (const std::exception &e) {
                 errorMessage = QString::fromLocal8Bit(e.what());
             }
@@ -341,6 +358,29 @@ void MainWindowPrivate::on_control_purgeFailed(const QString &message)
 {
     abortBackgroundAction(Common::tr
             ("Unable to clear memory of GPS tracker: %1").arg(message));
+}
+
+void MainWindowPrivate::on_control_writeStarted()
+{
+    startBackgroundAction(Common::tr("Writing configuration..."));
+}
+
+void MainWindowPrivate::on_control_writeBlocksFinished(uint num, uint total)
+{
+    updateBackgroundAction(num, total);
+}
+
+void MainWindowPrivate::on_control_writeFinished(const QString &message)
+{
+    if (!message.isEmpty())
+        Messages::textOutput(message);
+    stopBackgroundAction();
+}
+
+void MainWindowPrivate::on_control_writeFailed(const QString &message)
+{
+    abortBackgroundAction(Common::tr
+            ("Unable to write configuration to GPS tracker: %1").arg(message));
 }
 
 void MainWindowPrivate::startBackgroundAction(const QString &text)
@@ -404,10 +444,7 @@ QString MainWindowPrivate::savedTrackFileName(bool raw, const IgotuPoint &point,
     Q_FOREACH (FileExporter *exporter, exporters)
         if (raw || exporter->mode().testFlag(FileExporter::TrackExport))
             selectedExporters.append(exporter);
-    if (selectedExporters.isEmpty()) {
-        qWarning("No file exporters found");
-        return QString();
-    }
+    RETURN_VAL_IF_FAIL(!selectedExporters.isEmpty(), QString());
 
     QStringList filters;
     QStringList filterExtensions;

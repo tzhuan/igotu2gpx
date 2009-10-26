@@ -21,6 +21,8 @@
 
 #include "igotucommand.h"
 
+class QTime;
+
 namespace igotu
 {
 
@@ -114,6 +116,14 @@ private:
     QByteArray data;
 };
 
+class IGOTU_EXPORT TimeCommand : public IgotuCommand
+{
+public:
+    TimeCommand(DataConnection *connection, const QTime &time);
+
+    virtual QByteArray sendAndReceive();
+};
+
 class IGOTU_EXPORT UnknownWriteCommand1 : public IgotuCommand
 {
 public:
@@ -131,6 +141,14 @@ public:
 
 private:
     unsigned size;
+};
+
+class IGOTU_EXPORT UnknownWriteCommand3 : public IgotuCommand
+{
+public:
+    UnknownWriteCommand3(DataConnection *connection);
+
+    virtual QByteArray sendAndReceive();
 };
 
 class IGOTU_EXPORT UnknownPurgeCommand1 : public IgotuCommand

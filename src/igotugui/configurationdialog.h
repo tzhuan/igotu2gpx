@@ -16,48 +16,34 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU2GPX_SRC_IGOTU_FILEEXPORTER_H_
-#define _IGOTU2GPX_SRC_IGOTU_FILEEXPORTER_H_
+#ifndef _IGOTU2GPX_SRC_IGOTUGUI_CONFIGURATIONDIALOG_H_
+#define _IGOTU2GPX_SRC_IGOTUGUI_CONFIGURATIONDIALOG_H_
 
-#include "global.h"
-#include "igotupoints.h"
+#include <boost/scoped_ptr.hpp>
 
-#include <QtPlugin>
+#include <QDialog>
+
+class ConfigurationDialogPrivate;
 
 namespace igotu
 {
+class IgotuConfig;
+}
 
-class IgotuData;
-
-class FileExporter
+class ConfigurationDialog : public QDialog
 {
+    Q_OBJECT
+    friend class ConfigurationDialogPrivate;
+    friend class MainWindowPrivate;
 public:
-    virtual ~FileExporter()
-    {
-    }
+    ConfigurationDialog(const igotu::IgotuConfig &config, QWidget *parent = NULL);
+    ~ConfigurationDialog();
 
-    enum Flag {
-        TrackExport = 0x01,
-    };
-    Q_DECLARE_FLAGS(Mode, Flag)
-    virtual Mode mode() const = 0;
+    igotu::IgotuConfig config() const;
 
-    // lower is better
-    virtual int exporterPriority() const = 0;
-    virtual QString formatName() const = 0;
-    virtual QString formatDescription() const = 0;
-    virtual QString fileExtension() const = 0;
-    virtual QString fileType() const = 0;
-    virtual QByteArray save(const QList<QList<IgotuPoint> > &tracks,
-            bool tracksAsSegments, int utcOffset) const = 0;
-    virtual QByteArray save(const IgotuData &data,
-            bool tracksAsSegments, int utcOffset) const = 0;
+protected:
+    boost::scoped_ptr<ConfigurationDialogPrivate> d;
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(FileExporter::Mode)
-
-} // namespace igotu
-
-Q_DECLARE_INTERFACE(igotu::FileExporter, "de.mh21.igotu2gpx.fileexporter/1.0")
-
 #endif
+

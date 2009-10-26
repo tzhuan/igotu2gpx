@@ -158,6 +158,17 @@ while len(parts) > 0:
             r = unpack_from('>xxxHxxBH', query)
             print 'ReadCommand(pos = 0x%06x, size = 0x%04x)' % (r[1] * 0x10000 +
                     r[2], r[0])
+        # WriteCommand
+        elif query.startswith('\x93\x06\x07') and query[5] == '\x04':
+            r = unpack_from('>xxxHxBBH', query)
+            print 'WriteCommand(mode = 0x%02x, pos = 0x%06x, size = 0x%04x)' % (r[1],
+                    r[2] * 0x1000 + r[3], r[0])
+            rawdatapackages = (r[0] + 6) / 7
+        # TimeCommand
+        elif query.startswith('\x93\x09\x03'):
+            r = unpack_from('>xxxBBB', query)
+            print 'TimeCommand(time = time(%02u, %02u, %02u)' % (r[0], r[1],
+                    r[2])
         # UnknownPurgeCommand1
         elif query.startswith('\x93\x0c\x00'):
             r = unpack_from('>xxxB', query)
@@ -169,16 +180,13 @@ while len(parts) > 0:
         elif query.startswith('\x93\x06\x04\x00') and query[5:7] == '\x01\x06':
             r = unpack_from('>xxxxB', query)
             print 'UnknownWriteCommand1(mode = 0x%02x)' % (r[0])
-        # WriteCommand
-        elif query.startswith('\x93\x06\x07') and query[5] == '\x04':
-            r = unpack_from('>xxxHxBBH', query)
-            print 'WriteCommand(mode = 0x%02x, pos = 0x%06x, size = 0x%04x)' % (r[1],
-                    r[2] * 0x1000 + r[3], r[0])
-            rawdatapackages = (r[0] + 6) / 7
         # UnknownWriteCommand2
         elif query.startswith('\x93\x05\x04') and query[5:7] == '\x01\x05':
             r = unpack_from('>xxxH', query)
             print 'UnknownWriteCommand2(size = 0x%04x)' % (r[0])
+        # UnknownWriteCommand3
+        elif query.startswith('\x93\x0d\x07'):
+            print 'UnknownWriteCommand3()'
         else:
             print 'Unknown query: %s, returned %d' % (format_query(query, 15),
                     size)

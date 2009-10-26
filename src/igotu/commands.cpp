@@ -295,6 +295,23 @@ QByteArray UnknownWriteCommand2::sendAndReceive()
     return result;
 }
 
+// UnknownWriteCommand3 ========================================================
+
+UnknownWriteCommand3::UnknownWriteCommand3(DataConnection *connection) :
+    IgotuCommand(connection)
+{
+    QByteArray command("\x93\x0d\x07\0\0\0\0\0\0\0\0\0\0\0\0", 15);
+    setCommand(command);
+}
+
+QByteArray UnknownWriteCommand3::sendAndReceive()
+{
+    const QByteArray result = IgotuCommand::sendAndReceive();
+    if (!result.isEmpty())
+        throw IgotuError(IgotuCommand::tr("Response too long"));
+    return result;
+}
+
 // UnknownPurgeCommand1 ========================================================
 
 UnknownPurgeCommand1::UnknownPurgeCommand1(DataConnection *connection,
@@ -324,6 +341,26 @@ UnknownPurgeCommand2::UnknownPurgeCommand2(DataConnection *connection) :
 }
 
 QByteArray UnknownPurgeCommand2::sendAndReceive()
+{
+    const QByteArray result = IgotuCommand::sendAndReceive();
+    if (!result.isEmpty())
+        throw IgotuError(IgotuCommand::tr("Response too long"));
+    return result;
+}
+
+// TimeCommand =================================================================
+
+TimeCommand::TimeCommand(DataConnection *connection, const QTime &time) :
+    IgotuCommand(connection)
+{
+    QByteArray command("\x93\x09\x03\0\0\0\0\0\0\0\0\0\0\0\0", 15);
+    command[3] = time.hour();
+    command[4] = time.minute();
+    command[5] = time.second();
+    setCommand(command);
+}
+
+QByteArray TimeCommand::sendAndReceive()
 {
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (!result.isEmpty())

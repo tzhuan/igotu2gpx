@@ -16,6 +16,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
+#include "igotu/igotudata.h"
+
 #include "fileexporter.h"
 
 #include <QTextStream>
@@ -37,7 +39,7 @@ public:
     virtual QString fileType() const;
     virtual QByteArray save(const QList<QList<IgotuPoint> > &tracks,
             bool tracksAsSegments, int utcOffset) const;
-    virtual QByteArray save(const IgotuPoints &points,
+    virtual QByteArray save(const IgotuData &data,
             bool tracksAsSegments, int utcOffset) const;
 };
 
@@ -75,7 +77,7 @@ QString DetailsExporter::fileType() const
     return tr("Text files (%1)").arg(QLatin1String("*.") + fileExtension());
 }
 
-QByteArray DetailsExporter::save(const IgotuPoints &points, bool tracksAsSegments,
+QByteArray DetailsExporter::save(const IgotuData &data, bool tracksAsSegments,
         int utcOffset) const
 {
     Q_UNUSED(tracksAsSegments);
@@ -85,7 +87,7 @@ QByteArray DetailsExporter::save(const IgotuPoints &points, bool tracksAsSegment
     out.setCodec("UTF-8");
 
     unsigned index = 0;
-    Q_FOREACH (const IgotuPoint &igotuPoint, points.points()) {
+    Q_FOREACH (const IgotuPoint &igotuPoint, data.points().points()) {
         // No localization to enable parsing
         out << QString::fromLatin1("Record %1\n").arg(++index);
         if (igotuPoint.isWayPoint())
@@ -133,7 +135,7 @@ QByteArray DetailsExporter::save(const QList<QList<IgotuPoint> > &tracks,
     Q_UNUSED(tracks);
     Q_UNUSED(tracksAsSegments);
     Q_UNUSED(utcOffset);
-    qWarning("Unable to export tracks to details format");
+    qCritical("Unable to export tracks to details format");
     return QByteArray();
 }
 

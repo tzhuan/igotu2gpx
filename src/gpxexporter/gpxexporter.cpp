@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
+#include "igotu/igotudata.h"
 #include "igotu/xmlutils.h"
 
 #include "fileexporter.h"
@@ -39,7 +40,7 @@ public:
     virtual QString fileType() const;
     virtual QByteArray save(const QList<QList<IgotuPoint> > &tracks,
             bool tracksAsSegments, int utcOffset) const;
-    virtual QByteArray save(const IgotuPoints &points,
+    virtual QByteArray save(const IgotuData &data,
             bool tracksAsSegments, int utcOffset) const;
 };
 
@@ -77,10 +78,10 @@ QString GpxExporter::fileType() const
     return tr("GPX files (%1)").arg(QLatin1String("*.") + fileExtension());
 }
 
-QByteArray GpxExporter::save(const IgotuPoints &points, bool tracksAsSegments,
+QByteArray GpxExporter::save(const IgotuData &data, bool tracksAsSegments,
         int utcOffset) const
 {
-    return save(points.tracks(), tracksAsSegments, utcOffset);
+    return save(data.points().tracks(), tracksAsSegments, utcOffset);
 }
 
 QByteArray GpxExporter::save(const QList<QList<IgotuPoint> > &tracks,

@@ -19,10 +19,13 @@
 #include "commands.h"
 #include "dataconnection.h"
 #include "exception.h"
+#include "igotuconfig.h"
 #include "igotucontrol.h"
+#include "igotudata.h"
 #include "igotupoints.h"
 #include "pluginloader.h"
 #include "threadutils.h"
+#include "utils.h"
 
 #include <QDir>
 #include <QSemaphore>
@@ -41,11 +44,17 @@ public Q_SLOTS:
     void info();
     void contents();
     void purge();
+    void write(const IgotuConfig &config);
+    void reset();
+
     void notify(QObject *object, const QByteArray &method);
+    void disconnectQuietly();
+    void endTask();
 
 private:
     void connect();
-    void cleanup();
+    void disconnect();
+    void waitForWrite();
 
 Q_SIGNALS:
     void infoStarted();
@@ -62,10 +71,16 @@ Q_SIGNALS:
     void purgeFinished();
     void purgeFailed(const QString &message);
 
+    void writeStarted();
+    void writeBlocksFinished(uint num, uint total);
+    void writeFinished(const QString &debugMessage);
+    void writeFailed(const QString &message);
+
 private:
     IgotuControlPrivate * const p;
 
     boost::scoped_ptr<DataConnection> connection;
+    QString connectedDevice;
     QByteArray image;
 };
 
@@ -89,7 +104,12 @@ Q_SIGNALS:
     void info();
     void contents();
     void purge();
+    void write(const IgotuConfig &config);
+    void reset();
+
     void notify(QObject *object, const QByteArray &method);
+    void disconnectQuietly();
+    void endTask();
 
 public:
     unsigned taskCount;
@@ -110,7 +130,7 @@ public:
 // IgotuControlPrivate =========================================================
 
 IgotuControlPrivate::IgotuControlPrivate() :
-    taskCount(1),
+    taskCount(10),
     semaphore(taskCount),
     worker(this)
 {
@@ -166,19 +186,30 @@ IgotuControlPrivateWorker::IgotuControlPrivateWorker(IgotuControlPrivate *pub) :
 
 void IgotuControlPrivateWorker::connect()
 {
-    connection.reset();
-    image.clear();
+    if (!connectedDevice.isEmpty() && p->device == connectedDevice)
+        return;
+
+    disconnect();
 
     const QString protocol = p->device.section(QLatin1Char(':'), 0, 0)
         .toLower();
     const QString name = p->device.section(QLatin1Char(':'), 1);
     if (protocol == QLatin1String("image")) {
         image = QByteArray::fromBase64(name.toAscii());
+        connectedDevice = p->device;
     } else {
         Q_FOREACH (DataConnectionCreator *creator, p->creators()) {
             if (creator->dataConnection() != protocol)
                 continue;
-            connection.reset(creator->createDataConnection(name));
+            try {
+                connection.reset(creator->createDataConnection(name));
+                connectedDevice = p->device;
+                NmeaSwitchCommand(connection.get(), false).sendAndReceive();
+            } catch (...) {
+                connection.reset();
+                connectedDevice.clear();
+                throw;
+            }
             break;
         }
         if (!connection)
@@ -187,12 +218,45 @@ void IgotuControlPrivateWorker::connect()
     }
 }
 
-void IgotuControlPrivateWorker::cleanup()
+void IgotuControlPrivateWorker::disconnectQuietly()
 {
-    connection.reset();
-    image.clear();
+    try {
+        disconnect();
+    } catch (...) {
+        // ignored
+    }
+}
 
+void IgotuControlPrivateWorker::disconnect()
+{
+    image.clear();
+    connectedDevice.clear();
+    if (connection) {
+        try {
+            NmeaSwitchCommand(connection.get(), true).sendAndReceive();
+        } catch (...) {
+            // the next connect should not come here again
+            connection.reset();
+            throw;
+        }
+        connection.reset();
+    }
+}
+
+void IgotuControlPrivateWorker::endTask()
+{
     p->semaphore.release();
+}
+
+void IgotuControlPrivateWorker::waitForWrite()
+{
+    for (unsigned retries = 10; retries > 0; --retries) {
+        if (UnknownWriteCommand2(connection.get(), 0x0001)
+                .sendAndReceive() == QByteArray(1, '\x00'))
+            break;
+        if (retries == 1)
+            throw IgotuError(IgotuControl::tr("Command timeout"));
+    }
 }
 
 void IgotuControlPrivateWorker::info()
@@ -204,8 +268,6 @@ void IgotuControlPrivateWorker::info()
         QByteArray contents;
         QString status;
         if (connection) {
-            NmeaSwitchCommand(connection.get(), false).sendAndReceive();
-
             IdentificationCommand id(connection.get());
             id.sendAndReceive();
             status += IgotuControl::tr("Serial number: %1").arg(id.serialNumber()) +
@@ -241,12 +303,11 @@ void IgotuControlPrivateWorker::info()
                 .arg(count) + QLatin1Char('\n');
             contents = ReadCommand(connection.get(), 0, 0x1000)
                 .sendAndReceive();
-            NmeaSwitchCommand(connection.get(), true).sendAndReceive();
         } else {
             contents = image.left(0x1000);
         }
 
-        IgotuPoints igotuPoints(contents, 0);
+        IgotuConfig igotuPoints(contents);
         if (!igotuPoints.isValid())
             throw IgotuError(IgotuControl::tr("Uninitialized GPS tracker"));
 
@@ -298,7 +359,7 @@ void IgotuControlPrivateWorker::info()
                     status += QLatin1String("  ") + IgotuControl::tr
                         ("Log interval: %1 s")
                         .arg(entry.logInterval()) + QLatin1Char('\n');
-                    if (entry.isIntervalChangeEnabled()) {
+                    if (entry.intervalChangeSpeed() != 0.0) {
                         status += QLatin1String("  ") + IgotuControl::tr
                             ("Interval change: %1")
                             .arg(IgotuControl::tr("above %1 km/h, use %2 s"))
@@ -318,7 +379,7 @@ void IgotuControlPrivateWorker::info()
             ScheduleTableEntry entry = igotuPoints.scheduleTableEntries(1)[0];
             status += IgotuControl::tr("Log interval: %1 s")
                 .arg(entry.logInterval()) + QLatin1Char('\n');
-            if (entry.isIntervalChangeEnabled()) {
+            if (entry.intervalChangeSpeed() != 0.0) {
                 status += IgotuControl::tr
                     ("Interval change: %1")
                     .arg(IgotuControl::tr("above %1 km/h, use %2 s"))
@@ -348,10 +409,9 @@ void IgotuControlPrivateWorker::info()
                         igotuPoints.password()) + QLatin1Char('\n');
         }
 
-        cleanup();
         emit infoFinished(status, contents);
     } catch (const std::exception &e) {
-        cleanup();
+        disconnectQuietly();
         emit infoFailed(QString::fromLocal8Bit(e.what()));
     }
 }
@@ -365,8 +425,6 @@ void IgotuControlPrivateWorker::contents()
         QByteArray data;
         unsigned count;
         if (connection) {
-            NmeaSwitchCommand(connection.get(), false).sendAndReceive();
-
             IdentificationCommand id(connection.get());
             id.sendAndReceive();
 
@@ -378,16 +436,12 @@ void IgotuControlPrivateWorker::contents()
 
             for (unsigned i = 0; i < blocks; ++i) {
                 emit contentsBlocksFinished(i, blocks);
-                if (p->cancelRequested()) {
-                    NmeaSwitchCommand(connection.get(), true).sendAndReceive();
+                if (p->cancelRequested())
                     throw IgotuError(IgotuControl::tr("Cancelled"));
-                }
                 data += ReadCommand(connection.get(), i * 0x1000,
                         0x1000).sendAndReceive();
             }
             emit contentsBlocksFinished(blocks, blocks);
-
-            NmeaSwitchCommand(connection.get(), true).sendAndReceive();
         } else {
             data = image;
             if (data.size() < 0x1000)
@@ -395,10 +449,9 @@ void IgotuControlPrivateWorker::contents()
             count = (data.size() - 0x1000) / 0x20;
         }
 
-        cleanup();
         emit contentsFinished(data, count);
     } catch (const std::exception &e) {
-        cleanup();
+        disconnectQuietly();
         emit contentsFailed(QString::fromLocal8Bit(e.what()));
     }
 }
@@ -411,8 +464,6 @@ void IgotuControlPrivateWorker::purge()
 
         if (!connection)
             throw IgotuError(IgotuControl::tr("No device specified"));
-
-        NmeaSwitchCommand(connection.get(), false).sendAndReceive();
 
         IdentificationCommand id(connection.get());
         id.sendAndReceive();
@@ -444,19 +495,10 @@ void IgotuControlPrivateWorker::purge()
             bool purgeBlocks = false;
             for (unsigned i = blocks - 1; i > 0; --i) {
                 emit purgeBlocksFinished(blocks - i - 1, blocks);
-                if (p->cancelRequested()) {
-                    NmeaSwitchCommand(connection.get(), true).sendAndReceive();
+                if (p->cancelRequested())
                     throw IgotuError(IgotuControl::tr("Cancelled"));
-                }
                 if (purgeBlocks) {
-                    for (unsigned retries = 10; retries > 0; --retries) {
-                        if (UnknownWriteCommand2(connection.get(), 0x0001)
-                                .sendAndReceive() == QByteArray(1, '\x00'))
-                            break;
-                        if (retries == 1)
-                            throw IgotuError(IgotuControl::tr
-                                    ("Command timeout"));
-                    }
+                    waitForWrite();
                 } else {
                     if (ReadCommand(connection.get(), i * 0x1000, 0x10)
                             .sendAndReceive() != QByteArray(0x10, '\xff'))
@@ -471,14 +513,7 @@ void IgotuControlPrivateWorker::purge()
             if (purgeBlocks) {
                 UnknownPurgeCommand1(connection.get(), 0x1e).sendAndReceive();
                 UnknownPurgeCommand1(connection.get(), 0x1f).sendAndReceive();
-                for (unsigned retries = 10; retries > 0; --retries) {
-                    if (UnknownWriteCommand2(connection.get(), 0x0001)
-                            .sendAndReceive() == QByteArray(1, '\x00'))
-                        break;
-                    if (retries == 1)
-                        throw IgotuError(IgotuControl::tr
-                                ("Command timeout"));
-                }
+                waitForWrite();
             }
             UnknownPurgeCommand1(connection.get(), 0x1e).sendAndReceive();
             UnknownPurgeCommand1(connection.get(), 0x1f).sendAndReceive();
@@ -487,15 +522,10 @@ void IgotuControlPrivateWorker::purge()
             bool purgeBlocks = false;
             for (unsigned i = blocks - 1; i > 0; --i) {
                 emit purgeBlocksFinished(blocks - i - 1, blocks);
+                if (p->cancelRequested())
+                    throw IgotuError(IgotuControl::tr("Cancelled"));
                 if (purgeBlocks) {
-                    for (unsigned retries = 10; retries > 0; --retries) {
-                        if (UnknownWriteCommand2(connection.get(), 0x0001)
-                                .sendAndReceive() == QByteArray(1, '\x00'))
-                            break;
-                        if (retries == 1)
-                            throw IgotuError(IgotuControl::tr
-                                    ("Command timeout"));
-                    }
+                    waitForWrite();
                 } else {
                     if (ReadCommand(connection.get(), i * 0x1000, 0x10)
                             .sendAndReceive() != QByteArray(0x10, '\xff'))
@@ -509,27 +539,70 @@ void IgotuControlPrivateWorker::purge()
             }
             if (purgeBlocks) {
                 UnknownPurgeCommand2(connection.get()).sendAndReceive();
-                for (unsigned retries = 10; retries > 0; --retries) {
-                    if (UnknownWriteCommand2(connection.get(), 0x0001)
-                            .sendAndReceive() == QByteArray(1, '\x00'))
-                        break;
-                    if (retries == 1)
-                        throw IgotuError(IgotuControl::tr
-                                ("Command timeout"));
-                }
+                waitForWrite();
             }
             UnknownPurgeCommand2(connection.get()).sendAndReceive();
             emit purgeBlocksFinished(blocks, blocks);
         }
 
-        NmeaSwitchCommand(connection.get(), true).sendAndReceive();
-
-        cleanup();
         emit purgeFinished();
     } catch (const std::exception &e) {
-        cleanup();
+        disconnectQuietly();
         emit purgeFailed(QString::fromLocal8Bit(e.what()));
     }
+}
+
+void IgotuControlPrivateWorker::write(const IgotuConfig &config)
+{
+    emit writeStarted();
+    try {
+        connect();
+
+        QString message;
+
+        if (connection) {
+            IdentificationCommand id(connection.get());
+            id.sendAndReceive();
+
+            ModelCommand model(connection.get());
+            model.sendAndReceive();
+
+            UnknownWriteCommand1(connection.get(), 0x00).sendAndReceive();
+            WriteCommand(connection.get(), 0x20, 0x0000, QByteArray())
+                .sendAndReceive();
+            waitForWrite();
+
+            unsigned blocks = 0x10;
+            QByteArray configData = config.memoryDump();
+            for (unsigned i = 0; i < blocks; ++i) {
+                emit writeBlocksFinished(i, blocks + 1);
+                if (p->cancelRequested())
+                    throw IgotuError(IgotuControl::tr("Cancelled"));
+                UnknownWriteCommand1(connection.get(), 0x00).sendAndReceive();
+                WriteCommand(connection.get(), 0x02, i * 0x0100,
+                        configData.mid(i * 0x0100, 0x100)).sendAndReceive();
+                waitForWrite();
+            }
+            emit writeBlocksFinished(blocks, blocks + 1);
+            TimeCommand(connection.get(), QDateTime::currentDateTime()
+                    .toUTC().time()).sendAndReceive();
+            ReadCommand(connection.get(), 0, 0x1000).sendAndReceive();
+            UnknownWriteCommand3(connection.get()).sendAndReceive();
+            emit writeBlocksFinished(blocks + 1, blocks + 1);
+        } else {
+            message = dumpDiff(IgotuData(image, 0).config().memoryDump(),
+                    config.memoryDump());
+        }
+
+        emit writeFinished(message);
+    } catch (const std::exception &e) {
+        disconnectQuietly();
+        emit writeFailed(QString::fromLocal8Bit(e.what()));
+    }
+}
+
+void IgotuControlPrivateWorker::reset()
+{
 }
 
 void IgotuControlPrivateWorker::notify(QObject *object,
@@ -544,6 +617,8 @@ IgotuControl::IgotuControl(QObject *parent) :
     QObject(parent),
     d(new IgotuControlPrivate)
 {
+    qRegisterMetaType<IgotuConfig>("IgotuConfig");
+
     setDevice(defaultDevice());
     setUtcOffset(defaultUtcOffset());
     setTracksAsSegments(defaultTracksAsSegments());
@@ -573,14 +648,30 @@ IgotuControl::IgotuControl(QObject *parent) :
     connect(&d->worker, SIGNAL(purgeFailed(QString)),
              this, SIGNAL(purgeFailed(QString)));
 
+    connect(&d->worker, SIGNAL(writeStarted()),
+             this, SIGNAL(writeStarted()));
+    connect(&d->worker, SIGNAL(writeBlocksFinished(uint,uint)),
+             this, SIGNAL(writeBlocksFinished(uint,uint)));
+    connect(&d->worker, SIGNAL(writeFinished(QString)),
+             this, SIGNAL(writeFinished(QString)));
+    connect(&d->worker, SIGNAL(writeFailed(QString)),
+             this, SIGNAL(writeFailed(QString)));
+
     connect(d.get(), SIGNAL(info()),
              &d->worker, SLOT(info()));
     connect(d.get(), SIGNAL(contents()),
              &d->worker, SLOT(contents()));
     connect(d.get(), SIGNAL(purge()),
              &d->worker, SLOT(purge()));
+    connect(d.get(), SIGNAL(write(IgotuConfig)),
+             &d->worker, SLOT(write(IgotuConfig)));
+
     connect(d.get(), SIGNAL(notify(QObject*,QByteArray)),
              &d->worker, SLOT(notify(QObject*,QByteArray)));
+    connect(d.get(), SIGNAL(disconnectQuietly()),
+             &d->worker, SLOT(disconnectQuietly()));
+    connect(d.get(), SIGNAL(endTask()),
+             &d->worker, SLOT(endTask()));
 
     d->worker.moveToThread(&d->thread);
     d->thread.start();
@@ -589,6 +680,7 @@ IgotuControl::IgotuControl(QObject *parent) :
 IgotuControl::~IgotuControl()
 {
     d->semaphore.acquire(d->taskCount);
+    QMetaObject::invokeMethod(&d->worker, "disconnectQuietly", Qt::BlockingQueuedConnection);
 
     // kill the thread
     d->thread.quit();
@@ -658,6 +750,7 @@ void IgotuControl::info()
     if (!d->startTask())
         return;
     emit d->info();
+    emit d->endTask();
 }
 
 void IgotuControl::contents()
@@ -665,6 +758,7 @@ void IgotuControl::contents()
     if (!d->startTask())
         return;
     emit d->contents();
+    emit d->endTask();
 }
 
 void IgotuControl::purge()
@@ -672,6 +766,23 @@ void IgotuControl::purge()
     if (!d->startTask())
         return;
     emit d->purge();
+    emit d->endTask();
+}
+
+void IgotuControl::write(const IgotuConfig &config)
+{
+    if (!d->startTask())
+        return;
+    emit d->write(config);
+    emit d->endTask();
+}
+
+void IgotuControl::reset()
+{
+    if (!d->startTask())
+        return;
+    emit d->reset();
+    emit d->endTask();
 }
 
 void IgotuControl::cancel()

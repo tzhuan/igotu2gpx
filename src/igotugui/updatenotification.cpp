@@ -212,11 +212,8 @@ void UpdateNotificationPrivate::requestReleases(const QString &os)
 {
     QUrl url = releaseUrl();
 
-    if (url.scheme().toLower() != QLatin1String("https") &&
-        url.scheme().toLower() != QLatin1String("http")) {
-        qWarning("Update information needs to be retrieved over http(s) connection");
-        return;
-    }
+    RETURN_IF_FAIL(url.scheme().toLower() == QLatin1String("https") ||
+                   url.scheme().toLower() == QLatin1String("http"));
 
     url.addQueryItem(QLatin1String("os"), os);
     url.addQueryItem(QLatin1String("version"), QLatin1String(IGOTU_VERSION_STR));
@@ -246,7 +243,7 @@ void UpdateNotificationPrivate::requestReleases(const QString &os)
 void UpdateNotificationPrivate::on_http_sslErrors(const QList<QSslError> &errors)
 {
     Q_FOREACH (const QSslError &error, errors)
-        qWarning("Unable to retrieve update information: %s",
+        qCritical("Unable to retrieve update information: %s",
                 qPrintable(error.errorString()));
 }
 
@@ -259,11 +256,8 @@ void UpdateNotificationPrivate::on_http_done(bool error)
     }
 
     QTemporaryFile iniFile;
-    if (!iniFile.open()) {
-        qWarning("Unable to create temporary update file: %s",
-                qPrintable(iniFile.errorString()));
-        return;
-    }
+    RETURN_IF_FAIL(iniFile.open());
+
     iniFile.write(http->readAll());
     iniFile.flush();
     QSettings settings(iniFile.fileName(), QSettings::IniFormat);

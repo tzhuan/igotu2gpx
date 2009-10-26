@@ -23,24 +23,6 @@
 
 #define IGOTU_VERSION_STR "0.3.90"
 
-#define GCC_VERSION (__GNUC__ * 100                                         \
-                   + __GNUC_MINOR__ * 10                                    \
-                   + __GNUC_PATCHLEVEL)
-
-#if defined(Q_CC_MSVC) || defined(Q_OS_WIN32)
-    #define EXPORT_DECL __declspec(dllexport)
-    #define IMPORT_DECL __declspec(dllimport)
-#else
-    // Test for GCC >= 4.0.0
-    #if GCC_VERSION >= 400
-        #define EXPORT_DECL __attribute__ ((visibility("default")))
-        #define IMPORT_DECL
-    #else
-        #define EXPORT_DECL
-        #define IMPORT_DECL
-    #endif
-#endif
-
 #if defined(Q_CC_MSVC)
     #define DECLARE_DEPRECATED __declspec(deprecated)
 #else
@@ -48,10 +30,13 @@
 #endif
 
 #ifdef IGOTU_MAKEDLL
-    #define IGOTU_EXPORT EXPORT_DECL
+    #define IGOTU_EXPORT Q_DECL_EXPORT
 #else
-    #define IGOTU_EXPORT IMPORT_DECL
+    #define IGOTU_EXPORT Q_DECL_IMPORT
 #endif
+
+#define RETURN_IF_FAIL(test) if (!(test)) { qCritical("CRITICAL: %s: !(%s)", Q_FUNC_INFO, #test); return; }
+#define RETURN_VAL_IF_FAIL(test, val) if (!(test)) { qCritical("CRITICAL: %s: !(%s)", Q_FUNC_INFO, #test); return val; }
 
 #endif
 

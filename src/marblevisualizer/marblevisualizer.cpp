@@ -191,7 +191,7 @@ void MarbleVisualizer::highlightTrack(const QList<IgotuPoint> &track)
 
 void MarbleVisualizer::saveSelectedTracks()
 {
-    qWarning("Visualizer does not support track selection");
+    qCritical("Visualizer does not support track selection");
 }
 
 // MarbleVisualizerCreator =====================================================

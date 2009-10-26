@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
+#include "igotu/igotudata.h"
 #include "igotu/utils.h"
 #include "igotu/xmlutils.h"
 
@@ -40,7 +41,7 @@ public:
     virtual QString fileType() const;
     virtual QByteArray save(const QList<QList<IgotuPoint> > &tracks,
             bool tracksAsSegments, int utcOffset) const;
-    virtual QByteArray save(const IgotuPoints &points,
+    virtual QByteArray save(const IgotuData &data,
             bool tracksAsSegments, int utcOffset) const;
 };
 
@@ -78,10 +79,10 @@ QString KmlExporter::fileType() const
     return tr("KML files (%1)").arg(QLatin1String("*.") + fileExtension());
 }
 
-QByteArray KmlExporter::save(const IgotuPoints &points, bool tracksAsSegments,
+QByteArray KmlExporter::save(const IgotuData &data, bool tracksAsSegments,
         int utcOffset) const
 {
-    return save(points.tracks(), tracksAsSegments, utcOffset);
+    return save(data.points().tracks(), tracksAsSegments, utcOffset);
 }
 
 QByteArray KmlExporter::save(const QList<QList<IgotuPoint> > &tracks,

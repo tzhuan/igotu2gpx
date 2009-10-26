@@ -29,17 +29,78 @@ namespace igotu
 //
 // TRANSLATOR igotu::Common
 
+QString dump(const QByteArray &data)
+{
+    QString result;
+    result += Common::tr("Memory contents:") + QLatin1Char('\n');
+    const unsigned chunks = (data.size() + 15) / 16;
+    bool firstLine = true;
+    for (unsigned i = 0; i < chunks; ++i) {
+        const QByteArray chunk = data.mid(i * 16, 16);
+        if (firstLine)
+            firstLine = false;
+        else
+            result += QLatin1Char('\n');
+        result += QString().sprintf("%04x  ", i * 16);
+        for (unsigned j = 0; j < unsigned(chunk.size()); ++j) {
+            result += QString().sprintf("%02x ", uchar(chunk[j]));
+            if (j % 4 == 3)
+                result += QLatin1Char(' ');
+        }
+    }
+    return result;
+}
+
+QString dumpDiff(const QByteArray &oldData, const QByteArray &newData)
+{
+    QString result;
+    result += Common::tr("Differences:") + QLatin1Char('\n');
+    const unsigned chunks = (oldData.size() + 15) / 16;
+    bool firstLine = true;
+    for (unsigned i = 0; i < chunks; ++i) {
+        const QByteArray oldChunk = oldData.mid(i * 16, 16);
+        const QByteArray newChunk = newData.mid(i * 16, 16);
+        if (oldChunk == newChunk)
+            continue;
+        if (firstLine)
+            firstLine = false;
+        else
+            result += QLatin1Char('\n');
+        result += QString().sprintf("%04x - ", i * 16);
+        for (unsigned j = 0; j < unsigned(qMin(oldChunk.size(),
+                        newChunk.size())); ++j) {
+            if (oldChunk[j] == newChunk[j])
+                result += QLatin1String("__ ");
+            else
+                result += QString().sprintf("%02x ", uchar(oldChunk[j]));
+            if (j % 4 == 3)
+                result += QLatin1Char(' ');
+        }
+        result += QString().sprintf("\n%04x + ", i * 16);
+        for (unsigned j = 0; j < unsigned(qMin(oldChunk.size(),
+                        newChunk.size())); ++j) {
+            if (oldChunk[j] == newChunk[j])
+                result += QLatin1String("__ ");
+            else
+                result += QString().sprintf("%02x ", uchar(newChunk[j]));
+            if (j % 4 == 3)
+                result += QLatin1Char(' ');
+        }
+    }
+    return result;
+}
+
 // copied and modified from qobject.cpp
 void connectSlotsByNameToPrivate(QObject *publicObject, QObject *privateObject)
 {
     if (!publicObject)
         return;
     const QMetaObject *mo = privateObject->metaObject();
-    Q_ASSERT(mo);
+    RETURN_IF_FAIL(mo);
     const QObjectList list = qFindChildren<QObject*>(publicObject, QString());
     for (int i = 0; i < mo->methodCount(); ++i) {
         const char *slot = mo->method(i).signature();
-        Q_ASSERT(slot);
+        RETURN_IF_FAIL(slot);
         if (slot[0] != 'o' || slot[1] != 'n' || slot[2] != '_')
             continue;
         bool foundIt = false;
@@ -77,7 +138,7 @@ void connectSlotsByNameToPrivate(QObject *publicObject, QObject *privateObject)
             while (mo->method(i + 1).attributes() & QMetaMethod::Cloned)
                   ++i;
         } else if (!(mo->method(i).attributes() & QMetaMethod::Cloned)) {
-            qWarning("connectSlotsByName: No matching signal for %s", slot);
+            qCritical("connectSlotsByName: No matching signal for %s", slot);
         }
     }
 }

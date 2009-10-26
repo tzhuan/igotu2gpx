@@ -153,8 +153,8 @@ ReadCommand:
   ZZ: read data
 ----
 
-Flash erase commands
-~~~~~~~~~~~~~~~~~~~~
+Flash write/erase commands
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ----
 UnknownWriteCommand1:
@@ -185,6 +185,12 @@ UnknownWriteCommand2:
   XX: big endian read size (0001 for purge and write)
   ZZ: purge first time 03, purge second time and write 00
 
+UnknownWriteCommand3:
+  Command chunk 1: 93 0d 07 00 00 00 00 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 00 00
+
 UnknownPurgeCommand1:
   Command chunk 1: 93 0C 00 XX 00 00 00 00
   Response:        93 00 00
@@ -197,6 +203,13 @@ UnknownPurgeCommand2:
   Response:        93 00 00
   Command chunk 2: 00 00 00 00 00 00 00 SS
   Response:        93 00 00
+
+TimeCommand:
+  Command chunk 1: 93 09 03 XX YY ZZ 00 00
+  Response:        93 00 00
+  Command chunk 2: 00 00 00 00 00 00 00 SS
+  Response:        93 00 00
+  XX:YY:ZZ: UTC time
 ----
 
 Other commands
@@ -352,6 +365,30 @@ GT-120, Firmware 3.03, @trip PC 2.0 811.2582
   UnknownPurgeCommand1(0x1f)
 ----
 
+Configuration
+-------------
+
+GT-120, Firmware 3.03, @trip PC 2.0 811.2582
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+----
+  UnknownWriteCommand1(0x00)
+  WriteCommand(0x20, 0x0000, '')
+  while UnknownWriteCommand2(0x0001) != 0x00:
+    pass
+
+  blocks = 0x10
+  for i = 0; i < blocks; ++i:
+    UnknownWriteCommand1(0x00)
+    WriteCommand(0x02, i * 0x0100, config(i * 0x0100:(i + 1) * 0x0100))
+    while UnknownWriteCommand2(0x0001) != 0x00:
+        pass
+
+  TimeCommand(now())
+  ReadCommand(0, 0x1000)
+  UnknownWriteCommand3()
+
+----
 Flash layout
 ------------
 

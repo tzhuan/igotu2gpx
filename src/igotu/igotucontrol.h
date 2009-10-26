@@ -29,6 +29,7 @@ namespace igotu
 {
 
 class IgotuControlPrivate;
+class IgotuConfig;
 
 class IGOTU_EXPORT IgotuControl : public QObject
 {
@@ -37,7 +38,7 @@ public:
     IgotuControl(QObject *parent = NULL);
     ~IgotuControl();
 
-    // usb:vendor:product, serial:n or image:base64
+    // usb:<vendor>:<product>, serial:<n> or image:<base64>
     QString device() const;
     // default device for the platform
     static QString defaultDevice();
@@ -48,12 +49,11 @@ public:
     bool tracksAsSegments() const;
     static bool defaultTracksAsSegments();
 
-    // may throw
     void info();
-    // may throw
     void contents();
-    // may throw
     void purge();
+    void write(const IgotuConfig &config);
+    void reset();
 
     // signals the thread to cancel the currently running operation
     void cancel();
@@ -86,6 +86,12 @@ Q_SIGNALS:
     void purgeBlocksFinished(uint num, uint total);
     void purgeFinished();
     void purgeFailed(const QString &message);
+
+    void writeStarted();
+    // number of blocks finished, from 0 to total
+    void writeBlocksFinished(uint num, uint total);
+    void writeFinished(const QString &debugMessage);
+    void writeFailed(const QString &message);
 
 protected:
     boost::scoped_ptr<IgotuControlPrivate> d;

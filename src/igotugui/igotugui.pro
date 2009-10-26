@@ -10,6 +10,7 @@ win32:LIBS *= -lshell32
 RC_FILE = $$BASEDIR/data/windows/icon.rc
 
 SOURCES *= \
+    configurationdialog.cpp \
     iconstorage.cpp \
     igotugui.cpp \
     mainwindow.cpp \
@@ -19,6 +20,7 @@ SOURCES *= \
     qticonloader.cpp \
 
 HEADERS *= \
+    configurationdialog.h \
     iconstorage.h \
     mainwindow.h \
     plugindialog.h \
@@ -27,6 +29,7 @@ HEADERS *= \
     qticonloader.h \
 
 FORMS *= \
+    configurationdialog.ui \
     igotugui.ui \
     plugindialog.ui \
     preferencesdialog.ui \

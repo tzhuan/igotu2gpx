@@ -35,6 +35,7 @@ public:
     void info(const QByteArray &contents = QByteArray());
     void save(const QString &format);
     void purge();
+    void reset();
 
 protected:
     boost::scoped_ptr<MainObjectPrivate> d;

@@ -42,6 +42,9 @@ IGOTU_EXPORT int enumKeyToValue(const QMetaObject &metaObject, const char *type,
 IGOTU_EXPORT const char *enumValueToKey(const QMetaObject &metaObject, const
         char *type, int value);
 
+IGOTU_EXPORT QString dump(const QByteArray &data);
+IGOTU_EXPORT QString dumpDiff(const QByteArray &oldData, const QByteArray &newData);
+
 } // namespace igotu
 
 #endif

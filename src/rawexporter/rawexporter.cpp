@@ -16,6 +16,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
+#include "igotu/igotudata.h"
 #include "igotu/xmlutils.h"
 
 #include "fileexporter.h"
@@ -39,7 +40,7 @@ public:
     virtual QString fileType() const;
     virtual QByteArray save(const QList<QList<IgotuPoint> > &tracks,
             bool tracksAsSegments, int utcOffset) const;
-    virtual QByteArray save(const IgotuPoints &points,
+    virtual QByteArray save(const IgotuData &data,
             bool tracksAsSegments, int utcOffset) const;
 };
 
@@ -77,12 +78,12 @@ QString RawExporter::fileType() const
     return tr("Raw files (%1)").arg(QLatin1String("*.") + fileExtension());
 }
 
-QByteArray RawExporter::save(const IgotuPoints &points, bool tracksAsSegments,
+QByteArray RawExporter::save(const IgotuData &data, bool tracksAsSegments,
         int utcOffset) const
 {
     Q_UNUSED(tracksAsSegments);
     Q_UNUSED(utcOffset);
-    return points.memoryDump();
+    return data.memoryDump();
 }
 
 QByteArray RawExporter::save(const QList<QList<IgotuPoint> > &tracks,
@@ -91,7 +92,7 @@ QByteArray RawExporter::save(const QList<QList<IgotuPoint> > &tracks,
     Q_UNUSED(tracks);
     Q_UNUSED(tracksAsSegments);
     Q_UNUSED(utcOffset);
-    qWarning("Unable to export tracks to raw format");
+    qCritical("Unable to export tracks to raw format");
     return QByteArray();
 }
 

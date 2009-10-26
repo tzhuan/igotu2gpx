@@ -9,7 +9,9 @@ DEFINES *= IGOTU_MAKEDLL
 SOURCES *= \
     commands.cpp \
     igotucommand.cpp \
+    igotuconfig.cpp \
     igotucontrol.cpp \
+    igotudata.cpp \
     igotupoints.cpp \
     messages.cpp \
     optionutils.cpp \
@@ -25,7 +27,9 @@ HEADERS *= \
     fileexporter.h \
     global.h \
     igotucommand.h \
+    igotuconfig.h \
     igotucontrol.h \
+    igotudata.h \
     igotupoints.h \
     messages.h \
     optionutils.h \
