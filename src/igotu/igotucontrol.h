@@ -71,27 +71,14 @@ public Q_SLOTS:
     void setTracksAsSegments(bool tracksAsSegments);
 
 Q_SIGNALS:
-    void infoStarted();
-    void infoFinished(const QString &info, const QByteArray &contents);
-    void infoFailed(const QString &message);
+    void commandStarted(const QString &message);
+    // num: 0 to total
+    void commandRunning(uint num, uint total);
+    void commandFailed(const QString &message);
+    void commandSucceeded(const QString &message);
 
-    void contentsStarted();
-    // number of blocks finished, from 0 to total
-    void contentsBlocksFinished(uint num, uint total);
-    void contentsFinished(const QByteArray &contents, uint count);
-    void contentsFailed(const QString &message);
-
-    void purgeStarted();
-    // number of blocks finished, from 0 to total
-    void purgeBlocksFinished(uint num, uint total);
-    void purgeFinished();
-    void purgeFailed(const QString &message);
-
-    void writeStarted();
-    // number of blocks finished, from 0 to total
-    void writeBlocksFinished(uint num, uint total);
-    void writeFinished(const QString &debugMessage);
-    void writeFailed(const QString &message);
+    void infoRetrieved(const QString &info, const QByteArray &contents);
+    void contentsRetrieved(const QByteArray &contents, uint count);
 
 protected:
     boost::scoped_ptr<IgotuControlPrivate> d;

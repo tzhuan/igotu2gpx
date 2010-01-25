@@ -201,6 +201,8 @@ int main(int argc, char *argv[])
             mainObject.save(format);
         } else if (action == QLatin1String("clear")) {
             mainObject.purge();
+        } else if (action == QLatin1String("reset")) {
+            mainObject.reset();
         } else {
             throw IgotuError(MainObject::tr("Unknown action: %1")
                     .arg(action));

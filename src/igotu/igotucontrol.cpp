@@ -57,24 +57,13 @@ private:
     void waitForWrite();
 
 Q_SIGNALS:
-    void infoStarted();
-    void infoFinished(const QString &info, const QByteArray &contents);
-    void infoFailed(const QString &message);
+    void commandStarted(const QString &message);
+    void commandRunning(uint num, uint total);
+    void commandFailed(const QString &message);
+    void commandSucceeded(const QString &message = QString());
 
-    void contentsStarted();
-    void contentsBlocksFinished(uint num, uint total);
-    void contentsFinished(const QByteArray &contents, uint count);
-    void contentsFailed(const QString &message);
-
-    void purgeStarted();
-    void purgeBlocksFinished(uint num, uint total);
-    void purgeFinished();
-    void purgeFailed(const QString &message);
-
-    void writeStarted();
-    void writeBlocksFinished(uint num, uint total);
-    void writeFinished(const QString &debugMessage);
-    void writeFailed(const QString &message);
+    void infoRetrieved(const QString &info, const QByteArray &contents);
+    void contentsRetrieved(const QByteArray &contents, uint count);
 
 private:
     IgotuControlPrivate * const p;
@@ -261,7 +250,7 @@ void IgotuControlPrivateWorker::waitForWrite()
 
 void IgotuControlPrivateWorker::info()
 {
-    emit infoStarted();
+    emit commandStarted(tr("Downloading configuration..."));
     try {
         connect();
 
@@ -293,7 +282,7 @@ void IgotuControlPrivateWorker::info()
             // Can be forced with env variables:
             //   IGOTU2GPX_WORKAROUND and IGOTU2GPX_NOWORKAROUND
             // There seems to be a major firmware rework around 2.15 (debug
-            // mode was introduced, so until proven otherwise we just use this
+            // mode was introduced), so until proven otherwise we just use this
             // version)
             CountCommand countCommand(connection.get(),
                     id.firmwareVersion() >= 0x0215);
@@ -409,16 +398,19 @@ void IgotuControlPrivateWorker::info()
                         igotuPoints.password()) + QLatin1Char('\n');
         }
 
-        emit infoFinished(status, contents);
+        emit commandSucceeded();
+        emit infoRetrieved(status, contents);
     } catch (const std::exception &e) {
         disconnectQuietly();
-        emit infoFailed(QString::fromLocal8Bit(e.what()));
+        emit commandFailed(tr
+                ("Unable to download configuration from GPS tracker: %1")
+                .arg(QString::fromLocal8Bit(e.what())));
     }
 }
 
 void IgotuControlPrivateWorker::contents()
 {
-    emit contentsStarted();
+    emit commandStarted(tr("Downloading tracks..."));
     try {
         connect();
 
@@ -435,13 +427,13 @@ void IgotuControlPrivateWorker::contents()
             const unsigned blocks = 1 + (count + 0x7f) / 0x80;
 
             for (unsigned i = 0; i < blocks; ++i) {
-                emit contentsBlocksFinished(i, blocks);
+                emit commandRunning(i, blocks);
                 if (p->cancelRequested())
                     throw IgotuError(IgotuControl::tr("Cancelled"));
                 data += ReadCommand(connection.get(), i * 0x1000,
                         0x1000).sendAndReceive();
             }
-            emit contentsBlocksFinished(blocks, blocks);
+            emit commandRunning(blocks, blocks);
         } else {
             data = image;
             if (data.size() < 0x1000)
@@ -449,16 +441,19 @@ void IgotuControlPrivateWorker::contents()
             count = (data.size() - 0x1000) / 0x20;
         }
 
-        emit contentsFinished(data, count);
+        emit commandSucceeded();
+        emit contentsRetrieved(data, count);
     } catch (const std::exception &e) {
         disconnectQuietly();
-        emit contentsFailed(QString::fromLocal8Bit(e.what()));
+        emit commandFailed(tr
+                ("Unable to download trackpoints from GPS tracker: %1")
+                .arg(QString::fromLocal8Bit(e.what())));
     }
 }
 
 void IgotuControlPrivateWorker::purge()
 {
-    emit purgeStarted();
+    emit commandStarted(tr("Clearing memory..."));
     try {
         connect();
 
@@ -494,7 +489,7 @@ void IgotuControlPrivateWorker::purge()
         if (id.firmwareVersion() >= 0x0215) {
             bool purgeBlocks = false;
             for (unsigned i = blocks - 1; i > 0; --i) {
-                emit purgeBlocksFinished(blocks - i - 1, blocks);
+                emit commandRunning(blocks - i - 1, blocks);
                 if (p->cancelRequested())
                     throw IgotuError(IgotuControl::tr("Cancelled"));
                 if (purgeBlocks) {
@@ -517,11 +512,11 @@ void IgotuControlPrivateWorker::purge()
             }
             UnknownPurgeCommand1(connection.get(), 0x1e).sendAndReceive();
             UnknownPurgeCommand1(connection.get(), 0x1f).sendAndReceive();
-            emit purgeBlocksFinished(blocks, blocks);
+            emit commandRunning(blocks, blocks);
         } else {
             bool purgeBlocks = false;
             for (unsigned i = blocks - 1; i > 0; --i) {
-                emit purgeBlocksFinished(blocks - i - 1, blocks);
+                emit commandRunning(blocks - i - 1, blocks);
                 if (p->cancelRequested())
                     throw IgotuError(IgotuControl::tr("Cancelled"));
                 if (purgeBlocks) {
@@ -542,19 +537,21 @@ void IgotuControlPrivateWorker::purge()
                 waitForWrite();
             }
             UnknownPurgeCommand2(connection.get()).sendAndReceive();
-            emit purgeBlocksFinished(blocks, blocks);
+            emit commandRunning(blocks, blocks);
         }
 
-        emit purgeFinished();
+        emit commandSucceeded();
     } catch (const std::exception &e) {
         disconnectQuietly();
-        emit purgeFailed(QString::fromLocal8Bit(e.what()));
+        emit commandFailed(tr
+            ("Unable to clear memory of GPS tracker: %1")
+            .arg(QString::fromLocal8Bit(e.what())));
     }
 }
 
 void IgotuControlPrivateWorker::write(const IgotuConfig &config)
 {
-    emit writeStarted();
+    emit commandStarted(tr("Writing configuration..."));
     try {
         connect();
 
@@ -575,7 +572,7 @@ void IgotuControlPrivateWorker::write(const IgotuConfig &config)
             unsigned blocks = 0x10;
             QByteArray configData = config.memoryDump();
             for (unsigned i = 0; i < blocks; ++i) {
-                emit writeBlocksFinished(i, blocks + 1);
+                emit commandRunning(i, blocks + 1);
                 if (p->cancelRequested())
                     throw IgotuError(IgotuControl::tr("Cancelled"));
                 UnknownWriteCommand1(connection.get(), 0x00).sendAndReceive();
@@ -583,21 +580,23 @@ void IgotuControlPrivateWorker::write(const IgotuConfig &config)
                         configData.mid(i * 0x0100, 0x100)).sendAndReceive();
                 waitForWrite();
             }
-            emit writeBlocksFinished(blocks, blocks + 1);
+            emit commandRunning(blocks, blocks + 1);
             TimeCommand(connection.get(), QDateTime::currentDateTime()
                     .toUTC().time()).sendAndReceive();
             ReadCommand(connection.get(), 0, 0x1000).sendAndReceive();
             UnknownWriteCommand3(connection.get()).sendAndReceive();
-            emit writeBlocksFinished(blocks + 1, blocks + 1);
+            emit commandRunning(blocks + 1, blocks + 1);
         } else {
             message = dumpDiff(IgotuData(image, 0).config().memoryDump(),
                     config.memoryDump());
         }
 
-        emit writeFinished(message);
+        emit commandSucceeded(message);
     } catch (const std::exception &e) {
         disconnectQuietly();
-        emit writeFailed(QString::fromLocal8Bit(e.what()));
+        emit commandFailed(tr
+            ("Unable to write configuration to GPS tracker: %1")
+            .arg(QString::fromLocal8Bit(e.what())));
     }
 }
 
@@ -623,39 +622,19 @@ IgotuControl::IgotuControl(QObject *parent) :
     setUtcOffset(defaultUtcOffset());
     setTracksAsSegments(defaultTracksAsSegments());
 
-    connect(&d->worker, SIGNAL(infoStarted()),
-             this, SIGNAL(infoStarted()));
-    connect(&d->worker, SIGNAL(infoFinished(QString,QByteArray)),
-             this, SIGNAL(infoFinished(QString,QByteArray)));
-    connect(&d->worker, SIGNAL(infoFailed(QString)),
-             this, SIGNAL(infoFailed(QString)));
+    connect(&d->worker, SIGNAL(commandStarted(QString)),
+             this, SIGNAL(commandStarted(QString)));
+    connect(&d->worker, SIGNAL(commandRunning(uint,uint)),
+             this, SIGNAL(commandRunning(uint,uint)));
+    connect(&d->worker, SIGNAL(commandFailed(QString)),
+             this, SIGNAL(commandFailed(QString)));
+    connect(&d->worker, SIGNAL(commandSucceeded(QString)),
+             this, SIGNAL(commandSucceeded(QString)));
 
-    connect(&d->worker, SIGNAL(contentsStarted()),
-             this, SIGNAL(contentsStarted()));
-    connect(&d->worker, SIGNAL(contentsBlocksFinished(uint,uint)),
-             this, SIGNAL(contentsBlocksFinished(uint,uint)));
-    connect(&d->worker, SIGNAL(contentsFinished(QByteArray,uint)),
-             this, SIGNAL(contentsFinished(QByteArray,uint)));
-    connect(&d->worker, SIGNAL(contentsFailed(QString)),
-             this, SIGNAL(contentsFailed(QString)));
-
-    connect(&d->worker, SIGNAL(purgeStarted()),
-             this, SIGNAL(purgeStarted()));
-    connect(&d->worker, SIGNAL(purgeBlocksFinished(uint,uint)),
-             this, SIGNAL(purgeBlocksFinished(uint,uint)));
-    connect(&d->worker, SIGNAL(purgeFinished()),
-             this, SIGNAL(purgeFinished()));
-    connect(&d->worker, SIGNAL(purgeFailed(QString)),
-             this, SIGNAL(purgeFailed(QString)));
-
-    connect(&d->worker, SIGNAL(writeStarted()),
-             this, SIGNAL(writeStarted()));
-    connect(&d->worker, SIGNAL(writeBlocksFinished(uint,uint)),
-             this, SIGNAL(writeBlocksFinished(uint,uint)));
-    connect(&d->worker, SIGNAL(writeFinished(QString)),
-             this, SIGNAL(writeFinished(QString)));
-    connect(&d->worker, SIGNAL(writeFailed(QString)),
-             this, SIGNAL(writeFailed(QString)));
+    connect(&d->worker, SIGNAL(infoRetrieved(QString,QByteArray)),
+             this, SIGNAL(infoRetrieved(QString,QByteArray)));
+    connect(&d->worker, SIGNAL(contentsRetrieved(QByteArray,uint)),
+             this, SIGNAL(contentsRetrieved(QByteArray,uint)));
 
     connect(d.get(), SIGNAL(info()),
              &d->worker, SLOT(info()));

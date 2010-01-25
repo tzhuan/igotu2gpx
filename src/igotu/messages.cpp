@@ -89,4 +89,10 @@ void Messages::directOutput(const QByteArray &data)
     std::cout << std::string(data.data(), data.length());
 }
 
+void Messages::normalMessagePart(const QString &message)
+{
+    if (messagesPrivate()->verbose() >= 0)
+        std::cerr << qPrintable(message) << std::flush;
+}
+
 } // namespace igotu

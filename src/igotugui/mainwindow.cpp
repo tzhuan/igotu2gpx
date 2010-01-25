@@ -63,24 +63,13 @@ public Q_SLOTS:
     void on_actionPreferences_triggered();
     void on_actionQuit_triggered();
 
-    void on_control_infoStarted();
-    void on_control_infoFinished(const QString &info);
-    void on_control_infoFailed(const QString &message);
+    void on_control_commandStarted(const QString &message);
+    void on_control_commandRunning(uint num, uint total);
+    void on_control_commandSucceeded(const QString &message);
+    void on_control_commandFailed(const QString &failed);
 
-    void on_control_contentsStarted();
-    void on_control_contentsBlocksFinished(uint num, uint total);
-    void on_control_contentsFinished(const QByteArray &contents, uint count);
-    void on_control_contentsFailed(const QString &message);
-
-    void on_control_purgeStarted();
-    void on_control_purgeBlocksFinished(uint num, uint total);
-    void on_control_purgeFinished();
-    void on_control_purgeFailed(const QString &message);
-
-    void on_control_writeStarted();
-    void on_control_writeBlocksFinished(uint num, uint total);
-    void on_control_writeFinished(const QString &message);
-    void on_control_writeFailed(const QString &message);
+    void on_control_infoRetrieved(const QString &info);
+    void on_control_contentsRetrieved(const QByteArray &contents, uint count);
 
     void on_update_newVersionAvailable(const QString &version,
             const QString &name, const QUrl &url);
@@ -277,35 +266,35 @@ void MainWindowPrivate::on_update_newVersionAvailable(const QString &version,
     delete messageBox;
 }
 
-void MainWindowPrivate::on_control_infoStarted()
+void MainWindowPrivate::on_control_commandStarted(const QString &message)
 {
-    startBackgroundAction(Common::tr("Downloading configuration..."));
+    startBackgroundAction(message);
 }
 
-void MainWindowPrivate::on_control_infoFinished(const QString &info)
+void MainWindowPrivate::on_control_commandFailed(const QString &message)
+{
+    abortBackgroundAction(message);
+}
+
+void MainWindowPrivate::on_control_commandRunning(uint num, uint total)
+{
+    updateBackgroundAction(num, total);
+}
+
+void MainWindowPrivate::on_control_commandSucceeded(const QString &message)
+{
+    if (!message.isEmpty())
+        Messages::textOutput(message);
+    stopBackgroundAction();
+}
+
+void MainWindowPrivate::on_control_infoRetrieved(const QString &info)
 {
     ui->info->setText(info);
     control->contents();
 }
 
-void MainWindowPrivate::on_control_infoFailed(const QString &message)
-{
-    abortBackgroundAction(Common::tr
-            ("Unable to download configuration from GPS tracker: %1").arg(message));
-}
-
-void MainWindowPrivate::on_control_contentsStarted()
-{
-    startBackgroundAction(Common::tr("Downloading tracks..."));
-}
-
-void MainWindowPrivate::on_control_contentsBlocksFinished(uint num,
-        uint total)
-{
-    updateBackgroundAction(num, total);
-}
-
-void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
+void MainWindowPrivate::on_control_contentsRetrieved(const QByteArray &contents,
         uint count)
 {
     try {
@@ -325,62 +314,12 @@ void MainWindowPrivate::on_control_contentsFinished(const QByteArray &contents,
 
         stopBackgroundAction();
     } catch (const std::exception &e) {
+        // TODO: error message not correct, this should be more specific to the
+        // errors expected here or degrade gracefully
         abortBackgroundAction(Common::tr
                 ("Unable to download trackpoints from GPS tracker: %1")
                 .arg(QString::fromLocal8Bit(e.what())));
     }
-}
-
-void MainWindowPrivate::on_control_contentsFailed(const QString &message)
-{
-    abortBackgroundAction(Common::tr
-            ("Unable to download trackpoints from GPS tracker: %1")
-            .arg(message));
-}
-
-void MainWindowPrivate::on_control_purgeStarted()
-{
-    startBackgroundAction(Common::tr("Clearing memory..."));
-}
-
-void MainWindowPrivate::on_control_purgeBlocksFinished(uint num,
-        uint total)
-{
-    updateBackgroundAction(num, total);
-}
-
-void MainWindowPrivate::on_control_purgeFinished()
-{
-    stopBackgroundAction();
-}
-
-void MainWindowPrivate::on_control_purgeFailed(const QString &message)
-{
-    abortBackgroundAction(Common::tr
-            ("Unable to clear memory of GPS tracker: %1").arg(message));
-}
-
-void MainWindowPrivate::on_control_writeStarted()
-{
-    startBackgroundAction(Common::tr("Writing configuration..."));
-}
-
-void MainWindowPrivate::on_control_writeBlocksFinished(uint num, uint total)
-{
-    updateBackgroundAction(num, total);
-}
-
-void MainWindowPrivate::on_control_writeFinished(const QString &message)
-{
-    if (!message.isEmpty())
-        Messages::textOutput(message);
-    stopBackgroundAction();
-}
-
-void MainWindowPrivate::on_control_writeFailed(const QString &message)
-{
-    abortBackgroundAction(Common::tr
-            ("Unable to write configuration to GPS tracker: %1").arg(message));
 }
 
 void MainWindowPrivate::startBackgroundAction(const QString &text)
@@ -390,14 +329,17 @@ void MainWindowPrivate::startBackgroundAction(const QString &text)
     ui->actionPurge->setEnabled(false);
     ui->actionConfigureTracker->setEnabled(false);
     p->statusBar()->showMessage(text);
-    updateBackgroundAction(0, 1);
-    progress->show();
 }
 
 void MainWindowPrivate::updateBackgroundAction(unsigned value, unsigned maximum)
 {
-    progress->setMaximum(maximum);
-    progress->setValue(value);
+    if (maximum > 0) {
+        progress->show();
+        progress->setMaximum(maximum);
+        progress->setValue(value);
+    } else {
+        progress->hide();
+    }
 }
 
 void MainWindowPrivate::stopBackgroundAction()

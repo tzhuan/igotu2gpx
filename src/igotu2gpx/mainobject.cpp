@@ -37,25 +37,13 @@ class MainObjectPrivate : public QObject
 {
     Q_OBJECT
 public Q_SLOTS:
-    void on_control_infoStarted();
-    void on_control_infoFinished(const QString &info,
-            const QByteArray &contents);
-    void on_control_infoFailed(const QString &message);
+    void on_control_commandStarted(const QString &message);
+    void on_control_commandRunning(uint num, uint total);
+    void on_control_commandSucceeded(const QString &message);
+    void on_control_commandFailed(const QString &failed);
 
-    void on_control_contentsStarted();
-    void on_control_contentsBlocksFinished(uint num, uint total);
-    void on_control_contentsFinished(const QByteArray &contents, uint count);
-    void on_control_contentsFailed(const QString &message);
-
-    void on_control_purgeStarted();
-    void on_control_purgeBlocksFinished(uint num, uint total);
-    void on_control_purgeFinished();
-    void on_control_purgeFailed(const QString &message);
-
-    void on_control_writeStarted();
-    void on_control_writeBlocksFinished(uint num, uint total);
-    void on_control_writeFinished(const QString &message);
-    void on_control_writeFailed(const QString &message);
+    void on_control_infoRetrieved(const QString &info, const QByteArray &contents);
+    void on_control_contentsRetrieved(const QByteArray &contents, uint count);
 
 public:
     MainObject *p;
@@ -72,12 +60,33 @@ public:
 
 // MainObjectPrivate ===========================================================
 
-void MainObjectPrivate::on_control_infoStarted()
+void MainObjectPrivate::on_control_commandStarted(const QString &message)
 {
-    Messages::normalMessage(Common::tr("Downloading configuration..."));
+    Messages::normalMessagePart(message);
 }
 
-void MainObjectPrivate::on_control_infoFinished(const QString &info,
+void MainObjectPrivate::on_control_commandRunning(uint num, uint total)
+{
+    Q_UNUSED(num);
+    Q_UNUSED(total);
+    // TODO: Localize?
+    Messages::normalMessagePart(QLatin1String("."));
+}
+
+void MainObjectPrivate::on_control_commandFailed(const QString &message)
+{
+    Messages::normalMessage(QString());
+    Messages::errorMessage(message);
+}
+
+void MainObjectPrivate::on_control_commandSucceeded(const QString &message)
+{
+    Messages::normalMessage(QString());
+    if (!message.isEmpty())
+        Messages::textOutput(message);
+}
+
+void MainObjectPrivate::on_control_infoRetrieved(const QString &info,
         const QByteArray &contents)
 {
     if (this->contents.isEmpty()) {
@@ -88,24 +97,7 @@ void MainObjectPrivate::on_control_infoFinished(const QString &info,
     }
 }
 
-void MainObjectPrivate::on_control_infoFailed(const QString &message)
-{
-    Messages::errorMessage(Common::tr
-                ("Unable to download configuration from GPS tracker: %1").arg(message));
-}
-
-void MainObjectPrivate::on_control_contentsStarted()
-{
-    Messages::normalMessage(Common::tr("Downloading tracks..."));
-}
-
-void MainObjectPrivate::on_control_contentsBlocksFinished(uint num, uint total)
-{
-    Messages::normalMessage(MainObject::tr("Downloaded block %1/%2")
-            .arg(num).arg(total));
-}
-
-void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
+void MainObjectPrivate::on_control_contentsRetrieved(const QByteArray &contents,
         uint count)
 {
     FileExporter *selected = exporters.value(0);
@@ -122,57 +114,6 @@ void MainObjectPrivate::on_control_contentsFinished(const QByteArray &contents,
     else
         qCritical("No file exporters found");
 
-}
-
-void MainObjectPrivate::on_control_contentsFailed(const QString &message)
-{
-    Messages::errorMessage(Common::tr("Unable to download trackpoints from "
-                "GPS tracker: %1").arg(message));
-}
-
-void MainObjectPrivate::on_control_purgeStarted()
-{
-    Messages::normalMessage(Common::tr("Clearing memory..."));
-}
-
-void MainObjectPrivate::on_control_purgeBlocksFinished(uint num, uint total)
-{
-    Messages::normalMessage(MainObject::tr
-            ("Cleared block %1/%2").arg(num).arg(total));
-}
-
-void MainObjectPrivate::on_control_purgeFinished()
-{
-    // do nothing
-}
-
-void MainObjectPrivate::on_control_purgeFailed(const QString &message)
-{
-    Messages::errorMessage(Common::tr
-                ("Unable to clear memory of GPS tracker: %1").arg(message));
-}
-
-void MainObjectPrivate::on_control_writeStarted()
-{
-    Messages::normalMessage(Common::tr("Writing configuration..."));
-}
-
-void MainObjectPrivate::on_control_writeBlocksFinished(uint num, uint total)
-{
-    Messages::normalMessage(MainObject::tr
-            ("Wrote block %1/%2").arg(num).arg(total));
-}
-
-void MainObjectPrivate::on_control_writeFinished(const QString &message)
-{
-    if (!message.isEmpty())
-        Messages::textOutput(message);
-}
-
-void MainObjectPrivate::on_control_writeFailed(const QString &message)
-{
-    Messages::errorMessage(Common::tr
-                ("Unable to write configuration to GPS tracker: %1").arg(message));
 }
 
 // MainObject ==================================================================

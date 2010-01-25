@@ -40,6 +40,9 @@ public:
     static void errorMessage(const QString &message);
     static void normalMessage(const QString &message);
     static void verboseMessage(const QString &message);
+
+    // stderr + no LF
+    static void normalMessagePart(const QString &message);
 };
 
 } // namespace igotu
