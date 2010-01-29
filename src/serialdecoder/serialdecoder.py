@@ -65,14 +65,14 @@ def format_hex(data):
         result += '  ' + format_hex_line(data[i * 16:(i + 1) * 16]) + '\n'
     return result
 
-readdata = '';
-writedata = '';
-parts = [];
-remotemode = False;
-with open(sys.argv[1], 'r') as f:
-    firstline = True;
-    responseline = False;
-    for line in f.xreadlines():
+def parse_winserialdump(filehandle):
+    readdata = ''
+    writedata = ''
+    parts = []
+    remotemode = False
+    firstline = True
+    responseline = False
+    for line in filehandle.xreadlines():
         if firstline:
             firstline = False;
             if line.startswith('['):
@@ -107,8 +107,37 @@ with open(sys.argv[1], 'r') as f:
             readdata += decode_hex(data)
         if command == 'IRP_MJ_WRITE':
             writedata = decode_hex(data)
-if len(writedata) > 0:
-    parts += [{'query': writedata, 'response': readdata}]
+    if len(writedata) > 0:
+        parts += [{'query': writedata, 'response': readdata}]
+    return parts
+
+def parse_linuxusbdump(filehandle):
+    readdata = ''
+    writedata = ''
+    parts = []
+    remotemode = False
+    responseline = False
+    for line in filehandle.xreadlines():
+        newtokens = line.rstrip().split(' ')
+        if newtokens[2] == 'S':
+            if newtokens[3].startswith('Co:'):
+                if len(writedata) > 0:
+                    parts += [{'query': writedata, 'response': readdata}]
+                readdata = ''
+                writedata = decode_hex(''.join(newtokens[12:]))
+        elif newtokens[2] == 'C':
+            if newtokens[3].startswith('Ii:'):
+                readdata += decode_hex(''.join(newtokens[7:]))
+    if len(writedata) > 0:
+        parts += [{'query': writedata, 'response': readdata}]
+    return parts
+
+try:
+    with open(sys.argv[1], 'r') as f:
+        parts = parse_winserialdump(f)
+except:
+    with open(sys.argv[1], 'r') as f:
+        parts = parse_linuxusbdump(f)
 
 rawdatapackages = 0
 tempqueryparts = []
