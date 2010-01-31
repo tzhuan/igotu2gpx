@@ -81,7 +81,7 @@ unsigned IgotuCommandPrivate::sendCommand(const QByteArray &data)
         return 0;
 
     command[command.size() - 1] = -std::accumulate(command.data() + 0,
-            command.data() + command.size() - 2, 0);
+            command.data() + command.size() - 1, 0);
     int responseSize = 0;
     for (unsigned i = 0; i < pieces; ++i) {
         if (connection->mode().testFlag(DataConnection::NonBlockingPurge))

@@ -16,29 +16,27 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU2GPX_SRC_IGOTU2GPX_MAINOBJECT_H_
-#define _IGOTU2GPX_SRC_IGOTU2GPX_MAINOBJECT_H_
+#ifndef _IGOTU2GPX_SRC_TESTS_TESTS_H_
+#define _IGOTU2GPx_SRC_TESTS_TESTS_H_
 
-#include <QObject>
+#include <QtTest>
 
-class MainObjectPrivate;
+#define ARRAYCOMP(a, b, n)                                                     \
+    do {                                                                       \
+        for (unsigned compLoop = 0; compLoop < n; ++compLoop)                  \
+            if (a[compLoop] != b[compLoop])                                    \
+                QFAIL(qPrintable(QString::fromLatin1                           \
+                ("Array values not the same at index %1: was %2, expected %3") \
+                            .arg(compLoop)                                     \
+                            .arg(uchar(a[compLoop]))                           \
+                            .arg(uchar(b[compLoop]))));                        \
+    } while (0)
 
-class MainObject : public QObject
+class Tests: public QObject
 {
     Q_OBJECT
-public:
-    MainObject(const QString &device, bool tracksAsSegments, int utcOffset);
-    ~MainObject();
-
-    void info(const QByteArray &contents = QByteArray());
-    void save(const QString &format);
-    void purge();
-    void reset();
-    void config();
-
-protected:
-    MainObjectPrivate *d;
+private Q_SLOTS:
+    void igotuConfig();
 };
 
 #endif
-

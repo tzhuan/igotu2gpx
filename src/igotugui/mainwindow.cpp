@@ -152,6 +152,7 @@ void MainWindowPrivate::on_actionQuit_triggered()
 void MainWindowPrivate::on_actionReload_triggered()
 {
     control->info();
+    control->contents();
 }
 
 void MainWindowPrivate::on_actionSaveAll_triggered()
@@ -190,8 +191,11 @@ void MainWindowPrivate::on_actionPurge_triggered()
 #endif
     messageBox->exec();
 
-    if (messageBox->clickedButton() == purgeButton)
+    if (messageBox->clickedButton() == purgeButton) {
         control->purge();
+        control->info();
+        control->contents();
+    }
 
     delete messageBox;
 }
@@ -291,34 +295,20 @@ void MainWindowPrivate::on_control_commandSucceeded(const QString &message)
 void MainWindowPrivate::on_control_infoRetrieved(const QString &info)
 {
     ui->info->setText(info);
-    control->contents();
 }
 
 void MainWindowPrivate::on_control_contentsRetrieved(const QByteArray &contents,
         uint count)
 {
-    try {
-        lastTrackPoints.reset(new IgotuData(contents, count));
-        ui->actionSaveAll->setEnabled(count > 0);
+    lastTrackPoints.reset(new IgotuData(contents, count));
+    ui->actionSaveAll->setEnabled(count > 0);
 
-        QString errorMessage;
-        Q_FOREACH (TrackVisualizer *visualizer, visualizers) {
-            try {
-                visualizer->setTracks(lastTrackPoints->points(), control->utcOffset());
-            } catch (const std::exception &e) {
-                errorMessage = QString::fromLocal8Bit(e.what());
-            }
+    Q_FOREACH (TrackVisualizer *visualizer, visualizers) {
+        try {
+            visualizer->setTracks(lastTrackPoints->points(), control->utcOffset());
+        } catch (const std::exception &e) {
+            qCritical("Unable to set tracks in visualizer: %s", e.what());
         }
-        if (!errorMessage.isEmpty())
-            throw IgotuError(errorMessage);
-
-        stopBackgroundAction();
-    } catch (const std::exception &e) {
-        // TODO: error message not correct, this should be more specific to the
-        // errors expected here or degrade gracefully
-        abortBackgroundAction(Common::tr
-                ("Unable to download trackpoints from GPS tracker: %1")
-                .arg(QString::fromLocal8Bit(e.what())));
     }
 }
 

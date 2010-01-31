@@ -35,6 +35,8 @@ public:
     ScheduleTableEntry(const QByteArray &dump);
     ~ScheduleTableEntry();
 
+    static ScheduleTableEntry gt120DefaultEntry();
+
     bool isValid() const;
 
     QByteArray memoryDump() const;
@@ -64,23 +66,33 @@ public:
     IgotuConfig(const QByteArray &dump);
     ~IgotuConfig();
 
+    static IgotuConfig gt120DefaultConfig();
+
     bool isValid() const;
 
     QByteArray memoryDump() const;
+    QByteArray &memoryDump();
 
     unsigned securityVersion() const;
     bool isPasswordEnabled() const;
     QString password() const;
 
     bool isScheduleTableEnabled() const;
+    void setScheduleTableEnabled(bool value);
+
     // one-based plan
     QList<unsigned> scheduleTablePlans() const;
+    void setScheduleTablePlans(const QList<unsigned> &plans);
+
     // one-based plan
     QList<ScheduleTableEntry> scheduleTableEntries(unsigned plan) const;
-    // one-based plan
     void setScheduleTableEntry(unsigned plan, unsigned index, const ScheduleTableEntry &entry);
+
     QDate firstScheduleDate() const;
+    void setFirstScheduleDate(const QDate &date);
+
     unsigned dateOffset() const;
+    void setDateOffset(unsigned offset);
 
     bool isButtonEnabled() const;
     bool ledsEnabled() const;

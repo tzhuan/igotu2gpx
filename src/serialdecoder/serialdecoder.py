@@ -144,7 +144,8 @@ tempqueryparts = []
 while len(parts) > 0:
     query, size, response = handle_part(parts.pop(0))
     if size < 0:
-        print 'Query with error: %s' % format_query(query, 8, False)
+        print 'Query with error'
+        print '  %s, returned %d' % (format_query(query, 8, False), size)
         tempqueryparts = []
     elif rawdatapackages > 0:
         print 'Data write: (%s, returned %d)' % (format_query(query, 7), size)

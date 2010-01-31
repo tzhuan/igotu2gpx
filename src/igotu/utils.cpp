@@ -21,6 +21,9 @@
 #include "utils.h"
 
 #include <QMetaProperty>
+#include <QTextStream>
+
+#include <cmath>
 
 namespace igotu
 {
@@ -170,7 +173,7 @@ const char *enumValueToKey(const QMetaObject &metaObject,
 }
 
 // QColor/QRgb is in QtGui
-static unsigned Ahsv(double hue, double s, double v, double a)
+static unsigned ahsv(double hue, double s, double v, double a)
 {
     double r, g, b;
 
@@ -242,7 +245,7 @@ unsigned colorTableEntry(unsigned index)
 {
     const static unsigned hueBases[4] = { 16, 18, 17, 19 };
     double hue = ((hueBases[(index / 6) % 4] + (index % 6) * 4) % 24) / 24.0;
-    return Ahsv(hue, 1.0, 1.0, .65);
+    return ahsv(hue, 1.0, 1.0, .65);
 }
 
 QByteArray pointsToKml(const QList<QList<IgotuPoint> > &tracks, bool tracksAsSegments)

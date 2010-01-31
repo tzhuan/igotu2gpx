@@ -16,29 +16,15 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#ifndef _IGOTU2GPX_SRC_IGOTU2GPX_MAINOBJECT_H_
-#define _IGOTU2GPX_SRC_IGOTU2GPX_MAINOBJECT_H_
+#include "tests.h"
 
-#include <QObject>
+#include <QCoreApplication>
 
-class MainObjectPrivate;
-
-class MainObject : public QObject
+int main(int argc, char *argv[])
 {
-    Q_OBJECT
-public:
-    MainObject(const QString &device, bool tracksAsSegments, int utcOffset);
-    ~MainObject();
+    QCoreApplication app(argc, argv);
 
-    void info(const QByteArray &contents = QByteArray());
-    void save(const QString &format);
-    void purge();
-    void reset();
-    void config();
-
-protected:
-    MainObjectPrivate *d;
-};
-
-#endif
+    Tests tests;
+    return QTest::qExec(&tests, argc, argv);
+}
 

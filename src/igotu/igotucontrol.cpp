@@ -28,7 +28,10 @@
 #include "utils.h"
 
 #include <QDir>
+#include <QLocale>
+#include <QMutex>
 #include <QSemaphore>
+#include <QSet>
 #include <QStringList>
 
 namespace igotu
@@ -80,12 +83,10 @@ class IgotuControlPrivate : public QObject
 public:
     IgotuControlPrivate();
 
-    // returns false if there is already a task running
+    // returns false if there are already too many tasks running
     bool startTask();
     void requestCancel();
-    // also resets the cancel flag so that following calls to this function
-    // return false again
-    bool cancelRequested();
+    bool cancelRequested() const;
 
     static QList<DataConnectionCreator*> creators();
 
@@ -103,7 +104,7 @@ Q_SIGNALS:
 public:
     unsigned taskCount;
     QSemaphore semaphore;
-    QMutex cancelLock;
+    mutable QMutex cancelLock;
     bool cancel;
     EventThread thread;
     IgotuControlPrivateWorker worker;
@@ -135,15 +136,11 @@ bool IgotuControlPrivate::startTask()
     return true;
 }
 
-bool IgotuControlPrivate::cancelRequested()
+bool IgotuControlPrivate::cancelRequested() const
 {
     QMutexLocker locker(&cancelLock);
 
-    if (!cancel)
-        return false;
-
-    cancel = false;
-    return true;
+    return cancel;
 }
 
 void IgotuControlPrivate::requestCancel()
@@ -250,6 +247,9 @@ void IgotuControlPrivateWorker::waitForWrite()
 
 void IgotuControlPrivateWorker::info()
 {
+    if (p->cancelRequested())
+        return;
+
     emit commandStarted(tr("Downloading configuration..."));
     try {
         connect();
@@ -410,6 +410,9 @@ void IgotuControlPrivateWorker::info()
 
 void IgotuControlPrivateWorker::contents()
 {
+    if (p->cancelRequested())
+        return;
+
     emit commandStarted(tr("Downloading tracks..."));
     try {
         connect();
@@ -453,6 +456,9 @@ void IgotuControlPrivateWorker::contents()
 
 void IgotuControlPrivateWorker::purge()
 {
+    if (p->cancelRequested())
+        return;
+
     emit commandStarted(tr("Clearing memory..."));
     try {
         connect();
@@ -551,6 +557,9 @@ void IgotuControlPrivateWorker::purge()
 
 void IgotuControlPrivateWorker::write(const IgotuConfig &config)
 {
+    if (p->cancelRequested())
+        return;
+
     emit commandStarted(tr("Writing configuration..."));
     try {
         connect();
@@ -602,6 +611,9 @@ void IgotuControlPrivateWorker::write(const IgotuConfig &config)
 
 void IgotuControlPrivateWorker::reset()
 {
+    // TODO
+    write(IgotuConfig::gt120DefaultConfig());
+    // TODO There are some more commands missing here...
 }
 
 void IgotuControlPrivateWorker::notify(QObject *object,
@@ -644,6 +656,8 @@ IgotuControl::IgotuControl(QObject *parent) :
              &d->worker, SLOT(purge()));
     connect(d.get(), SIGNAL(write(IgotuConfig)),
              &d->worker, SLOT(write(IgotuConfig)));
+    connect(d.get(), SIGNAL(reset()),
+             &d->worker, SLOT(reset()));
 
     connect(d.get(), SIGNAL(notify(QObject*,QByteArray)),
              &d->worker, SLOT(notify(QObject*,QByteArray)));

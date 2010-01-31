@@ -21,6 +21,8 @@
 #include "exception.h"
 #include "messages.h"
 
+#include <QTime>
+
 #include <QtEndian>
 
 namespace igotu
@@ -245,6 +247,8 @@ WriteCommand::WriteCommand(DataConnection *connection, unsigned writeMode,
     command[8] = (pos >> 0x08) & 0xff;
     command[9] = (pos >> 0x00) & 0xff;
     setCommand(command);
+
+    setReceiveRemainder(false);
 }
 
 QByteArray WriteCommand::sendAndReceive()

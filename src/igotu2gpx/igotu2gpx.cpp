@@ -101,6 +101,9 @@ int main(int argc, char *argv[])
          .toLocal8Bit() + '\n' +
          //: Do not translate the word before the colon
          MainObject::tr("diff: show configuration differences relative to an image file")
+         .toLocal8Bit() + '\n' +
+         //: Do not translate the word before the colon
+         MainObject::tr("config: change the configuration of the GPS tracker")
          .toLocal8Bit())
 
         ("device,d",
@@ -203,6 +206,8 @@ int main(int argc, char *argv[])
             mainObject.purge();
         } else if (action == QLatin1String("reset")) {
             mainObject.reset();
+        } else if (action == QLatin1String("config")) {
+            mainObject.config();
         } else {
             throw IgotuError(MainObject::tr("Unknown action: %1")
                     .arg(action));

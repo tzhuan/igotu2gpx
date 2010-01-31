@@ -45,9 +45,13 @@ public Q_SLOTS:
     void on_control_infoRetrieved(const QString &info, const QByteArray &contents);
     void on_control_contentsRetrieved(const QByteArray &contents, uint count);
 
+    void write();
+
 public:
     MainObject *p;
 
+    bool config;
+    QByteArray configContents;
     IgotuControl *control;
     QByteArray contents;
     QString format;
@@ -100,6 +104,11 @@ void MainObjectPrivate::on_control_infoRetrieved(const QString &info,
 void MainObjectPrivate::on_control_contentsRetrieved(const QByteArray &contents,
         uint count)
 {
+    if (config) {
+        configContents = contents;
+        return;
+    }
+
     FileExporter *selected = exporters.value(0);
     Q_FOREACH (FileExporter *exporter, exporters) {
         if (format == exporter->formatName()) {
@@ -116,12 +125,20 @@ void MainObjectPrivate::on_control_contentsRetrieved(const QByteArray &contents,
 
 }
 
+void MainObjectPrivate::write()
+{
+    control->write(configContents);
+    control->notify(qApp, "quit");
+}
+
 // MainObject ==================================================================
 
 MainObject::MainObject(const QString &device, bool tracksAsSegments, int utcOffset) :
     d(new MainObjectPrivate)
 {
     d->p = this;
+
+    d->config = false;
 
     QMultiMap<int, FileExporter*> exporterMap;
     Q_FOREACH (FileExporter * const exporter,
@@ -132,7 +149,7 @@ MainObject::MainObject(const QString &device, bool tracksAsSegments, int utcOffs
     d->control = new IgotuControl(this);
     d->control->setObjectName(QLatin1String("control"));
 
-    connectSlotsByNameToPrivate(this, d.get());
+    connectSlotsByNameToPrivate(this, d);
 
     if (!device.isEmpty())
         d->control->setDevice(device);
@@ -143,6 +160,7 @@ MainObject::MainObject(const QString &device, bool tracksAsSegments, int utcOffs
 
 MainObject::~MainObject()
 {
+    delete d;
 }
 
 void MainObject::info(const QByteArray &contents)
@@ -170,6 +188,14 @@ void MainObject::purge()
 void MainObject::reset()
 {
     d->control->reset();
+    d->control->notify(qApp, "quit");
+}
+
+void MainObject::config()
+{
+    d->config = true;
+    d->control->contents();
+    d->control->notify(d, "write");
 }
 
 #include "mainobject.moc"

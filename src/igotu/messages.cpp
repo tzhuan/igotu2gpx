@@ -19,6 +19,7 @@
 #include "messages.h"
 
 #include <QMutex>
+#include <QString>
 
 #include <iostream>
 

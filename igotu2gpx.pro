@@ -14,6 +14,7 @@ TEMPLATE = subdirs
 clebsDirs(src/igotu)
 clebsDirs(src/igotu2gpx, src/igotu)
 clebsDirs(src/igotugui, src/igotu)
+clebsDirs(src/tests, src/igotu)
 
 clebsDirs(src/*exporter, src/igotu)
 
@@ -33,6 +34,9 @@ INSTALLS *= docs
 
 todo.commands = @grep -Rn '\'TODO\|FIXME\|XXX\|\\todo\'' src/*/*.pro src/*/*.h src/*/*.cpp tools/*
 QMAKE_EXTRA_TARGETS *= todo
+
+test.commands = @echo [tester] Entering dir "\\'src/tests\\'" && $$DESTDIR/tester -silent
+QMAKE_EXTRA_TARGETS *= test
 
 stripinstalled.commands = strip bin/debug-installed/bin/* bin/debug-installed/bin/plugins/* bin/debug-installed/lib/*
 QMAKE_EXTRA_TARGETS *= stripinstalled

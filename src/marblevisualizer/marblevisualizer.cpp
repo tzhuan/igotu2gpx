@@ -16,7 +16,6 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
-#include "igotu/exception.h"
 #include "igotu/igotupoints.h"
 #include "igotu/paths.h"
 #include "igotu/utils.h"
@@ -149,9 +148,11 @@ void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points,
 
     kmlFile.reset(new QTemporaryFile(QDir::tempPath() +
                 QLatin1String("/igotu2gpx_temp_XXXXXX.kml")));
-    if (!kmlFile->open())
-        throw IgotuError(tr("Unable to create temporary kml file: %1")
-                .arg(kmlFile->errorString()));
+    if (!kmlFile->open()) {
+        qCritical("Unable to create temporary kml file: %s",
+                qPrintable(kmlFile->errorString()));
+        return;
+    }
     kmlFile->write(pointsToKml(trackPoints, false));
     kmlFile->flush();
 #if MARBLE_VERSION < 0x000800
