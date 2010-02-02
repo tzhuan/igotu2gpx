@@ -20,6 +20,7 @@
 #include "igotu/commonmessages.h"
 #include "igotu/exception.h"
 #include "igotu/fileexporter.h"
+#include "igotu/igotucontrol.h"
 #include "igotu/igotupoints.h"
 #include "igotu/messages.h"
 #include "igotu/optionutils.h"
@@ -51,6 +52,24 @@ QString imagePath, device, format;
 //
 // TRANSLATOR igotu::Common
 
+static QString parameterList(const QList<QPair<const char*, QString> > &descriptions)
+{
+    typedef QPair<const char*, QString> QP;
+    QString result;
+    Q_FOREACH (const QP &description, descriptions)
+        result += QLatin1String("  ") + QLatin1String(description.first) +
+        QLatin1String(": ") + description.second + QLatin1Char('\n');
+    return result.left(result.size() - 1);
+}
+
+static QString parameterList(const QMultiMap<int, QString> &exporterMap)
+{
+    QString result;
+    Q_FOREACH (const QString &value, exporterMap)
+        result += QLatin1String("  ") + value + QLatin1Char('\n');
+    return result.left(result.size() - 1);
+}
+
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
@@ -81,6 +100,7 @@ int main(int argc, char *argv[])
                     exporter->formatDescription()));
 
     QString action;
+    QStringList parameters;
     int offset = 0;
 
     po::options_description options("Options");
@@ -94,16 +114,16 @@ int main(int argc, char *argv[])
          MainObject::tr("dump: output trackpoints")
          .toLocal8Bit() + '\n' +
          //: Do not translate the word before the colon
+         MainObject::tr("config: change the configuration of the GPS tracker")
+         .toLocal8Bit() + '\n' +
+         //: Do not translate the word before the colon
          MainObject::tr("clear: clear memory of the GPS tracker")
          .toLocal8Bit() + '\n' +
          //: Do not translate the word before the colon
-         MainObject::tr("reset: clear memory and configuration of the GPS tracker")
+         MainObject::tr("reset: reset the GPS tracker to factory defaults")
          .toLocal8Bit() + '\n' +
          //: Do not translate the word before the colon
          MainObject::tr("diff: show configuration differences relative to an image file")
-         .toLocal8Bit() + '\n' +
-         //: Do not translate the word before the colon
-         MainObject::tr("config: change the configuration of the GPS tracker")
          .toLocal8Bit())
 
         ("device,d",
@@ -116,10 +136,15 @@ int main(int argc, char *argv[])
          MainObject::tr("read memory contents from file "
              "(saved by \"dump -f raw\")").toLocal8Bit())
 
+        ("set,s",
+         po::value<QStringList>(&parameters),
+         MainObject::tr("change the configuration:").toLocal8Bit() + '\n'
+         + parameterList(IgotuControl::configureParameters()).toLocal8Bit())
+
         ("format,f",
          po::value<QString>(&format),
          MainObject::tr("use the specified output format:").toLocal8Bit() + '\n'
-         + QStringList(exporterMap.values()).join(QLatin1String("\n")).toLocal8Bit())
+         + parameterList(exporterMap).toLocal8Bit())
 
         ("segments",
          MainObject::tr("group trackpoints into segments instead of tracks")
@@ -140,6 +165,7 @@ int main(int argc, char *argv[])
     ;
     po::positional_options_description positionalOptions;
     positionalOptions.add("action", 1);
+    positionalOptions.add("set", -1);
 
     try {
         po::store(po::command_line_parser(arguments())
@@ -163,7 +189,7 @@ int main(int argc, char *argv[])
         if (variables.count("help") || action.isEmpty()) {
             Messages::textOutput(Common::tr("Usage: %1")
                     //: Do not translate the actions (info|dump|clear|diff)
-                    .arg(MainObject::tr("%1 info|dump|clear|diff [OPTIONS...]")
+                    .arg(MainObject::tr("%1 info|dump|config|clear|reset|diff [OPTIONS...]")
                         .arg(QFileInfo(app.applicationFilePath()).fileName())));
             Messages::normalMessage(QString());
             std::cout << options << "\n";
@@ -207,7 +233,12 @@ int main(int argc, char *argv[])
         } else if (action == QLatin1String("reset")) {
             mainObject.reset();
         } else if (action == QLatin1String("config")) {
-            mainObject.config();
+            QVariantMap configParams;
+            Q_FOREACH (const QString &param, parameters)
+                Q_FOREACH (const QString &part, param.split(QLatin1Char(',')))
+                    configParams.insert(part.section(QLatin1Char('='), 0, 0),
+                            part.section(QLatin1Char('='), 1));
+            mainObject.configure(configParams);
         } else {
             throw IgotuError(MainObject::tr("Unknown action: %1")
                     .arg(action));

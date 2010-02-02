@@ -20,6 +20,7 @@
 #define _IGOTU2GPX_SRC_IGOTU2GPX_MAINOBJECT_H_
 
 #include <QObject>
+#include <QVariantMap>
 
 class MainObjectPrivate;
 
@@ -34,7 +35,7 @@ public:
     void save(const QString &format);
     void purge();
     void reset();
-    void config();
+    void configure(const QVariantMap &config);
 
 protected:
     MainObjectPrivate *d;

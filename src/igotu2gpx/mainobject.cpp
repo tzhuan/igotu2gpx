@@ -39,19 +39,15 @@ class MainObjectPrivate : public QObject
 public Q_SLOTS:
     void on_control_commandStarted(const QString &message);
     void on_control_commandRunning(uint num, uint total);
-    void on_control_commandSucceeded(const QString &message);
+    void on_control_commandSucceeded();
     void on_control_commandFailed(const QString &failed);
 
     void on_control_infoRetrieved(const QString &info, const QByteArray &contents);
     void on_control_contentsRetrieved(const QByteArray &contents, uint count);
 
-    void write();
-
 public:
     MainObject *p;
 
-    bool config;
-    QByteArray configContents;
     IgotuControl *control;
     QByteArray contents;
     QString format;
@@ -73,7 +69,6 @@ void MainObjectPrivate::on_control_commandRunning(uint num, uint total)
 {
     Q_UNUSED(num);
     Q_UNUSED(total);
-    // TODO: Localize?
     Messages::normalMessagePart(QLatin1String("."));
 }
 
@@ -83,11 +78,9 @@ void MainObjectPrivate::on_control_commandFailed(const QString &message)
     Messages::errorMessage(message);
 }
 
-void MainObjectPrivate::on_control_commandSucceeded(const QString &message)
+void MainObjectPrivate::on_control_commandSucceeded()
 {
     Messages::normalMessage(QString());
-    if (!message.isEmpty())
-        Messages::textOutput(message);
 }
 
 void MainObjectPrivate::on_control_infoRetrieved(const QString &info,
@@ -104,11 +97,6 @@ void MainObjectPrivate::on_control_infoRetrieved(const QString &info,
 void MainObjectPrivate::on_control_contentsRetrieved(const QByteArray &contents,
         uint count)
 {
-    if (config) {
-        configContents = contents;
-        return;
-    }
-
     FileExporter *selected = exporters.value(0);
     Q_FOREACH (FileExporter *exporter, exporters) {
         if (format == exporter->formatName()) {
@@ -125,20 +113,12 @@ void MainObjectPrivate::on_control_contentsRetrieved(const QByteArray &contents,
 
 }
 
-void MainObjectPrivate::write()
-{
-    control->write(configContents);
-    control->notify(qApp, "quit");
-}
-
 // MainObject ==================================================================
 
 MainObject::MainObject(const QString &device, bool tracksAsSegments, int utcOffset) :
     d(new MainObjectPrivate)
 {
     d->p = this;
-
-    d->config = false;
 
     QMultiMap<int, FileExporter*> exporterMap;
     Q_FOREACH (FileExporter * const exporter,
@@ -191,11 +171,10 @@ void MainObject::reset()
     d->control->notify(qApp, "quit");
 }
 
-void MainObject::config()
+void MainObject::configure(const QVariantMap &config)
 {
-    d->config = true;
-    d->control->contents();
-    d->control->notify(d, "write");
+    d->control->configure(config);
+    d->control->notify(qApp, "quit");
 }
 
 #include "mainobject.moc"

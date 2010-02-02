@@ -22,6 +22,7 @@
 #include <boost/scoped_ptr.hpp>
 
 #include <QDialog>
+#include <QVariantMap>
 
 class ConfigurationDialogPrivate;
 
@@ -39,7 +40,7 @@ public:
     ConfigurationDialog(const igotu::IgotuConfig &config, QWidget *parent = NULL);
     ~ConfigurationDialog();
 
-    igotu::IgotuConfig config() const;
+    QVariantMap config() const;
 
 protected:
     boost::scoped_ptr<ConfigurationDialogPrivate> d;

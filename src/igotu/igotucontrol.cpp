@@ -44,17 +44,24 @@ public:
     IgotuControlPrivateWorker(IgotuControlPrivate *pub);
 
 public Q_SLOTS:
-    void info();
-    void contents();
-    void purge();
-    void write(const IgotuConfig &config);
-    void reset();
+    void infoCommand();
+    void contentsCommand();
+    void purgeCommand();
+    void resetCommand();
+    void configureCommand(const QVariantMap &config);
 
     void notify(QObject *object, const QByteArray &method);
     void disconnectQuietly();
     void endTask();
 
 private:
+    bool info(QString *infoText, QByteArray *configDump);
+    bool contents(QByteArray *memoryDump, unsigned *blockCount);
+    bool purge();
+    bool reset();
+    bool write(const IgotuConfig &config);
+    bool configure(const QString &config);
+
     void connect();
     void disconnect();
     void waitForWrite();
@@ -63,7 +70,7 @@ Q_SIGNALS:
     void commandStarted(const QString &message);
     void commandRunning(uint num, uint total);
     void commandFailed(const QString &message);
-    void commandSucceeded(const QString &message = QString());
+    void commandSucceeded();
 
     void infoRetrieved(const QString &info, const QByteArray &contents);
     void contentsRetrieved(const QByteArray &contents, uint count);
@@ -91,11 +98,11 @@ public:
     static QList<DataConnectionCreator*> creators();
 
 Q_SIGNALS:
-    void info();
-    void contents();
-    void purge();
-    void write(const IgotuConfig &config);
-    void reset();
+    void infoCommand();
+    void contentsCommand();
+    void purgeCommand();
+    void resetCommand();
+    void configureCommand(const QVariantMap &config);
 
     void notify(QObject *object, const QByteArray &method);
     void disconnectQuietly();
@@ -245,10 +252,10 @@ void IgotuControlPrivateWorker::waitForWrite()
     }
 }
 
-void IgotuControlPrivateWorker::info()
+bool IgotuControlPrivateWorker::info(QString *infoText, QByteArray *configDump)
 {
     if (p->cancelRequested())
-        return;
+        return false;
 
     emit commandStarted(tr("Downloading configuration..."));
     try {
@@ -399,19 +406,24 @@ void IgotuControlPrivateWorker::info()
         }
 
         emit commandSucceeded();
-        emit infoRetrieved(status, contents);
+        if (infoText)
+            *infoText = status;
+        if (configDump)
+            *configDump = contents;
+        return true;
     } catch (const std::exception &e) {
         disconnectQuietly();
         emit commandFailed(tr
                 ("Unable to download configuration from GPS tracker: %1")
                 .arg(QString::fromLocal8Bit(e.what())));
+        return false;
     }
 }
 
-void IgotuControlPrivateWorker::contents()
+bool IgotuControlPrivateWorker::contents(QByteArray *memoryDump, unsigned *blockCount)
 {
     if (p->cancelRequested())
-        return;
+        return false;
 
     emit commandStarted(tr("Downloading tracks..."));
     try {
@@ -445,19 +457,24 @@ void IgotuControlPrivateWorker::contents()
         }
 
         emit commandSucceeded();
-        emit contentsRetrieved(data, count);
+        if (memoryDump)
+            *memoryDump = data;
+        if (blockCount)
+            *blockCount = count;
+        return true;
     } catch (const std::exception &e) {
         disconnectQuietly();
         emit commandFailed(tr
                 ("Unable to download trackpoints from GPS tracker: %1")
                 .arg(QString::fromLocal8Bit(e.what())));
+        return false;
     }
 }
 
-void IgotuControlPrivateWorker::purge()
+bool IgotuControlPrivateWorker::purge()
 {
     if (p->cancelRequested())
-        return;
+        return false;
 
     emit commandStarted(tr("Clearing memory..."));
     try {
@@ -547,24 +564,24 @@ void IgotuControlPrivateWorker::purge()
         }
 
         emit commandSucceeded();
+        return true;
     } catch (const std::exception &e) {
         disconnectQuietly();
         emit commandFailed(tr
             ("Unable to clear memory of GPS tracker: %1")
             .arg(QString::fromLocal8Bit(e.what())));
+        return false;
     }
 }
 
-void IgotuControlPrivateWorker::write(const IgotuConfig &config)
+bool IgotuControlPrivateWorker::write(const IgotuConfig &config)
 {
     if (p->cancelRequested())
-        return;
+        return false;
 
     emit commandStarted(tr("Writing configuration..."));
     try {
         connect();
-
-        QString message;
 
         if (connection) {
             IdentificationCommand id(connection.get());
@@ -595,25 +612,103 @@ void IgotuControlPrivateWorker::write(const IgotuConfig &config)
             ReadCommand(connection.get(), 0, 0x1000).sendAndReceive();
             UnknownWriteCommand3(connection.get()).sendAndReceive();
             emit commandRunning(blocks + 1, blocks + 1);
-        } else {
-            message = dumpDiff(IgotuData(image, 0).config().memoryDump(),
-                    config.memoryDump());
         }
 
-        emit commandSucceeded(message);
+        emit commandSucceeded();
+        return true;
     } catch (const std::exception &e) {
         disconnectQuietly();
         emit commandFailed(tr
             ("Unable to write configuration to GPS tracker: %1")
             .arg(QString::fromLocal8Bit(e.what())));
+        return false;
     }
 }
 
-void IgotuControlPrivateWorker::reset()
+bool IgotuControlPrivateWorker::reset()
 {
     // TODO
-    write(IgotuConfig::gt120DefaultConfig());
+    return write(IgotuConfig::gt120DefaultConfig());
     // TODO There are some more commands missing here...
+}
+
+void IgotuControlPrivateWorker::infoCommand()
+{
+    QString infoText;
+    QByteArray configDump;
+
+    if (!info(&infoText, &configDump))
+        return;
+
+    emit infoRetrieved(infoText, configDump);
+}
+
+void IgotuControlPrivateWorker::contentsCommand()
+{
+    QByteArray memoryDump;
+    unsigned blockCount;
+
+    if (!contents(&memoryDump, &blockCount))
+        return;
+
+    emit contentsRetrieved(memoryDump, blockCount);
+}
+
+void IgotuControlPrivateWorker::purgeCommand()
+{
+    if (!purge())
+        return;
+
+    // no signal to emit
+}
+
+void IgotuControlPrivateWorker::resetCommand()
+{
+    if (!reset())
+        return;
+
+    // no signal to emit
+}
+
+void IgotuControlPrivateWorker::configureCommand(const QVariantMap &config)
+{
+    QString infoText;
+    QByteArray configDump;
+
+    if (!info(NULL, &configDump))
+        return;
+
+    IgotuConfig igotuConfig(configDump);
+    QMapIterator<QString, QVariant> i(config);
+    while (i.hasNext()) {
+        i.next();
+        const QByteArray key = i.key().toAscii();
+        if (key == "interval") {
+            ScheduleTableEntry entry = igotuConfig.scheduleTableEntries(1).value(0);
+            entry.setLogInterval(i.value().toUInt());
+            igotuConfig.setScheduleTableEntry(1, 0, entry);
+        } else if (key == "changespeed") {
+            ScheduleTableEntry entry = igotuConfig.scheduleTableEntries(1).value(0);
+            entry.setIntervalChangeSpeed(i.value().toDouble());
+            igotuConfig.setScheduleTableEntry(1, 0, entry);
+        } else if (key == "changedinterval") {
+            ScheduleTableEntry entry = igotuConfig.scheduleTableEntries(1).value(0);
+            entry.setChangedLogInterval(i.value().toUInt());
+            igotuConfig.setScheduleTableEntry(1, 0, entry);
+        } else {
+            // TODO would be nice to transmit this to the GUI/CLI
+            qCritical("Unknown configuration parameter: %s",
+                    qPrintable(i.key()));
+        }
+    }
+
+    if (!write(igotuConfig.memoryDump()))
+        return;
+
+    if (!info(&infoText, &configDump))
+        return;
+
+    emit infoRetrieved(infoText, configDump);
 }
 
 void IgotuControlPrivateWorker::notify(QObject *object,
@@ -634,38 +729,7 @@ IgotuControl::IgotuControl(QObject *parent) :
     setUtcOffset(defaultUtcOffset());
     setTracksAsSegments(defaultTracksAsSegments());
 
-    connect(&d->worker, SIGNAL(commandStarted(QString)),
-             this, SIGNAL(commandStarted(QString)));
-    connect(&d->worker, SIGNAL(commandRunning(uint,uint)),
-             this, SIGNAL(commandRunning(uint,uint)));
-    connect(&d->worker, SIGNAL(commandFailed(QString)),
-             this, SIGNAL(commandFailed(QString)));
-    connect(&d->worker, SIGNAL(commandSucceeded(QString)),
-             this, SIGNAL(commandSucceeded(QString)));
-
-    connect(&d->worker, SIGNAL(infoRetrieved(QString,QByteArray)),
-             this, SIGNAL(infoRetrieved(QString,QByteArray)));
-    connect(&d->worker, SIGNAL(contentsRetrieved(QByteArray,uint)),
-             this, SIGNAL(contentsRetrieved(QByteArray,uint)));
-
-    connect(d.get(), SIGNAL(info()),
-             &d->worker, SLOT(info()));
-    connect(d.get(), SIGNAL(contents()),
-             &d->worker, SLOT(contents()));
-    connect(d.get(), SIGNAL(purge()),
-             &d->worker, SLOT(purge()));
-    connect(d.get(), SIGNAL(write(IgotuConfig)),
-             &d->worker, SLOT(write(IgotuConfig)));
-    connect(d.get(), SIGNAL(reset()),
-             &d->worker, SLOT(reset()));
-
-    connect(d.get(), SIGNAL(notify(QObject*,QByteArray)),
-             &d->worker, SLOT(notify(QObject*,QByteArray)));
-    connect(d.get(), SIGNAL(disconnectQuietly()),
-             &d->worker, SLOT(disconnectQuietly()));
-    connect(d.get(), SIGNAL(endTask()),
-             &d->worker, SLOT(endTask()));
-
+    connectWorker(&d->worker, this, d.get());
     d->worker.moveToThread(&d->thread);
     d->thread.start();
 }
@@ -742,7 +806,7 @@ void IgotuControl::info()
 {
     if (!d->startTask())
         return;
-    emit d->info();
+    emit d->infoCommand();
     emit d->endTask();
 }
 
@@ -750,7 +814,7 @@ void IgotuControl::contents()
 {
     if (!d->startTask())
         return;
-    emit d->contents();
+    emit d->contentsCommand();
     emit d->endTask();
 }
 
@@ -758,15 +822,7 @@ void IgotuControl::purge()
 {
     if (!d->startTask())
         return;
-    emit d->purge();
-    emit d->endTask();
-}
-
-void IgotuControl::write(const IgotuConfig &config)
-{
-    if (!d->startTask())
-        return;
-    emit d->write(config);
+    emit d->purgeCommand();
     emit d->endTask();
 }
 
@@ -774,8 +830,21 @@ void IgotuControl::reset()
 {
     if (!d->startTask())
         return;
-    emit d->reset();
+    emit d->resetCommand();
     emit d->endTask();
+}
+
+void IgotuControl::configure(const QVariantMap &config)
+{
+    if (!d->startTask())
+        return;
+    emit d->configureCommand(config);
+    emit d->endTask();
+}
+
+void IgotuControl::notify(QObject *object, const char *method)
+{
+    emit d->notify(object, method);
 }
 
 void IgotuControl::cancel()
@@ -783,9 +852,16 @@ void IgotuControl::cancel()
     d->requestCancel();
 }
 
-void IgotuControl::notify(QObject *object, const char *method)
+QList<QPair<const char*, QString> > IgotuControl::configureParameters()
 {
-    emit d->notify(object, method);
+    typedef QPair<const char*, QString> QP;
+    QList<QP> result;
+
+    result.append(QP("interval", tr("log interval (s)")));
+    result.append(QP("changespeed", tr("interval change speed (km/h)")));
+    result.append(QP("changedinterval", tr("changed log interval (s)")));
+
+    return result;
 }
 
 } // namespace igotu

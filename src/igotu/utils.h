@@ -35,6 +35,11 @@ IGOTU_EXPORT QByteArray pointsToKml(const QList<QList<IgotuPoint> > &tracks,
 
 IGOTU_EXPORT void connectSlotsByNameToPrivate(QObject *publicObject, QObject
         *privateObject);
+// Connects slots and signals of the same name and signature:
+//   worker::SIGNAL -> public::SIGNAL
+//   private::SIGNAL -> worker::SLOT
+IGOTU_EXPORT void connectWorker(QObject *workerObject, QObject *publicObject,
+        QObject *privateObject);
 
 IGOTU_EXPORT int enumKeyToValue(const QMetaObject &metaObject, const char *type,
         const char *key);

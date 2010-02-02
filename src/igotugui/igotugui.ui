@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>984</width>
-     <height>23</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -67,9 +67,9 @@
    </attribute>
    <addaction name="actionReload"/>
    <addaction name="actionPurge"/>
+   <addaction name="actionConfigureTracker"/>
    <addaction name="actionCancel"/>
    <addaction name="actionSaveAll"/>
-   <addaction name="actionConfigureTracker"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="dockWidget">

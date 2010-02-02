@@ -65,10 +65,10 @@ public Q_SLOTS:
 
     void on_control_commandStarted(const QString &message);
     void on_control_commandRunning(uint num, uint total);
-    void on_control_commandSucceeded(const QString &message);
+    void on_control_commandSucceeded();
     void on_control_commandFailed(const QString &failed);
 
-    void on_control_infoRetrieved(const QString &info);
+    void on_control_infoRetrieved(const QString &info, const QByteArray &contents);
     void on_control_contentsRetrieved(const QByteArray &contents, uint count);
 
     void on_update_newVersionAvailable(const QString &version,
@@ -93,6 +93,7 @@ public:
     MainWindow *p;
 
     boost::scoped_ptr<IgotuData> lastTrackPoints;
+    boost::scoped_ptr<IgotuConfig> lastConfig;
     boost::scoped_ptr<Ui::MainWindow> ui;
     IgotuControl *control;
     UpdateNotification *update;
@@ -202,11 +203,11 @@ void MainWindowPrivate::on_actionPurge_triggered()
 
 void MainWindowPrivate::on_actionConfigureTracker_triggered()
 {
-    RETURN_IF_FAIL(lastTrackPoints);
+    RETURN_IF_FAIL(lastConfig);
     QPointer<ConfigurationDialog> dialog
-        (new ConfigurationDialog(lastTrackPoints->config(), p));
+        (new ConfigurationDialog(*lastConfig, p));
     if (dialog->exec() == QDialog::Accepted)
-        control->write(dialog->config());
+        control->configure(dialog->config());
 
     delete dialog;
 }
@@ -285,15 +286,14 @@ void MainWindowPrivate::on_control_commandRunning(uint num, uint total)
     updateBackgroundAction(num, total);
 }
 
-void MainWindowPrivate::on_control_commandSucceeded(const QString &message)
+void MainWindowPrivate::on_control_commandSucceeded()
 {
-    if (!message.isEmpty())
-        Messages::textOutput(message);
     stopBackgroundAction();
 }
 
-void MainWindowPrivate::on_control_infoRetrieved(const QString &info)
+void MainWindowPrivate::on_control_infoRetrieved(const QString &info, const QByteArray &contents)
 {
+    lastConfig.reset(new IgotuConfig(contents));
     ui->info->setText(info);
 }
 
@@ -301,6 +301,7 @@ void MainWindowPrivate::on_control_contentsRetrieved(const QByteArray &contents,
         uint count)
 {
     lastTrackPoints.reset(new IgotuData(contents, count));
+    lastConfig.reset(new IgotuConfig(lastTrackPoints->config()));
     ui->actionSaveAll->setEnabled(count > 0);
 
     Q_FOREACH (TrackVisualizer *visualizer, visualizers) {

@@ -26,13 +26,6 @@ using namespace igotu;
 
 class ConfigurationDialogPrivate : public QObject
 {
-    Q_OBJECT
-public Q_SLOTS:
-    void on_interval_timeChanged(const QTime &time);
-    void on_changedInterval_timeChanged(const QTime &time);
-    void on_changeEnabled_toggled(bool enabled);
-    void on_changeSpeed_valueChanged(int value);
-
 public:
     void syncDialogToConfiguration();
 
@@ -47,34 +40,12 @@ public:
 
 // ConfigurationDialogPrivate ====================================================
 
-void ConfigurationDialogPrivate::on_interval_timeChanged(const QTime &time)
-{
-    entry.setLogInterval(QTime().secsTo(time));
-}
-
-
-void ConfigurationDialogPrivate::on_changedInterval_timeChanged(const QTime &time)
-{
-    entry.setChangedLogInterval(QTime().secsTo(time));
-}
-
-
-void ConfigurationDialogPrivate::on_changeEnabled_toggled(bool enabled)
-{
-    entry.setIntervalChangeSpeed(enabled ? ui->changeSpeed->value() : 0);
-}
-
-void ConfigurationDialogPrivate::on_changeSpeed_valueChanged(int value)
-{
-    entry.setIntervalChangeSpeed(ui->changeEnabled->isChecked() ? value : 0);
-}
-
 void ConfigurationDialogPrivate::syncDialogToConfiguration()
 {
     ui->interval->setTime(QTime().addSecs(entry.logInterval()));
     ui->changedInterval->setTime(QTime().addSecs(entry.changedLogInterval()));
     const double speed = entry.intervalChangeSpeed();
-    ui->changeSpeed->setValue(speed != 0.0 ? speed : 10);
+    ui->changeSpeed->setValue(speed != 0.0 ? qRound(speed) : 10);
     ui->changeEnabled->setChecked(speed != 0.0);
 }
 
@@ -107,11 +78,23 @@ ConfigurationDialog::~ConfigurationDialog()
 {
 }
 
-IgotuConfig ConfigurationDialog::config() const
+QVariantMap ConfigurationDialog::config() const
 {
-    IgotuConfig result = d->config;
-    result.setScheduleTableEntry(1, 0, d->entry);
+    QVariantMap result;
+
+    unsigned newLogInterval =
+        QTime().secsTo(d->ui->interval->time());
+    unsigned newIntervalChangeSpeed =
+        d->ui->changeEnabled->isChecked() ? d->ui->changeSpeed->value() : 0;
+    unsigned newChangedLogInterval =
+        QTime().secsTo(d->ui->changedInterval->time());
+
+    if (d->entry.logInterval() != newLogInterval)
+        result.insert(QLatin1String("interval"), newLogInterval);
+    if (d->entry.intervalChangeSpeed() != newIntervalChangeSpeed)
+        result.insert(QLatin1String("changespeed"), newIntervalChangeSpeed);
+    if (d->entry.changedLogInterval() != newChangedLogInterval)
+        result.insert(QLatin1String("changedinterval"), newChangedLogInterval);
+
     return result;
 }
-
-#include "configurationdialog.moc"

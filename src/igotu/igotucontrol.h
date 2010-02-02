@@ -24,6 +24,7 @@
 #include <boost/scoped_ptr.hpp>
 
 #include <QObject>
+#include <QVariantMap>
 
 namespace igotu
 {
@@ -52,15 +53,17 @@ public:
     void info();
     void contents();
     void purge();
-    void write(const IgotuConfig &config);
     void reset();
+    void configure(const QVariantMap &config);
 
-    // signals the thread to cancel the currently running operation
-    void cancel();
+    static QList<QPair<const char*, QString> > configureParameters();
 
     // schedules a slot of an object that will be called when all tasks have
     // been processed
     void notify(QObject *object, const char *method);
+
+    // signals the thread to cancel the currently running operation
+    void cancel();
 
     // Returns true if no tasks are pending
     bool queuesEmpty();
@@ -75,7 +78,7 @@ Q_SIGNALS:
     // num: 0 to total
     void commandRunning(uint num, uint total);
     void commandFailed(const QString &message);
-    void commandSucceeded(const QString &message);
+    void commandSucceeded();
 
     void infoRetrieved(const QString &info, const QByteArray &contents);
     void contentsRetrieved(const QByteArray &contents, uint count);

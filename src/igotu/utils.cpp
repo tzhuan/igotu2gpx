@@ -146,6 +146,46 @@ void connectSlotsByNameToPrivate(QObject *publicObject, QObject *privateObject)
     }
 }
 
+void connectWorker(QObject *workerObject, QObject *publicObject, QObject *privateObject)
+{
+    if (!workerObject)
+        return;
+    const QMetaObject *mo = workerObject->metaObject();
+    const QMetaObject *pubMo = publicObject->metaObject();
+    const QMetaObject *privMo = privateObject->metaObject();
+    RETURN_IF_FAIL(mo);
+    for (unsigned i = mo->methodOffset(); i < unsigned(mo->methodCount()); ++i) {
+        const QMetaMethod m = mo->method(i);
+        const QMetaMethod::MethodType t = m.methodType();
+        const char * const signature = m.signature();
+        if (t == QMetaMethod::Signal) {
+            int index = pubMo->indexOfMethod(signature);
+            if (index < 0 ||
+                pubMo->method(index).methodType() != QMetaMethod::Signal) {
+                qCritical("Unable to find public signal for worker signal %s",
+                        signature);
+                continue;
+            }
+            if (!QMetaObject::connect(workerObject, i, publicObject, index)) {
+                qCritical("Unable to connect public signal for worker signal %s",
+                        signature);
+            }
+        } else if (t == QMetaMethod::Slot) {
+            int index = privMo->indexOfMethod(signature);
+            if (index < 0 ||
+                privMo->method(index).methodType() != QMetaMethod::Signal) {
+                qCritical("Unable to find private signal for worker slot %s",
+                        signature);
+                continue;
+            }
+            if (!QMetaObject::connect(privateObject, index, workerObject, i)) {
+                qCritical("Unable to connect private signal for worker slot %s",
+                        signature);
+            }
+        }
+    }
+}
+
 int enumKeyToValue(const QMetaObject &metaObject,
         const char *type, const char *key)
 {
