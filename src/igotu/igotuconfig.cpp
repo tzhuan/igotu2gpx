@@ -18,6 +18,10 @@
 
 #include "igotuconfig.h"
 
+#include <QVector>
+
+#include <QtEndian>
+
 namespace igotu
 {
 
