@@ -63,7 +63,7 @@ QString errorString(DWORD err)
 {
     WCHAR *s;
     if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0, 
+                FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, 0,
                 reinterpret_cast<WCHAR*>(&s), 0, NULL))
         return QString();
     // wchar_t can be a buildin type, but it is always 16bit
@@ -81,7 +81,7 @@ QString errorString(DWORD err)
 
 SerialConnection::SerialConnection(unsigned port)
 {
-    QString device = QString::fromLatin1("COM%1").arg(port);
+    QString device = QString::fromLatin1("\\\\.\\COM%1").arg(port);
     handle = CreateFileA(device.toAscii(),
                 GENERIC_READ | GENERIC_WRITE,
                 0,
