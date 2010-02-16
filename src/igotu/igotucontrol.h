@@ -24,6 +24,7 @@
 #include <boost/scoped_ptr.hpp>
 
 #include <QObject>
+#include <QPair>
 #include <QVariantMap>
 
 namespace igotu
