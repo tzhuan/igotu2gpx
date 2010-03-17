@@ -159,9 +159,9 @@ int main(int argc, char *argv[])
         ("version",
          Common::tr("output version information and exit").toLocal8Bit())
         ("verbose,v",
-         Common::tr("increase verbosity")
-         .toLocal8Bit())
-
+         Common::tr("increase verbosity").toLocal8Bit())
+        ("really-verbose",
+         Common::tr("very high verbosity").toLocal8Bit())
     ;
     po::positional_options_description positionalOptions;
     positionalOptions.add("action", 1);
@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
                 QString::fromAscii(contents.toBase64());
         }
 
-        Messages::setVerbose(variables.count("verbose"));
+        Messages::setVerbose(2 * variables.count("really-verbose") + variables.count("verbose"));
 
         MainObject mainObject(device, variables.count("segments"), offset);
 
