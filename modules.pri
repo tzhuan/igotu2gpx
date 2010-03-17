@@ -4,4 +4,4 @@
 clebsModule(marblevisualizer,libmarble)
 clebsModule(libusbconnection,libusb)
 clebsModule(libusb10connection,libusb10)
-win32:clebsModule(serialconnection)
+win32|linux:clebsModule(serialconnection)

@@ -21,7 +21,12 @@
 
 #include "dataconnection.h"
 
+#ifdef Q_OS_WIN32
 #include <windows.h>
+#else
+#include <errno.h>
+#include <fcntl.h>
+#endif
 
 #include <QCoreApplication>
 
@@ -31,7 +36,7 @@ class SerialConnection : public DataConnection
 {
     Q_DECLARE_TR_FUNCTIONS(SerialConnection)
 public:
-    SerialConnection(unsigned port);
+    SerialConnection(const QString &port);
     ~SerialConnection();
 
     virtual void send(const QByteArray &query);
@@ -41,7 +46,11 @@ public:
 
 private:
     QByteArray receiveBuffer;
+#ifdef Q_OS_WIN32
     HANDLE handle;
+#else
+    int handle;
+#endif
 };
 
 class SerialConnectionCreator :
@@ -59,6 +68,7 @@ public:
 
 Q_EXPORT_PLUGIN2(serialConnection, SerialConnectionCreator)
 
+#ifdef Q_OS_WIN32
 QString errorString(DWORD err)
 {
     WCHAR *s;
@@ -72,6 +82,7 @@ QString errorString(DWORD err)
     LocalFree(s);
     return result;
 }
+#endif
 
 // Put translations in the right context
 //
@@ -79,9 +90,14 @@ QString errorString(DWORD err)
 
 // SerialConnection ============================================================
 
-SerialConnection::SerialConnection(unsigned port)
+SerialConnection::SerialConnection(const QString &port)
 {
-    QString device = QString::fromLatin1("\\\\.\\COM%1").arg(port);
+    QString device = port;
+    bool ok = false;
+    unsigned portNumber = port.toUInt(ok);
+#ifdef Q_OS_WIN32
+    if (ok)
+        device = QString::fromLatin1("\\\\.\\COM%1").arg(portNumber);
     handle = CreateFileA(device.toAscii(),
                 GENERIC_READ | GENERIC_WRITE,
                 0,
@@ -100,23 +116,44 @@ SerialConnection::SerialConnection(unsigned port)
     Win_CommTimeouts.WriteTotalTimeoutMultiplier = 2;
     Win_CommTimeouts.WriteTotalTimeoutConstant = 1000;
     SetCommTimeouts(handle, &Win_CommTimeouts);
+#else
+    if (ok)
+        device = QString::fromLatin1("/dev/ttyUSB%1").arg(portNumber);
+    handle = open(device.toAscii(), O_RDWR | O_NOCTTY);
+    if (handle == -1)
+        throw IgotuError(Common::tr("Unable to open device '%1': %2")
+            .arg(device, QString::fromLocal8Bit(strerror(errno))));
+#endif
 }
 
 SerialConnection::~SerialConnection()
 {
+#ifdef Q_OS_WIN32
     CloseHandle(handle);
+#else
+    close(handle);
+#endif
 }
 
 void SerialConnection::send(const QByteArray &query)
 {
-    DWORD result;
-
     receiveBuffer.clear();
+
+#ifdef Q_OS_WIN32
+    DWORD result;
 
     if (!WriteFile(handle, query.data(), query.size(), &result, NULL))
         throw IgotuError(Common::tr("Unable to send data to device: %1")
                 .arg(errorString(GetLastError())));
-    if (result != unsigned(query.size()))
+#else
+    int result;
+
+    // TODO: EAGAIN etc.
+    if ((result = write(handle, query.data(), query.size())) == -1)
+        throw IgotuError(Common::tr("Unable to send data to device: %1")
+                .arg(QString::fromLocal8Bit(strerror(errno))));
+#endif
+    if (unsigned(result) != unsigned(query.size()))
         throw IgotuError(Common::tr("Unable to send data to device: %1")
                 .arg(Common::tr("Only %1/%2 bytes could be sent"))
                 .arg(result).arg(query.size()));
@@ -135,10 +172,18 @@ QByteArray SerialConnection::receive(unsigned expected)
         if (toRead == 0)
             break;
         QByteArray data(toRead, 0);
+#ifdef Q_OS_WIN32
         DWORD result;
         if (!ReadFile(handle, data.data(), data.size(), &result, NULL))
             throw IgotuError(Common::tr("Unable to read data from device: %1")
                 .arg(errorString(GetLastError())));
+#else
+        int result;
+        // TODO: EAGAIN etc.
+        if ((result = read(handle, data.data(), data.size())) == -1)
+            throw IgotuError(Common::tr("Unable to read data from device: %1")
+                .arg(QString::fromLocal8Bit(strerror(errno))));
+#endif
         if (result == 0)
             ++emptyCount;
         receiveBuffer += data.left(result);
@@ -148,12 +193,20 @@ QByteArray SerialConnection::receive(unsigned expected)
 
 void SerialConnection::purge()
 {
+#ifdef Q_OS_WIN32
     PurgeComm(handle, PURGE_RXCLEAR | PURGE_TXCLEAR);
+#endif
+    // TODO LINUX
 }
 
 DataConnection::Mode SerialConnection::mode() const
 {
+#ifdef Q_OS_WIN32
     return NonBlockingPurge;
+#else
+    // TODO LINUX
+    return 0;
+#endif
 }
 
 // SerialConnectionCreator =====================================================
@@ -165,18 +218,22 @@ QString SerialConnectionCreator::dataConnection() const
 
 int SerialConnectionCreator::connectionPriority() const
 {
-    return 0;
+    return 300;
 }
 
 QString SerialConnectionCreator::defaultConnectionId() const
 {
+#ifdef Q_OS_WIN32
     return QLatin1String("3");
+#else
+    return QLatin1String("0");
+#endif
 }
 
 DataConnection *SerialConnectionCreator::createDataConnection
         (const QString &id) const
 {
-    return new SerialConnection(id.toUInt());
+    return new SerialConnection(id);
 }
 
 #include "serialconnection.moc"

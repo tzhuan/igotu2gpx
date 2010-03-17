@@ -16,9 +16,9 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                *
  ******************************************************************************/
 
+#include "igotu/commonmessages.h"
 #include "igotu/exception.h"
 #include "igotu/messages.h"
-#include "igotu/commonmessages.h"
 
 #include "dataconnection.h"
 
@@ -27,6 +27,7 @@
 #include <usb.h>
 
 #include <QCoreApplication>
+#include <QStringList>
 
 using namespace igotu;
 
@@ -34,7 +35,7 @@ class LibusbConnection : public DataConnection
 {
     Q_DECLARE_TR_FUNCTIONS(LibusbConnection)
 public:
-    LibusbConnection(unsigned vendorId, unsigned productId);
+    LibusbConnection(unsigned vendorId, unsigned productId, const QString &flags);
     ~LibusbConnection();
 
     virtual void send(const QByteArray &query);
@@ -48,6 +49,7 @@ private:
 
     QByteArray receiveBuffer;
     boost::shared_ptr<struct usb_dev_handle> handle;
+    unsigned timeOut;
 };
 
 class LibusbConnectionCreator :
@@ -71,10 +73,23 @@ Q_EXPORT_PLUGIN2(libusbConnection, LibusbConnectionCreator)
 
 // LibusbConnection ============================================================
 
-LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId)
+LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId,
+        const QString &flags) :
+    timeOut(20)
 {
+    Q_FOREACH (const QString &flag, flags.split(QLatin1Char(','))) {
+        if (flag.isEmpty())
+            continue;
+        const QString name = flag.section(QLatin1Char('='), 0, 0);
+        const QString value = flag.section(QLatin1Char('='), 1);
+        if (name == QLatin1String("timeout"))
+            timeOut = value.toUInt();
+        else
+            qWarning("Unknown flag: %s=%s", qPrintable(name), qPrintable(value));
+    }
+
     usb_init();
-    if (Messages::verbose() > 0)
+    if (Messages::verbose() > 1)
         usb_set_debug(255);
     usb_find_busses();
     usb_find_devices();
@@ -106,8 +121,7 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId)
     char buf[256];
     if (usb_get_driver_np(handle.get(), 0, buf, sizeof(buf)) == 0) {
         Messages::verboseMessage(Common::tr
-                ("Interface 0 already claimed by kernel driver, detaching")
-                .arg(QString::fromAscii(buf)));
+                ("Interface 0 already claimed by kernel driver, detaching"));
 
         int result = usb_detach_kernel_driver_np(handle.get(), 0);
         if (result < 0)
@@ -169,9 +183,6 @@ QByteArray LibusbConnection::receive(unsigned expected)
     QByteArray data;
     unsigned emptyCount = 0;
     while (emptyCount < 3) {
-        // This is not ideal, the receive needs to be initiated before the
-        // actual send(), and the receives need to stick closely together,
-        // otherwise data gets lost
         unsigned toRemove = qMin(unsigned(receiveBuffer.size()), toRead);
         data += receiveBuffer.left(toRemove);
         receiveBuffer.remove(0, toRemove);
@@ -180,7 +191,7 @@ QByteArray LibusbConnection::receive(unsigned expected)
             break;
         QByteArray data(0x10, 0);
         int result = usb_interrupt_read(handle.get(), 0x81, data.data(), 0x10,
-                20);
+                timeOut);
         if (result < 0)
             throw IgotuError(Common::tr("Unable to read data from device: %1")
                 .arg(QString::fromLocal8Bit(strerror(-result))));
@@ -194,7 +205,7 @@ QByteArray LibusbConnection::receive(unsigned expected)
 void LibusbConnection::purge()
 {
     usb_interrupt_read(handle.get(), 0x81, QByteArray(0x10, '\0').data(), 0x10,
-            20);
+            timeOut);
 }
 
 DataConnection::Mode LibusbConnection::mode() const
@@ -215,7 +226,7 @@ QString LibusbConnectionCreator::dataConnection() const
 
 int LibusbConnectionCreator::connectionPriority() const
 {
-    return 100;
+    return 200;
 }
 
 QString LibusbConnectionCreator::defaultConnectionId() const
@@ -226,9 +237,11 @@ QString LibusbConnectionCreator::defaultConnectionId() const
 DataConnection *LibusbConnectionCreator::createDataConnection
         (const QString &id) const
 {
+    const QString device = id.section(QLatin1Char(','), 0, 0);
+    const QString flags = id.section(QLatin1Char(','), 1);
     return new LibusbConnection
-        (id.section(QLatin1Char(':'), 0, 0).toUInt(NULL, 16),
-         id.section(QLatin1Char(':'), 1, 1).toUInt(NULL, 16));
+        (device.section(QLatin1Char(':'), 0, 0).toUInt(NULL, 16),
+         device.section(QLatin1Char(':'), 1, 1).toUInt(NULL, 16), flags);
 }
 
 #include "libusbconnection.moc"

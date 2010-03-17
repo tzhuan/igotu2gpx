@@ -56,11 +56,14 @@ Writes are done with control messages:
     usb_control_msg(handle, 0x21, 0x09, 0x0200, 0x0000, data, size, timeout);
 ----
 
-This must be done asynchronously, i.e., writes should be independent from
-reads. If one read completes, the next one must be started immediately.
+The Windows driver schedules the reads asynchronously, i.e., writes are
+independent from reads. If one read completes, the next one is started
+immediately. Such a scheme was also implemented with libusb 1.0, but did not
+result in successful communication. Instead, reads and writes are scheduled
+synchronously, which works perfectly well.
 
 There seems to be a firmware bug that may send responses twice for some
-commands. If the transmission is done synchronously, it will not be possible to
+commands. Because the transmission is done synchronously, it is not possible to
 detect and discard superfluous bytes. This is especially important on Mac OS X,
 as the USB interrupt transfers there ignore the timeout given.
 

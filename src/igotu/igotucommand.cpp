@@ -84,7 +84,8 @@ unsigned IgotuCommandPrivate::sendCommand(const QByteArray &data)
             command.data() + command.size() - 1, 0);
     int responseSize = 0;
     for (unsigned i = 0; i < pieces; ++i) {
-        if (connection->mode().testFlag(DataConnection::NonBlockingPurge))
+        if (i == 0 &&
+                connection->mode().testFlag(DataConnection::NonBlockingPurge))
             connection->purge();
         connection->send(command.mid(i * 8, 8));
         responseSize = receiveResponseSize();
