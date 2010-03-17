@@ -84,7 +84,7 @@ Q_EXPORT_PLUGIN2(libusb10Connection, Libusb10ConnectionCreator)
 
 Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId,
         const QString &flags) :
-    timeOut(5)
+    timeOut(20)
 {
     Q_FOREACH (const QString &flag, flags.split(QLatin1Char(','))) {
         if (flag.isEmpty())
@@ -187,8 +187,8 @@ void Libusb10Connection::send(const QByteArray &query)
     if (query.isEmpty())
         return;
 
-    int result = libusb_control_transfer(handle.get(), 0x21, 0x09, 0x0200, 0x0000,
-            (unsigned char*)(query.data()), query.size(), 1000);
+    int result = libusb_control_transfer(handle.get(), 0x21, 0x09, 0x0200,
+            0x0000, (unsigned char*)(query.data()), query.size(), 1000);
 
     if (result < 0)
         throw IgotuError(Common::tr("Unable to send data to device: %1")
@@ -199,38 +199,123 @@ void Libusb10Connection::send(const QByteArray &query)
                 .arg(result).arg(query.size()));
 }
 
+static void transferCallback(struct libusb_transfer *transfer)
+{
+    int *completed = reinterpret_cast<int*>(transfer->user_data);
+    *completed = 1;
+}
+
 QByteArray Libusb10Connection::receive(unsigned expected)
 {
     unsigned toRead = expected;
-    QByteArray data;
     unsigned emptyCount = 0;
+    int completed;
+    QByteArray result;
+    unsigned char interruptTransferBuffer[0x10];
+    boost::shared_ptr<libusb_transfer> transfer(libusb_alloc_transfer(0),
+            libusb_free_transfer);
+    libusb_fill_interrupt_transfer(transfer.get(), handle.get(), 0x81,
+            interruptTransferBuffer, 0x10, &transferCallback, &completed,
+            timeOut);
+    timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 1000;
     while (emptyCount < 3) {
         unsigned toRemove = qMin(unsigned(receiveBuffer.size()), toRead);
-        data += receiveBuffer.left(toRemove);
+        result += receiveBuffer.left(toRemove);
         receiveBuffer.remove(0, toRemove);
         toRead -= toRemove;
         if (toRead == 0)
             break;
-        QByteArray data(0x10, 0);
-        int size;
-        int result = libusb_interrupt_transfer(handle.get(), 0x81,
-                reinterpret_cast<unsigned char*>(data.data()), 0x10, &size, timeOut);
-        if (result < 0 && result != LIBUSB_ERROR_TIMEOUT)
+
+        completed = 0;
+        int result = libusb_submit_transfer(transfer.get());
+        if (result < 0)
             throw IgotuError(Common::tr("Unable to read data from device: %1")
-                .arg(result));
+                    .arg(result));
+
+#ifdef Q_OS_MACX
+        timeval time;
+        gettimeofday(&time, NULL);
+        const qlonglong cancelTime = qlonglong(time.tv_sec) * 1000000 +
+            time.tv_usec + 2 * timeOut * 1000;
+#endif
+
+        while (!completed) {
+            result = libusb_handle_events_timeout(context.get(), &tv);
+#ifdef Q_OS_MACX
+            gettimeofday(&time, NULL);
+            bool manualCancel = cancelTime <= qlonglong(time.tv_sec) * 1000000 +
+                time.tv_usec;
+#else
+            bool manualCancel = false;
+#endif
+            if (result < 0 || manualCancel) {
+                if (manualCancel)
+                    qDebug("Cancel transfer");
+                libusb_cancel_transfer(transfer.get());
+                while (!completed)
+                    if (libusb_handle_events(context.get()) < 0)
+                        break;
+                if (!manualCancel)
+                    throw IgotuError(Common::tr("Unable to read data from device: %1")
+                            .arg(result));
+            }
+        }
+
+        unsigned size = transfer->actual_length;
         if (size == 0)
             ++emptyCount;
-        receiveBuffer += data.left(size);
+        receiveBuffer +=
+            QByteArray(reinterpret_cast<char*>(interruptTransferBuffer), size);
     }
-    return data;
+
+    return result;
 }
 
 void Libusb10Connection::purge()
 {
-    int size;
-    libusb_interrupt_transfer(handle.get(), 0x81,
-            reinterpret_cast<unsigned char*>(QByteArray(0x10, '\0').data()),
-            0x10, &size, timeOut);
+    int completed;
+    unsigned char interruptTransferBuffer[0x10];
+    boost::shared_ptr<libusb_transfer> transfer(libusb_alloc_transfer(0),
+            libusb_free_transfer);
+    libusb_fill_interrupt_transfer(transfer.get(), handle.get(), 0x81,
+            interruptTransferBuffer, 0x10, &transferCallback, &completed,
+            timeOut);
+    timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 1000;
+
+    completed = 0;
+    int result = libusb_submit_transfer(transfer.get());
+    if (result < 0)
+        return;
+
+#ifdef Q_OS_MACX
+    timeval time;
+    gettimeofday(&time, NULL);
+    const qlonglong cancelTime = qlonglong(time.tv_sec) * 1000000 +
+        time.tv_usec + 2 * timeOut * 1000;
+#endif
+
+    while (!completed) {
+        result = libusb_handle_events_timeout(context.get(), &tv);
+#ifdef Q_OS_MACX
+        gettimeofday(&time, NULL);
+        bool manualCancel = cancelTime <= qlonglong(time.tv_sec) * 1000000 +
+            time.tv_usec;
+#else
+        bool manualCancel = false;
+#endif
+        if (result < 0 || manualCancel) {
+            if (manualCancel)
+                qDebug("Cancel purge");
+            libusb_cancel_transfer(transfer.get());
+            while (!completed)
+                if (libusb_handle_events(context.get()) < 0)
+                    break;
+        }
+    }
 }
 
 DataConnection::Mode Libusb10Connection::mode() const
