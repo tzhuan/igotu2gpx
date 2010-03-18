@@ -2,14 +2,14 @@ CLEBS_REQUIRED *= qtversion430 boost-po
 CLEBS_SUGGESTED *= libmarble
 win32:CLEBS_REQUIRED *= libopenssl
 unix:CLEBS_SUGGESTED *=  libusb10
-unix:!macx:CLEBS_SUGGESTED *= chrpath
+unix:!macx:CLEBS_SUGGESTED *= chrpath libusb
 
 include(clebs.pri)
 
 OBJECTS_DIR =
 TEMPLATE = subdirs
 
-!clebsCheckModulesOne(serialconnection libusb10connection):error("No device drivers found, please install libusb-1.0")
+!clebsCheckModulesOne(serialconnection libusb10connection libusbconnection):error("No device drivers found, please install libusb-1.0")
 
 clebsDirs(src/igotu)
 clebsDirs(src/igotu2gpx, src/igotu)
@@ -21,6 +21,7 @@ clebsDirs(src/*exporter, src/igotu)
 clebsDirs(src/marblevisualizer, src/igotu, marblevisualizer)
 clebsDirs(src/listvisualizer, src/igotu)
 
+clebsDirs(src/libusbconnection, src/igotu, libusbconnection)
 clebsDirs(src/libusb10connection, src/igotu, libusb10connection)
 clebsDirs(src/serialconnection, src/igotu, serialconnection)
 

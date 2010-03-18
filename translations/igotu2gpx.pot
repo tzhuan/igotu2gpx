@@ -192,13 +192,6 @@ msgstr ""
 
 #. Do not translate the word before the colon
 #. ts-context MainObject
-#: ../src/igotu2gpx/igotu2gpx.cpp:117
-#, fuzzy
-msgid "config: change the configuration of the GPS tracker"
-msgstr ""
-
-#. Do not translate the word before the colon
-#. ts-context MainObject
 #: ../src/igotu2gpx/igotu2gpx.cpp:120
 #, fuzzy
 msgid "clear: clear memory of the GPS tracker"
@@ -206,16 +199,23 @@ msgstr ""
 
 #. Do not translate the word before the colon
 #. ts-context MainObject
-#: ../src/igotu2gpx/igotu2gpx.cpp:123
+#: ../src/igotu2gpx/igotu2gpx.cpp:126
 #, fuzzy
-msgid "reset: reset the GPS tracker to factory defaults"
+msgid "diff: show configuration differences relative to an image file"
 msgstr ""
 
 #. Do not translate the word before the colon
 #. ts-context MainObject
-#: ../src/igotu2gpx/igotu2gpx.cpp:126
+#: ../src/igotu2gpx/igotu2gpx.cpp:117
 #, fuzzy
-msgid "diff: show configuration differences relative to an image file"
+msgid "config: change the configuration of the GPS tracker"
+msgstr ""
+
+#. Do not translate the word before the colon
+#. ts-context MainObject
+#: ../src/igotu2gpx/igotu2gpx.cpp:123
+#, fuzzy
+msgid "reset: reset the GPS tracker to factory defaults"
 msgstr ""
 
 #. ts-context MainObject
@@ -756,30 +756,35 @@ msgstr ""
 
 #. ts-context igotu::Common
 #: ../src/libusb10connection/libusb10connection.cpp:123
+#: ../src/libusbconnection/libusbconnection.cpp:106
 #, fuzzy
 msgid "Unable to find device '%1'"
 msgstr ""
 
 #. ts-context igotu::Common
 #: ../src/libusb10connection/libusb10connection.cpp:135
+#: ../src/libusbconnection/libusbconnection.cpp:116
 #, fuzzy
 msgid "Unable to open device '%1'"
 msgstr ""
 
 #. ts-context igotu::Common
 #: ../src/libusb10connection/libusb10connection.cpp:139
+#: ../src/libusbconnection/libusbconnection.cpp:122
 #, fuzzy
 msgid "Interface 0 already claimed by kernel driver, detaching"
 msgstr ""
 
 #. ts-context igotu::Common
 #: ../src/libusb10connection/libusb10connection.cpp:143
+#: ../src/libusbconnection/libusbconnection.cpp:127
 #, fuzzy
 msgid "Unable to detach kernel driver from device '%1': %2"
 msgstr ""
 
 #. ts-context igotu::Common
 #: ../src/libusb10connection/libusb10connection.cpp:151
+#: ../src/libusbconnection/libusbconnection.cpp:135
 #, fuzzy
 msgid "Unable to claim interface 0 on device '%1'"
 msgstr ""
@@ -787,6 +792,8 @@ msgstr ""
 #. ts-context igotu::Common
 #: ../src/libusb10connection/libusb10connection.cpp:200
 #: ../src/libusb10connection/libusb10connection.cpp:203
+#: ../src/libusbconnection/libusbconnection.cpp:171
+#: ../src/libusbconnection/libusbconnection.cpp:174
 #: ../src/serialconnection/serialconnection.cpp:145
 #: ../src/serialconnection/serialconnection.cpp:152
 #: ../src/serialconnection/serialconnection.cpp:156
@@ -796,6 +803,7 @@ msgstr ""
 
 #. ts-context igotu::Common
 #: ../src/libusb10connection/libusb10connection.cpp:204
+#: ../src/libusbconnection/libusbconnection.cpp:175
 #: ../src/serialconnection/serialconnection.cpp:157
 #, fuzzy
 msgid "Only %1/%2 bytes could be sent"
@@ -804,6 +812,7 @@ msgstr ""
 #. ts-context igotu::Common
 #: ../src/libusb10connection/libusb10connection.cpp:240
 #: ../src/libusb10connection/libusb10connection.cpp:265
+#: ../src/libusbconnection/libusbconnection.cpp:195
 #: ../src/serialconnection/serialconnection.cpp:177
 #: ../src/serialconnection/serialconnection.cpp:183
 #, fuzzy

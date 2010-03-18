@@ -3,7 +3,7 @@ Section: utils
 Priority: extra
 Maintainer: Michael Hofmann <mh21@piware.de>
 Build-Depends: cdbs, debhelper, libqt4-dev, libboost-dev,
- libboost-program-options-dev, libusb-1.0-0-dev, libmarble-dev | libmarble-dev-kde4
+ libboost-program-options-dev, libusb-1.0-0-dev | libusb-dev, libmarble-dev | libmarble-dev-kde4
 Standards-Version: 3.8.0
 Homepage: http://mh21.de/igotu2gpx/
 
