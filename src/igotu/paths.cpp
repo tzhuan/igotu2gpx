@@ -141,7 +141,7 @@ QStringList Paths::iconDirectories()
     result << directoriesFromEnvironment("XDG_DATA_DIRS",
             QLatin1String("/usr/local/share:/usr/share"),
             QLatin1String("/icons/hicolor"));
-#elif defined(Q_OS_MACX)
+#elif defined(Q_OS_MAC)
     // TODO: for the MacOS X native case, user config is missing
     result << directoriesFromEnvironment("XDG_DATA_HOME",
             QDir::homePath() + QLatin1String("/.local/share"),
@@ -182,7 +182,7 @@ QStringList Paths::translationDirectories()
     result << directoriesFromEnvironment("XDG_DATA_DIRS",
             QLatin1String("/usr/local/share:/usr/share"),
             QLatin1String("/locale"));
-#elif defined(Q_OS_MACX)
+#elif defined(Q_OS_MAC)
     // TODO: for the MacOS X native case, user config is missing
     result << directoriesFromEnvironment("XDG_DATA_HOME",
             QDir::homePath() + QLatin1String("/.local/share"),
@@ -211,7 +211,7 @@ QStringList Paths::translationDirectories()
 QString Paths::mainPluginDirectory()
 {
     QString result;
-#if defined(Q_OS_MACX)
+#if defined(Q_OS_MAC)
     result = relativeToBaseDirectory(QStringList(QLatin1String("/PlugIns")),
             QStringList()).value(0);
 #elif defined(Q_OS_WIN32)
@@ -224,7 +224,7 @@ QString Paths::mainPluginDirectory()
 QString Paths::mainDataDirectory()
 {
     QString result;
-#if defined(Q_OS_MACX)
+#if defined(Q_OS_MAC)
     result = relativeToBaseDirectory(QStringList(QLatin1String("/Resources")),
             QStringList()).value(0);
 #elif defined(Q_OS_WIN32)
@@ -244,7 +244,7 @@ QStringList Paths::pluginDirectories()
             QStringList());
     result << QLatin1String("/usr/local/lib") + DIRECTORY;
     result << QLatin1String("/usr/lib") + DIRECTORY;
-#elif defined(Q_OS_MACX)
+#elif defined(Q_OS_MAC)
     // TODO: for the MacOS X native case, user config is missing
     result << QDir::homePath() + QLatin1String("/.local/lib") + DIRECTORY;
     result << relativeToBaseDirectory

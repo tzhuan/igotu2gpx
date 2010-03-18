@@ -281,18 +281,7 @@ bool IgotuControlPrivateWorker::info(QString *infoText, QByteArray *configDump)
                         "http://bugs.launchpad.net/igotu2gpx/+filebug")
                     .arg(model.modelName()) + QLatin1Char('\n');
 
-            // Workaround necessary for:
-            //   GT120 3.03
-            //   GT100 2.24
-            // Not necessary for:
-            //   GT100 1.39
-            // Can be forced with env variables:
-            //   IGOTU2GPX_WORKAROUND and IGOTU2GPX_NOWORKAROUND
-            // There seems to be a major firmware rework around 2.15 (debug
-            // mode was introduced), so until proven otherwise we just use this
-            // version)
-            CountCommand countCommand(connection.get(),
-                    id.firmwareVersion() >= 0x0215);
+            CountCommand countCommand(connection.get());
             countCommand.sendAndReceive();
             unsigned count = countCommand.trackPointCount();
             status += IgotuControl::tr("Number of points: %1")
@@ -435,8 +424,7 @@ bool IgotuControlPrivateWorker::contents(QByteArray *memoryDump, unsigned *block
             IdentificationCommand id(connection.get());
             id.sendAndReceive();
 
-            CountCommand countCommand(connection.get(),
-                    id.firmwareVersion() >= 0x0215);
+            CountCommand countCommand(connection.get());
             countCommand.sendAndReceive();
             count = countCommand.trackPointCount();
             const unsigned blocks = 1 + (count + 0x7f) / 0x80;

@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     app.setOrganizationName(QLatin1String("mh21.de"));
     app.setOrganizationDomain(QLatin1String("mh21.de"));
     app.setWindowIcon(IconStorage::get(IconStorage::GuiIcon));
-#if defined(Q_OS_MACX) && QT_VERSION >= 0x040400
+#if defined(Q_OS_MAC) && QT_VERSION >= 0x040400
     app.setAttribute(Qt::AA_DontShowIconsInMenus);
 #endif
 

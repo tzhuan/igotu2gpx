@@ -79,7 +79,7 @@ private:
 class IGOTU_EXPORT CountCommand : public IgotuCommand
 {
 public:
-    CountCommand(DataConnection *connection, bool gt120BugWorkaround);
+    CountCommand(DataConnection *connection);
 
     virtual QByteArray sendAndReceive();
 
@@ -87,7 +87,6 @@ public:
 
 private:
     unsigned count;
-    bool bugWorkaround;
 };
 
 class IGOTU_EXPORT ReadCommand : public IgotuCommand

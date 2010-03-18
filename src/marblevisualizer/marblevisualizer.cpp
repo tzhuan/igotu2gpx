@@ -100,7 +100,7 @@ void MarbleVisualizer::initMarble()
 {
     delete tracks;
 
-#if defined(Q_OS_MACX) || defined(Q_OS_WIN32)
+#if defined(Q_OS_MAC) || defined(Q_OS_WIN32)
     MarbleDirs::setMarblePluginPath(Paths::mainPluginDirectory() +
             QLatin1String("/marble"));
     MarbleDirs::setMarbleDataPath(Paths::mainDataDirectory() +

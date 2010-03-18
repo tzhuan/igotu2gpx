@@ -36,15 +36,7 @@ public:
     virtual void send(const QByteArray &query) = 0;
     virtual QByteArray receive(unsigned expected) = 0;
     virtual void purge() = 0;
-
-    enum Flag {
-        NonBlockingPurge = 0x01,
-    };
-    Q_DECLARE_FLAGS(Mode, Flag)
-    virtual Mode mode() const = 0;
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(DataConnection::Mode)
 
 class DataConnectionCreator
 {

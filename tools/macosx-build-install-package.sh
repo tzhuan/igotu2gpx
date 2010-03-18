@@ -26,6 +26,7 @@ cp "$SOURCE"/"$CMDLINE" "$MACOS"
 cp "$SOURCE"/libigotu.1.dylib "$FRAMEWORKS"
 cp "$SOURCE"/lib*visualizer.dylib "$PLUGINS"
 cp "$SOURCE"/lib*connection.dylib "$PLUGINS"
+cp "$SOURCE"/lib*exporter.dylib "$PLUGINS"
 cp data/mac/igotugui.icns "$RESOURCES"/igotu2gpx.icns
 cp -R data/icons "$RESOURCES"
 cp -R contrib/tango/icons "$RESOURCES"
@@ -83,7 +84,7 @@ cp /Applications/Marble.app/Contents/Resources/data/placemarks/b*.cache "$RESOUR
 cp /Applications/Marble.app/Contents/Resources/data/LICENSE.txt "$RESOURCES"/marble
 
 cp /usr/local/lib/libboost_program_options-xgcc40-mt-1_39.dylib "$FRAMEWORKS"
-cp /usr/local/lib/libusb-0.1.4.dylib "$FRAMEWORKS"
+cp /usr/local/lib/libusb-1.0.0.dylib "$FRAMEWORKS"
 
 if [ "$1" != "debug" ]; then
     for i in $QT; do
@@ -91,7 +92,7 @@ if [ "$1" != "debug" ]; then
     done
     strip -x "$FRAMEWORKS"/libigotu.1.dylib
     strip -x "$FRAMEWORKS"/libboost_program_options-xgcc40-mt-1_39.dylib
-    strip -x "$FRAMEWORKS"/libusb-0.1.4.dylib
+    strip -x "$FRAMEWORKS"/libusb-1.0.0.dylib
     strip -x "$MACOS"/"$CMDLINE"
     strip -x "$MACOS"/"$GUI"
 fi
@@ -102,6 +103,6 @@ for i in "$FRAMEWORKS"/Qt*.framework/Versions/Current/Qt* "$PLUGINS"/*.dylib "$P
     done
     install_name_tool -change libigotu.1.dylib @executable_path/../FrameWorks/libigotu.1.dylib "$i"
     install_name_tool -change libboost_program_options-xgcc40-mt-1_39.dylib @executable_path/../FrameWorks/libboost_program_options-xgcc40-mt-1_39.dylib "$i"
-    install_name_tool -change /usr/local/lib/libusb-0.1.4.dylib @executable_path/../FrameWorks/libusb-0.1.4.dylib "$i"
+    install_name_tool -change /usr/local/lib/libusb-1.0.0.dylib @executable_path/../FrameWorks/libusb-1.0.0.dylib "$i"
     install_name_tool -change @executable_path/lib/libmarblewidget.7.dylib @executable_path/../FrameWorks/libmarblewidget.0.7.1.dylib "$i"
 done

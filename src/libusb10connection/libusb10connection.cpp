@@ -35,6 +35,10 @@
 
 using namespace igotu;
 
+#ifdef Q_OS_MAC
+#define IGOTU2GPX_USB_MANUALCANCEL
+#endif
+
 // TODO: better error messages with libusb error codes
 
 class Libusb10Connection : public DataConnection
@@ -48,7 +52,6 @@ public:
     virtual void send(const QByteArray &query);
     virtual QByteArray receive(unsigned expected);
     virtual void purge();
-    virtual Mode mode() const;
 
 private:
     typedef boost::shared_ptr<libusb_device> Device;
@@ -59,6 +62,7 @@ private:
     boost::shared_ptr<libusb_device_handle> handle;
     QByteArray receiveBuffer;
     unsigned timeOut;
+    bool hadKernelDriver;
 };
 
 class Libusb10ConnectionCreator :
@@ -84,7 +88,8 @@ Q_EXPORT_PLUGIN2(libusb10Connection, Libusb10ConnectionCreator)
 
 Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId,
         const QString &flags) :
-    timeOut(20)
+    timeOut(20),
+    hadKernelDriver(false)
 {
     Q_FOREACH (const QString &flag, flags.split(QLatin1Char(','))) {
         if (flag.isEmpty())
@@ -130,7 +135,6 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId,
         throw IgotuError(Common::tr("Unable to open device '%1'")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
 
-#ifdef Q_OS_LINUX
     if (libusb_kernel_driver_active(handle.get(), 0) == 1) {
         Messages::verboseMessage(Common::tr
                 ("Interface 0 already claimed by kernel driver, detaching"));
@@ -140,8 +144,8 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId,
                     ("Unable to detach kernel driver from device '%1': %2")
                     .arg(QString().sprintf("%04x:%04x", vendorId, productId))
                     .arg(result));
+        hadKernelDriver = true;
     }
-#endif
 
     if (libusb_claim_interface(handle.get(), 0) != 0)
         throw IgotuError(Common::tr("Unable to claim interface 0 on device '%1'")
@@ -151,6 +155,8 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId,
 Libusb10Connection::~Libusb10Connection()
 {
     libusb_release_interface(handle.get(), 0);
+    if (hadKernelDriver)
+        libusb_attach_kernel_driver(handle.get(), 0);
 }
 
 Libusb10Connection::DeviceList Libusb10Connection::find_devices
@@ -234,7 +240,7 @@ QByteArray Libusb10Connection::receive(unsigned expected)
             throw IgotuError(Common::tr("Unable to read data from device: %1")
                     .arg(result));
 
-#ifdef Q_OS_MACX
+#ifdef IGOTU2GPX_USB_MANUALCANCEL
         timeval time;
         gettimeofday(&time, NULL);
         const qlonglong cancelTime = qlonglong(time.tv_sec) * 1000000 +
@@ -243,7 +249,7 @@ QByteArray Libusb10Connection::receive(unsigned expected)
 
         while (!completed) {
             result = libusb_handle_events_timeout(context.get(), &tv);
-#ifdef Q_OS_MACX
+#ifdef IGOTU2GPX_USB_MANUALCANCEL
             gettimeofday(&time, NULL);
             bool manualCancel = cancelTime <= qlonglong(time.tv_sec) * 1000000 +
                 time.tv_usec;
@@ -251,8 +257,6 @@ QByteArray Libusb10Connection::receive(unsigned expected)
             bool manualCancel = false;
 #endif
             if (result < 0 || manualCancel) {
-                if (manualCancel)
-                    qDebug("Cancel transfer");
                 libusb_cancel_transfer(transfer.get());
                 while (!completed)
                     if (libusb_handle_events(context.get()) < 0)
@@ -291,7 +295,7 @@ void Libusb10Connection::purge()
     if (result < 0)
         return;
 
-#ifdef Q_OS_MACX
+#ifdef IGOTU2GPX_USB_MANUALCANCEL
     timeval time;
     gettimeofday(&time, NULL);
     const qlonglong cancelTime = qlonglong(time.tv_sec) * 1000000 +
@@ -300,7 +304,7 @@ void Libusb10Connection::purge()
 
     while (!completed) {
         result = libusb_handle_events_timeout(context.get(), &tv);
-#ifdef Q_OS_MACX
+#ifdef IGOTU2GPX_USB_MANUALCANCEL
         gettimeofday(&time, NULL);
         bool manualCancel = cancelTime <= qlonglong(time.tv_sec) * 1000000 +
             time.tv_usec;
@@ -308,8 +312,6 @@ void Libusb10Connection::purge()
         bool manualCancel = false;
 #endif
         if (result < 0 || manualCancel) {
-            if (manualCancel)
-                qDebug("Cancel purge");
             libusb_cancel_transfer(transfer.get());
             while (!completed)
                 if (libusb_handle_events(context.get()) < 0)
@@ -318,16 +320,11 @@ void Libusb10Connection::purge()
     }
 }
 
-DataConnection::Mode Libusb10Connection::mode() const
-{
-    return NonBlockingPurge;
-}
-
 // Libusb10ConnectionCreator ===================================================
 
 QString Libusb10ConnectionCreator::dataConnection() const
 {
-    return QLatin1String("usb10");
+    return QLatin1String("usb");
 }
 
 int Libusb10ConnectionCreator::connectionPriority() const

@@ -23,7 +23,6 @@
 #macx:BOOSTINCLUDEDIR = $${BOOSTROOT}/include/boost-1_38
 #macx:BOOSTLIBDIR = $${BOOSTROOT}/lib
 #macx:BOOSTPOLIB = boost_program_options-xgcc40-mt
-#macx:LIBUSBINCLUDEDIR = /usr/local/include
 
 #win32:BOOSTROOT = $$BASEDIR/../api/boost
 #win32:BOOSTINCLUDEDIR = $${BOOSTROOT}/include/boost-1_33_1

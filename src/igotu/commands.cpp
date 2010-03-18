@@ -148,10 +148,8 @@ QString ModelCommand::modelName() const
 
 // CountCommand ================================================================
 
-CountCommand::CountCommand(DataConnection *connection,
-        bool bugWorkaround) :
-    IgotuCommand(connection),
-    bugWorkaround(bugWorkaround)
+CountCommand::CountCommand(DataConnection *connection) :
+    IgotuCommand(connection)
 {
     QByteArray command("\x93\x0b\x03\x00\x1d\0\0\0\0\0\0\0\0\0\0", 15);
     setCommand(command);
@@ -165,36 +163,6 @@ QByteArray CountCommand::sendAndReceive()
         throw IgotuError(IgotuCommand::tr("Response too short"));
     count = qFromBigEndian<quint16>(reinterpret_cast<const uchar*>
             (result.data() + 1));
-
-    // There seems to be a firmware bug that sends the last response code again
-    // (apparently only for this command); because libusb support is
-    // synchronous, we cannot be sure that the next command purges the transmit
-    // buffer before. This can go away when all data connections are async.
-    bool useWorkAround = bugWorkaround &&
-            !connection()->mode().testFlag(DataConnection::NonBlockingPurge);
-    bool message = false;
-    if (bugWorkaround && !useWorkAround &&
-            !qgetenv("IGOTU2GPX_WORKAROUND").isEmpty()) {
-        Messages::normalMessage(QLatin1String("IGOTU2GPX_WORKAROUND"));
-        useWorkAround = true;
-        message = true;
-    }
-    if (bugWorkaround && useWorkAround &&
-            !qgetenv("IGOTU2GPX_NOWORKAROUND").isEmpty()) {
-        Messages::normalMessage(QLatin1String("IGOTU2GPX_NOWORKAROUND"));
-        useWorkAround = false;
-        message = true;
-    }
-    if (message)
-        Messages::normalMessage(IgotuCommand::tr("Please file a bug at "
-            "https://bugs.launchpad.net/igotu2gpx/+filebug if the use\n"
-            "of IGOTU2GPX_(NO)WORKAROUND solves your connection problems. "
-            "Please include:\n"
-            "- the tracker model and\n"
-            "- the output of igotu2gpx info"));
-    if (useWorkAround)
-        connection()->purge();
-
     return result;
 }
 

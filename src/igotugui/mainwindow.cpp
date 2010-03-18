@@ -187,7 +187,7 @@ void MainWindowPrivate::on_actionPurge_triggered()
         purgeButton->setIcon(IconStorage::get(IconStorage::PurgeIcon));
     messageBox->setDefaultButton(purgeButton);
     // necessary so MacOS X gives us a sheet
-#if defined(Q_OS_MACX)
+#if defined(Q_OS_MAC)
     messageBox->setWindowModality(Qt::WindowModal);
 #endif
     messageBox->exec();
@@ -256,7 +256,7 @@ void MainWindowPrivate::on_update_newVersionAvailable(const QString &version,
     messageBox->setEscapeButton(laterButton);
     messageBox->setDefaultButton(getButton);
     // necessary so MacOS X gives us a sheet
-#if defined(Q_OS_MACX)
+#if defined(Q_OS_MAC)
     messageBox->setWindowModality(Qt::WindowModal);
 #endif
     messageBox->exec();

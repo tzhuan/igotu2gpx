@@ -92,7 +92,7 @@ PluginLoaderWorker::PluginLoaderWorker() :
     nameFilters(QLatin1String("lib*.so"))
 #elif defined(Q_OS_WIN32)
     nameFilters(QLatin1String("*.dll"))
-#elif defined(Q_OS_MACX)
+#elif defined(Q_OS_MAC)
     nameFilters(QLatin1String("*.dylib"))
 #else
     nameFilters()

@@ -126,7 +126,7 @@ void PluginDialogPrivate::scanPlugins()
     ignored << QLatin1String("libigotu.so");
 #elif defined(Q_OS_WIN32)
     ignored << QLatin1String("igotu.dll");
-#elif defined(Q_OS_MACX)
+#elif defined(Q_OS_MAC)
     ignored << QLatin1String("libigotu.1.dylib");
 #endif
 

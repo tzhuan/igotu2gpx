@@ -42,7 +42,6 @@ public:
     virtual void send(const QByteArray &query);
     virtual QByteArray receive(unsigned expected);
     virtual void purge();
-    virtual Mode mode() const;
 
 private:
     QByteArray receiveBuffer;
@@ -197,16 +196,6 @@ void SerialConnection::purge()
     PurgeComm(handle, PURGE_RXCLEAR | PURGE_TXCLEAR);
 #endif
     // TODO LINUX
-}
-
-DataConnection::Mode SerialConnection::mode() const
-{
-#ifdef Q_OS_WIN32
-    return NonBlockingPurge;
-#else
-    // TODO LINUX
-    return 0;
-#endif
 }
 
 // SerialConnectionCreator =====================================================
