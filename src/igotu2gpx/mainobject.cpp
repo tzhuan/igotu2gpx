@@ -28,6 +28,7 @@
 
 #include "mainobject.h"
 
+#include <QCoreApplication>
 #include <QFile>
 #include <QMetaMethod>
 
