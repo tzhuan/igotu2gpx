@@ -1,3 +1,34 @@
+igotu2gpx (0.3.0-0) UNRELEASED; urgency=low
+
+  * Released igot2gpx 0.3.0.
+  * Changes since version 0.2.94:
+    - Allow http update urls again.
+    - Fixed update check.
+    - Updated translations.
+
+ -- Michael Hofmann <mh21@piware.de>  Mon, 26 Oct 2009 20:40:47 +0100
+
+igotu2gpx (0.2.94-0) UNRELEASED; urgency=low
+
+  * Released the fourth release candidate of igotu2gpx 0.3.0.
+  * Changes since version 0.2.93:
+    - Fixed track downloading on newer GT100/GT200/GT200e devices
+
+ -- Michael Hofmann <mh21@piware.de>  Mon, 05 Oct 2009 20:47:22 +0200
+
+igotu2gpx (0.2.93-0) UNRELEASED; urgency=low
+
+  * Released the third release candidate of igotu2gpx 0.3.0.
+  * Changes since version 0.2.92:
+    - Updates fixed by supplying the missing Host: header
+    - Include lib32 and lib64 in plugin search
+    - Option to group points into segments instead of tracks on GPX output added, manpage updates
+    - Debian packaging fix on Hardy
+    - Support to recognize a GT-200e
+    - Do not crash if no connection plugins are found
+
+ -- Michael Hofmann <mh21@piware.de>  Sun, 04 Oct 2009 15:39:15 +0200
+
 igotu2gpx (0.2.92-0) UNRELEASED; urgency=low
 
   * Released the second release candidate of igotu2gpx 0.3.0.
@@ -7,7 +38,6 @@ igotu2gpx (0.2.92-0) UNRELEASED; urgency=low
     - Dutch translation thanks to Peter Florijn
     - French translation thanks to Inti Raymi
     - Polish translation thanks to Jakub Kowalski
-
 
  -- Michael Hofmann <mh21@piware.de>  Sat, 26 Sep 2009 01:23:14 +0200
 

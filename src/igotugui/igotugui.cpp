@@ -85,6 +85,8 @@ int main(int argc, char *argv[])
         ("verbose,v",
          Common::tr("increase verbosity")
          .toLocal8Bit())
+        ("really-verbose",
+         Common::tr("very high verbosity").toLocal8Bit())
     ;
 
     try {
@@ -118,7 +120,7 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    Messages::setVerbose(variables.count("verbose"));
+    Messages::setVerbose(2 * variables.count("really-verbose") + variables.count("verbose"));
 
     MainWindow mainWindow;
     mainWindow.show();

@@ -18,6 +18,8 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.                 #
 ###############################################################################
 
+# Decodes Windows serial logs (portmon) and Linux USB logs (usbmon)
+
 from __future__ import with_statement
 from struct import unpack, unpack_from
 import re, sys

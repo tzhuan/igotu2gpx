@@ -315,7 +315,7 @@ requests welcome!''')
                 sys.exit('Could not add translations to bazaar')
 
         tarball = '-sa'
-        for dist in ['hardy', 'intrepid', 'jaunty', 'karmic']:
+        for dist in ['hardy', 'intrepid', 'jaunty', 'karmic', 'lucid']:
             if subprocess.call(['dch', '-v', '%s-1~%s1' % (version, dist), '-D',
                 dist, 'Released %s for %s.' % (self.versionDescription(version),
                     dist)]) != 0:
