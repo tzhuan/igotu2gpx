@@ -35,6 +35,7 @@ class LaunchpadHelper:
         self.releaseNotesFile = os.path.join(self.configDir, 'releasenotes.txt')
         self.releaseExportFile = os.path.join(self.configDir, 'release-data.txt')
         self.launchpad = None
+        self.targets = ['hardy', 'intrepid', 'jaunty', 'karmic', 'lucid'];
         self.files = [{
             'file_type': 'Code Release Tarball',
             'content_type': 'application/x-gzip',
@@ -315,7 +316,7 @@ requests welcome!''')
                 sys.exit('Could not add translations to bazaar')
 
         tarball = '-sa'
-        for dist in ['hardy', 'intrepid', 'jaunty', 'karmic', 'lucid']:
+        for dist in self.targets:
             if subprocess.call(['dch', '-v', '%s-1~%s1' % (version, dist), '-D',
                 dist, 'Released %s for %s.' % (self.versionDescription(version),
                     dist)]) != 0:
@@ -349,7 +350,7 @@ requests welcome!''')
         with open(self.versionFile, 'r') as f:
             version = f.read()
 
-        for dist in ['hardy', 'intrepid', 'jaunty', 'karmic']:
+        for dist in self.targets:
             if subprocess.call(['dput', 'ppa:mh21/ppa', os.path.join('..',
                 'build-area', 'igotu2gpx_%s-1~%s1_source.changes' % (version,
                     dist))]) != 0:
@@ -401,7 +402,7 @@ requests welcome!''')
 
         ppa = self.launchpad.people['mh21'].ppas[0]
         team = self.launchpad.people['igotu2gpx']
-        for dist in ['hardy', 'intrepid', 'jaunty', 'karmic']:
+        for dist in self.targets:
             binaries = ppa.getPublishedBinaries(
                     binary_name='igotu2gpx',
                     version='%s-1~%s1' % (version, dist),
