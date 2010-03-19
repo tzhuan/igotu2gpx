@@ -149,7 +149,7 @@ void MainObject::info(const QByteArray &contents)
     d->contents = contents;
 
     d->control->info();
-    d->control->notify(qApp, "quit");
+    d->control->notify(QCoreApplication::instance(), "quit");
 }
 
 void MainObject::save(const QString &format)
@@ -157,25 +157,25 @@ void MainObject::save(const QString &format)
     d->format = format;
 
     d->control->contents();
-    d->control->notify(qApp, "quit");
+    d->control->notify(QCoreApplication::instance(), "quit");
 }
 
 void MainObject::purge()
 {
     d->control->purge();
-    d->control->notify(qApp, "quit");
+    d->control->notify(QCoreApplication::instance(), "quit");
 }
 
 void MainObject::reset()
 {
     d->control->reset();
-    d->control->notify(qApp, "quit");
+    d->control->notify(QCoreApplication::instance(), "quit");
 }
 
 void MainObject::configure(const QVariantMap &config)
 {
     d->control->configure(config);
-    d->control->notify(qApp, "quit");
+    d->control->notify(QCoreApplication::instance(), "quit");
 }
 
 #include "mainobject.moc"
