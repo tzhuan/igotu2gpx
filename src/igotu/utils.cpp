@@ -222,7 +222,7 @@ static unsigned ahsv(double hue, double s, double v, double a)
         r = g = b = v;
     } else {
         hue *= 6;
-        const unsigned sector = floor(hue);
+        const unsigned sector = unsigned(floor(hue));
         const double f = hue - sector;
         const double p = v * (1 - s);
         if (sector & 1) {
