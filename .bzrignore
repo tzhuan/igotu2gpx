@@ -21,6 +21,13 @@ object_script.*
 /tags-qt4
 /logs/
 
+src/igotuserial/*.ko
+src/igotuserial/*.mod.c
+src/igotuserial/Module.markers
+src/igotuserial/Module.symvers
+src/igotuserial/modules.order
+src/igotuserial/.*
+
 translations/*.mo
 translations/*.ts
 translations/*.qm

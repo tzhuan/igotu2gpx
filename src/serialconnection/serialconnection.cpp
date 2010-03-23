@@ -26,6 +26,7 @@
 #else
 #include <errno.h>
 #include <fcntl.h>
+#include <termios.h>
 #endif
 
 #include <QCoreApplication>
@@ -93,7 +94,7 @@ SerialConnection::SerialConnection(const QString &port)
 {
     QString device = port;
     bool ok = false;
-    unsigned portNumber = port.toUInt(ok);
+    unsigned portNumber = port.toUInt(&ok);
 #ifdef Q_OS_WIN32
     if (ok)
         device = QString::fromLatin1("\\\\.\\COM%1").arg(portNumber);
@@ -194,8 +195,9 @@ void SerialConnection::purge()
 {
 #ifdef Q_OS_WIN32
     PurgeComm(handle, PURGE_RXCLEAR | PURGE_TXCLEAR);
+#else
+    tcflush(handle, TCIFLUSH);
 #endif
-    // TODO LINUX
 }
 
 // SerialConnectionCreator =====================================================
