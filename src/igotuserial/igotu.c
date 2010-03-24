@@ -20,11 +20,10 @@
 static int debug;
 
 struct igotu_private {
-	spinlock_t writelock;		/* write urb lock */
-	unsigned writecount;		/* write urb pending */
-
-	spinlock_t readlock;		/* read urb lock */
-	unsigned readcount;		/* read urb pending */
+	atomic_t write_count;		/* number of write urbs pending */
+	struct urb *write_control_urb;
+	unsigned char *write_control_buffer;
+	struct usb_ctrlrequest *write_control_cr;
 };
 
 static struct usb_device_id id_table[] = {
@@ -44,19 +43,11 @@ static struct usb_driver igotu_driver = {
 
 static void igotu_read_int_callback(struct urb *urb)
 {
-	struct igotu_private *priv;
 	struct usb_serial_port *port = urb->context;
 	int result;
-	unsigned long flags;
 	unsigned char *data = urb->transfer_buffer;
 	struct tty_struct *tty;
 	int status = urb->status;
-
-	priv = usb_get_serial_port_data(port);
-
-	spin_lock_irqsave(&priv->readlock, flags);
-	--priv->readcount;
-	spin_unlock_irqrestore(&priv->readlock, flags);
 
 	switch (status) {
 	case 0:
@@ -66,12 +57,12 @@ static void igotu_read_int_callback(struct urb *urb)
 	case -ENOENT:
 	case -ESHUTDOWN:
 		/* this urb is terminated, clean up */
-		dev_dbg(&urb->dev->dev,
+		dev_dbg(&port->dev,
 				"%s - urb shutting down with status: %d",
 				__func__, status);
 		return;
 	default:
-		dev_dbg(&urb->dev->dev,
+		dev_dbg(&port->dev,
 				"%s - nonzero urb status received: %d",
 				__func__, status);
 		goto submit;
@@ -89,45 +80,91 @@ static void igotu_read_int_callback(struct urb *urb)
 	tty_kref_put(tty);
 
 submit:
-	spin_lock_irqsave(&priv->readlock, flags);
-	if (priv->readcount) {
-		spin_unlock_irqrestore(&priv->readlock, flags);
-		return;
-	}
-	++priv->readcount;
-	spin_unlock_irqrestore(&priv->readlock, flags);
-
 	result = usb_submit_urb(urb, GFP_ATOMIC);
 	if (result) {
-		dev_err(&urb->dev->dev,
-				"%s - Error %d submitting interrupt urb\n",
+		dev_err(&port->dev,
+				"%s - error %d submitting interrupt urb\n",
 				__func__, result);
 		return;
 	}
 }
 
-static int igotu_startup(struct usb_serial *serial)
+static void igotu_write_control_callback(struct urb *urb)
 {
-	struct igotu_private *priv;
-	struct usb_serial_port *port = serial->port[0];
+	struct usb_serial_port *port = urb->context;
+	struct igotu_private *priv = usb_get_serial_port_data(port);
+	int result;
+	int status = urb->status;
 
-	dev_dbg(&serial->dev->dev, "%s - port %d", __func__, port->number);
+	atomic_dec(&priv->write_count);
+
+	switch (status) {
+	case 0:
+		/* success */
+		break;
+	case -ECONNRESET:
+	case -ENOENT:
+	case -ESHUTDOWN:
+		/* this urb is terminated, clean up */
+		dev_dbg(&port->dev,
+				"%s - urb shutting down with status: %d",
+				__func__, status);
+		return;
+	default:
+		dev_dbg(&port->dev,
+				"%s - nonzero urb status received: %d",
+				__func__, status);
+		goto submit;
+	}
+
+	dev_dbg(&port->dev, "%s", __func__);
+
+submit:
+	result = usb_submit_urb(port->interrupt_in_urb, GFP_ATOMIC);
+	if (result) {
+		dev_err(&port->dev,
+				"%s - error %d submitting interrupt urb\n",
+				__func__, result);
+		return;
+	}
+}
+
+static int igotu_attach(struct usb_serial *serial)
+{
+	struct usb_serial_port *port = serial->port[0];
+	struct igotu_private *priv;
+
+	dev_dbg(&port->dev, "%s", __func__);
 
 	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
 	if (!priv)
 		goto error;
 
-	spin_lock_init(&priv->writelock);
-	spin_lock_init(&priv->readlock);
+	priv->write_control_urb = usb_alloc_urb(0, GFP_KERNEL);
+	if (!priv->write_control_urb)
+		goto error;
 
-	/* TODO needed? */
-	usb_reset_configuration(serial->dev);
+	priv->write_control_buffer = kmalloc(8, GFP_KERNEL);
+	if (!priv->write_control_buffer)
+		goto error;
+
+	priv->write_control_cr = kzalloc(sizeof(*priv->write_control_cr),
+			GFP_KERNEL);
+	if (!priv->write_control_cr)
+		goto error;
+
+	atomic_set(&priv->write_count, 0);
 
 	usb_set_serial_port_data(port, priv);
 
 	return 0;
 
 error:
+	if (priv) {
+		kfree(priv->write_control_cr);
+		kfree(priv->write_control_buffer);
+		usb_free_urb(priv->write_control_urb);
+	}
 	kfree(priv);
 	return -ENOMEM;
 }
@@ -135,20 +172,24 @@ error:
 static void igotu_release(struct usb_serial *serial)
 {
 	struct usb_serial_port *port = serial->port[0];
+	struct igotu_private *priv = usb_get_serial_port_data(port);
 
-	dev_dbg(&serial->dev->dev, "%s - port %d", __func__, port->number);
+	dev_dbg(&port->dev, "%s", __func__);
 
-	kfree(usb_get_serial_port_data(port));
+	kfree(priv->write_control_cr);
+	kfree(priv->write_control_buffer);
+	usb_free_urb(priv->write_control_urb);
+	kfree(priv);
 	usb_set_serial_port_data(port, NULL);
 }
 
 static int igotu_open(struct tty_struct *tty,
 			struct usb_serial_port *port, struct file *filp)
 {
-	struct igotu_private *priv;
+	struct igotu_private *priv = usb_get_serial_port_data(port);
 	int result = 0;
 
-	dev_dbg(&port->dev, "%s - port %d", __func__, port->number);
+	dev_dbg(&port->dev, "%s", __func__);
 
 	/* similar to the USB Cypress M8 driver */
 
@@ -174,126 +215,89 @@ static int igotu_open(struct tty_struct *tty,
 				   characters */
 		| IEXTEN);	/* disable non-POSIX special characters */
 
+	priv->write_control_cr->bRequestType = 0x21;
+	priv->write_control_cr->bRequest = 0x09;
+	priv->write_control_cr->wValue = cpu_to_le16(0x0200);
+	priv->write_control_cr->wIndex = 0;
+	priv->write_control_cr->wLength = 0;
+
+	usb_fill_control_urb(priv->write_control_urb, port->serial->dev,
+			usb_sndctrlpipe(port->serial->dev, 0),
+			(char *) priv->write_control_cr,
+			priv->write_control_buffer, 0,
+			igotu_write_control_callback, port);
+
 	if (port->interrupt_in_urb) {
 		dev_dbg(&port->dev, "%s - adding interrupt input", __func__);
-		priv = usb_get_serial_port_data(port);
-		++priv->readcount;
 		result = usb_submit_urb(port->interrupt_in_urb, GFP_KERNEL);
 		if (result) {
-			--priv->readcount;
 			dev_err(&port->dev,
-				"%s - Error %d submitting interrupt urb\n",
+				"%s - error %d submitting interrupt urb\n",
 				__func__, result);
 		}
 	}
+
 	return result;
 }
 
 static void igotu_close(struct usb_serial_port *port)
 {
-	struct igotu_private *priv;
+	struct igotu_private *priv = usb_get_serial_port_data(port);
 
-	dev_dbg(&port->dev, "%s - port %d", __func__, port->number);
+	dev_dbg(&port->dev, "%s", __func__);
 
-	priv = usb_get_serial_port_data(port);
-
+	usb_kill_urb(priv->write_control_urb);
 	usb_kill_urb(port->interrupt_in_urb);
 }
 
 static int igotu_write(struct tty_struct *tty, struct usb_serial_port *port,
 			const unsigned char *buf, int count)
 {
-	struct igotu_private *priv;
+	struct igotu_private *priv = usb_get_serial_port_data(port);
 	int result;
-	unsigned long flags;
-	bool pendingread;
 
-	dev_dbg(&port->dev, "%s - port %d", __func__, port->number);
+	dev_dbg(&port->dev, "%s", __func__);
 
-	if (count == 0) {
-		dev_dbg(&port->dev, "%s - port %d: empty write",
-				__func__, port->number);
+	if (!atomic_add_unless(&priv->write_count, 1, 1)) {
+		dev_dbg(&port->dev, "%s - write urb already pending", __func__);
 		return 0;
 	}
 
-	priv = usb_get_serial_port_data(port);
+	usb_kill_urb(port->interrupt_in_urb);
 
-	spin_lock_irqsave(&priv->writelock, flags);
-	if (priv->writecount) {
-		dev_dbg(&port->dev, "%s - port %d: urb already pending",
-				__func__, port->number);
-		spin_unlock_irqrestore(&priv->writelock, flags);
-		return 0;
-	}
-	++priv->writecount;
-	spin_unlock_irqrestore(&priv->writelock, flags);
+	count = min(8, count);
+	memcpy(priv->write_control_buffer, buf, count);
 
-	/* Cancel any existing read urb and prevent the scheduling of another */
-	spin_lock_irqsave(&priv->readlock, flags);
-	pendingread = priv->readcount;
-	++priv->readcount;
-	spin_unlock_irqrestore(&priv->readlock, flags);
-	if (pendingread)
-		usb_kill_urb(port->interrupt_in_urb);
+	priv->write_control_urb->transfer_buffer_length = count;
+	priv->write_control_cr->wLength = cpu_to_le16(count);
+	result = usb_submit_urb(priv->write_control_urb, GFP_KERNEL);
 
-	/* TODO: wait for the urb to be killed */
-
-	result = usb_control_msg(port->serial->dev,
-			usb_sndctrlpipe(port->serial->dev, 0),
-			0x09, 0x21, 0x0200, 0, (void *) buf, count, 100);
-
-	spin_lock_irqsave(&priv->writelock, flags);
-	--priv->writecount;
-	spin_unlock_irqrestore(&priv->writelock, flags);
-
-	if (result != count) {
+	if (result) {
+		atomic_dec(&priv->write_count);
 		dev_err(&port->dev,
-			"%s - Error %d submitting control urb\n",
+			"%s - error %d submitting control urb\n",
 			__func__, result);
 		count = 0;
 	}
 
-	/* Resubmit the read urb */
-	if (port->interrupt_in_urb) {
-		result = usb_submit_urb(port->interrupt_in_urb, GFP_KERNEL);
-		if (result) {
-			dev_err(&port->dev,
-				"%s - Error %d submitting interrupt urb\n",
-				__func__, result);
-		}
-	} else {
-		result = 1;
-	}
-
-	if (result) {
-		spin_lock_irqsave(&priv->readlock, flags);
-		--priv->readcount;
-		spin_unlock_irqrestore(&priv->readlock, flags);
-	}
-
-	dev_dbg(&port->dev, "%s - port %d: %d bytes sent",
-			__func__, port->number, count);
+	usb_serial_debug_data(debug, &port->dev, __func__, count,
+			priv->write_control_buffer);
 
 	return count;
 }
 
 int igotu_write_room(struct tty_struct *tty)
 {
-	struct igotu_private *priv;
 	struct usb_serial_port *port = tty->driver_data;
-	unsigned long flags;
+	struct igotu_private *priv = usb_get_serial_port_data(port);
 	int room;
 
-	dev_dbg(&port->dev, "%s - port %d", __func__, port->number);
+	dev_dbg(&port->dev, "%s", __func__);
 
-	priv = usb_get_serial_port_data(port);
+	room = atomic_read(&priv->write_count) ? 0 : 8;
 
-	spin_lock_irqsave(&priv->writelock, flags);
-	room = priv->writecount ? 0 : 8;
-	spin_unlock_irqrestore(&priv->writelock, flags);
-
-	dev_dbg(&port->dev, "%s - port %d: room for %d bytes",
-			__func__, port->number, room);
+	dev_dbg(&port->dev, "%s - room for %d bytes",
+			__func__, room);
 
 	return room;
 }
@@ -306,7 +310,7 @@ static struct usb_serial_driver igotu_device = {
 	.id_table =		id_table,
 	.usb_driver =		&igotu_driver,
 	.num_ports =		1,
-	.attach =		igotu_startup,
+	.attach =		igotu_attach,
 	.release =		igotu_release,
 	.open =			igotu_open,
 	.close =		igotu_close,
