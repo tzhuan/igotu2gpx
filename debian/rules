@@ -3,11 +3,21 @@
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/qmake.mk
 
+DEB_VERSION ?= $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f 2 -d ' ')
+DEB_UPSTREAM_VERSION ?= $(shell echo $(DEB_VERSION) | cut -d- -f1)
+PACKAGE=igotu
+
 DEB_QMAKE_ARGS := RELEASE=0 PREFIXDIR=/usr
 
 install/igotu2gpx::
-	rm debian/igotu2gpx/usr/lib/*.so
-	rm debian/igotu2gpx/usr/share/doc/igotu2gpx/LICENSE
+	rm debian/tmp/usr/lib/*.so
+	rm debian/tmp/usr/share/doc/igotu2gpx/LICENSE
+
+install/igotu-dkms::
+	mkdir -p debian/$(PACKAGE)-dkms/usr/src/$(PACKAGE)-$(DEB_UPSTREAM_VERSION)
+	cp -a src/igotuserial/Makefile debian/$(PACKAGE)-dkms/usr/src/$(PACKAGE)-$(DEB_UPSTREAM_VERSION)/
+	cp -a src/igotuserial/igotu.c debian/$(PACKAGE)-dkms/usr/src/$(PACKAGE)-$(DEB_UPSTREAM_VERSION)/
+	sed -e 's/xxxVERSIONxxx/$(DEB_UPSTREAM_VERSION)/g' debian/dkms.conf > debian/$(PACKAGE)-dkms/usr/src/$(PACKAGE)-$(DEB_UPSTREAM_VERSION)/dkms.conf
 
 $(patsubst %,binary-install/%,$(DEB_PACKAGES)) :: binary-install/%:
 	$(if $(wildcard /usr/bin/dh_desktop),dh_desktop -p$(cdbs_curpkg))

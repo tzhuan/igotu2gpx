@@ -1,0 +1,18 @@
+#!/bin/sh
+
+#DEBHELPER#
+
+NAME=igotu
+PACKAGE_NAME=$NAME-dkms
+
+CVERSION=`dpkg-query -W -f='${Version}' $PACKAGE_NAME | cut -d- -f1`
+
+case "$1" in
+    remove|upgrade|purge)
+		echo "Removing all DKMS Modules"
+		dkms remove -m $NAME -v $CVERSION --all > /dev/null
+		echo "Done."
+	;;
+esac
+
+

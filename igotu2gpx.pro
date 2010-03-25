@@ -66,7 +66,7 @@ for(tsfile, tsfiles) {
 win32 {
     tsrelease += cd .
 } else {
-    tsrelease = lrelease translations/igotu2gpx_*.ts
+    tsrelease = lrelease translations/igotu2gpx_*.ts || cd .
 }
 
 
