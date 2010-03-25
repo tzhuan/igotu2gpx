@@ -9,13 +9,14 @@
  * version.
  */
 
-#include <linux/kernel.h>
 #include <linux/init.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
 #include <linux/tty.h>
 #include <linux/tty_flip.h>
-#include <linux/module.h>
 #include <linux/usb.h>
 #include <linux/usb/serial.h>
+#include <linux/version.h>
 
 static int debug;
 
@@ -71,13 +72,23 @@ static void igotu_read_int_callback(struct urb *urb)
 	usb_serial_debug_data(debug, &port->dev, __func__, urb->actual_length,
 			data);
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,26)
+	tty = port->tty;
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,27)
+	tty = port->port.tty;
+#else
 	tty = tty_port_tty_get(&port->port);
+#endif
 	if (tty && urb->actual_length) {
 		tty_buffer_request_room(tty, urb->actual_length);
 		tty_insert_flip_string(tty, data, urb->actual_length);
 		tty_flip_buffer_push(tty);
 	}
+
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,27)
+#else
 	tty_kref_put(tty);
+#endif
 
 submit:
 	result = usb_submit_urb(urb, GFP_ATOMIC);
@@ -183,11 +194,21 @@ static void igotu_release(struct usb_serial *serial)
 	usb_set_serial_port_data(port, NULL);
 }
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,26)
+static int igotu_open(struct usb_serial_port *port, struct file *filp)
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,31)
 static int igotu_open(struct tty_struct *tty,
 			struct usb_serial_port *port, struct file *filp)
+#else
+static int igotu_open(struct tty_struct *tty,
+			struct usb_serial_port *port)
+#endif
 {
 	struct igotu_private *priv = usb_get_serial_port_data(port);
 	int result = 0;
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,26)
+	struct tty_struct *tty = port->tty;
+#endif
 
 	dev_dbg(&port->dev, "%s", __func__);
 
@@ -240,18 +261,35 @@ static int igotu_open(struct tty_struct *tty,
 	return result;
 }
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,26)
+static void igotu_close(struct usb_serial_port *port, struct file *filp)
+#elif LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,30)
+static void igotu_close(struct tty_struct *tty,
+			struct usb_serial_port *port, struct file *filp)
+#else
 static void igotu_close(struct usb_serial_port *port)
+#endif
 {
 	struct igotu_private *priv = usb_get_serial_port_data(port);
 
 	dev_dbg(&port->dev, "%s", __func__);
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,30)
+	if (!priv)
+		return;
+#endif
+
 	usb_kill_urb(priv->write_control_urb);
 	usb_kill_urb(port->interrupt_in_urb);
 }
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,26)
+static int igotu_write(struct usb_serial_port *port,
+			const unsigned char *buf, int count)
+#else
 static int igotu_write(struct tty_struct *tty, struct usb_serial_port *port,
 			const unsigned char *buf, int count)
+#endif
 {
 	struct igotu_private *priv = usb_get_serial_port_data(port);
 	int result;
@@ -286,9 +324,16 @@ static int igotu_write(struct tty_struct *tty, struct usb_serial_port *port,
 	return count;
 }
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,26)
+int igotu_write_room(struct usb_serial_port *port)
+#else
 int igotu_write_room(struct tty_struct *tty)
+#endif
 {
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,26)
+#else
 	struct usb_serial_port *port = tty->driver_data;
+#endif
 	struct igotu_private *priv = usb_get_serial_port_data(port);
 	int room;
 
@@ -311,7 +356,11 @@ static struct usb_serial_driver igotu_device = {
 	.usb_driver =		&igotu_driver,
 	.num_ports =		1,
 	.attach =		igotu_attach,
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,30)
+	.shutdown =		igotu_release,
+#else
 	.release =		igotu_release,
+#endif
 	.open =			igotu_open,
 	.close =		igotu_close,
 	.write =		igotu_write,
