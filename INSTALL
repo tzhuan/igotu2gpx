@@ -9,12 +9,13 @@ To compile igotu2gpx, you need:
 - qt4 (http://www.qtsoftware.com/)
 - boost (http://www.boost.org/)
 - boost-program-options (http://www.boost.org/, included with boost)
-- libusb 1.0 (on Linux and Mac OS X systems, http://libusb.sourceforge.net/)
 - pkg-config (on Linux and Mac OS X systems)
 - chrpath (on Linux, optional, makes it possible to run the program without
   installation)
 - marble (http://edu.kde.org/marble, optional, openstreetmap display of tracks)
 - openssl (on Windows already on install time, otherwise only at runtime, http://openssl.org)
+- libusb 1.0 (on Mac OS X systems, http://libusb.sourceforge.net/)
+- libusb or libusb 1.0 (on Linux, http://libusb.sourceforge.net/), or the kernel driver (see below)
 
 On a Ubuntu system, this should get you the dependencies:
 ----
@@ -55,6 +56,15 @@ content:
 and run:
 ----
     ldconfig
+----
+
+To compile the kernel module, go to src/igotuserial and compile with:
+----
+    make
+----
+You can then load the kernel module with:
+----
+    sudo modprobe usbserial; sudo insmod ./igotu.ko
 ----
 
 Mac OS X

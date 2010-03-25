@@ -7,7 +7,7 @@ DEB_VERSION ?= $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f 2 -d ' '
 DEB_UPSTREAM_VERSION ?= $(shell echo $(DEB_VERSION) | cut -d- -f1)
 PACKAGE=igotu
 
-DEB_QMAKE_ARGS := RELEASE=0 PREFIXDIR=/usr
+DEB_QMAKE_ARGS := RELEASE=0 PREFIXDIR=/usr CLEBS_DISABLED="libusbconnection libusb10connection"
 
 install/igotu2gpx::
 	rm debian/tmp/usr/lib/*.so
