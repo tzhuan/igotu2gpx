@@ -123,6 +123,13 @@ SerialConnection::SerialConnection(const QString &port)
     if (handle == -1)
         throw IgotuError(Common::tr("Unable to open device '%1': %2")
             .arg(device, QString::fromLocal8Bit(strerror(errno))));
+    struct termios options;
+    tcgetattr(handle, &options);
+    options.c_cc[VMIN] = 0;
+    options.c_cc[VTIME] = 1;
+    if (tcsetattr(handle, TCSANOW, &options) != 0)
+        throw IgotuError(Common::tr("Unable to open device '%1': %2")
+            .arg(device, QString::fromLocal8Bit(strerror(errno))));
 #endif
 }
 
@@ -148,8 +155,10 @@ void SerialConnection::send(const QByteArray &query)
 #else
     int result;
 
-    // TODO: EAGAIN etc.
-    if ((result = write(handle, query.data(), query.size())) == -1)
+    do {
+        result = write(handle, query.data(), query.size());
+    } while (result == -1 && errno == EINTR);
+    if (result == -1)
         throw IgotuError(Common::tr("Unable to send data to device: %1")
                 .arg(QString::fromLocal8Bit(strerror(errno))));
 #endif
@@ -179,8 +188,10 @@ QByteArray SerialConnection::receive(unsigned expected)
                 .arg(errorString(GetLastError())));
 #else
         int result;
-        // TODO: EAGAIN etc.
-        if ((result = read(handle, data.data(), data.size())) == -1)
+        do {
+            result = read(handle, data.data(), data.size());
+        } while (result == -1 && errno == EINTR);
+        if (result == -1)
             throw IgotuError(Common::tr("Unable to read data from device: %1")
                 .arg(QString::fromLocal8Bit(strerror(errno))));
 #endif
