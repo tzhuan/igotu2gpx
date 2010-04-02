@@ -64,7 +64,6 @@ IdentificationCommand::IdentificationCommand(DataConnection *connection) :
 
 QByteArray IdentificationCommand::sendAndReceive()
 {
-    // TODO: what are the other 4 bytes?
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (result.size() < 6)
         throw IgotuError(IgotuCommand::tr("Response too short"));
@@ -157,7 +156,6 @@ CountCommand::CountCommand(DataConnection *connection) :
 
 QByteArray CountCommand::sendAndReceive()
 {
-    // TODO: what is the first byte?
     const QByteArray result = IgotuCommand::sendAndReceive();
     if (result.size() < 3)
         throw IgotuError(IgotuCommand::tr("Response too short"));

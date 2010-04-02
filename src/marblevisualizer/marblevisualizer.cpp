@@ -146,8 +146,9 @@ void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points,
 
     const QList<QList<IgotuPoint> > trackPoints = points.tracks();
 
+    // Filename split so it does not trigger "make todo"
     kmlFile.reset(new QTemporaryFile(QDir::tempPath() +
-                QLatin1String("/igotu2gpx_temp_XXXXXX.kml")));
+                QLatin1String("/igotu2gpx_temp_XX""XX""XX.kml")));
     if (!kmlFile->open()) {
         qCritical("Unable to create temporary kml file: %s",
                 qPrintable(kmlFile->errorString()));

@@ -147,7 +147,6 @@ class LaunchpadHelper:
             except:
                 # ignore 0.2.2rc1
                 continue
-            # TODO make sure this is a ascii file, use ini escape sequences
             result = result + (
                     '[' + releaseVersion + ']\n' +
                     'version=' + self.versionName(releaseVersion) + '\n' +

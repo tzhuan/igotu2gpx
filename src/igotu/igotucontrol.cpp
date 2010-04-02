@@ -672,14 +672,17 @@ void IgotuControlPrivateWorker::configureCommand(const QVariantMap &config)
         i.next();
         const QByteArray key = i.key().toAscii();
         if (key == "interval") {
+            // TODO: disable schedule
             ScheduleTableEntry entry = igotuConfig.scheduleTableEntries(1).value(0);
             entry.setLogInterval(i.value().toUInt());
             igotuConfig.setScheduleTableEntry(1, 0, entry);
         } else if (key == "changespeed") {
+            // TODO: disable schedule
             ScheduleTableEntry entry = igotuConfig.scheduleTableEntries(1).value(0);
             entry.setIntervalChangeSpeed(i.value().toDouble());
             igotuConfig.setScheduleTableEntry(1, 0, entry);
         } else if (key == "changedinterval") {
+            // TODO: disable schedule
             ScheduleTableEntry entry = igotuConfig.scheduleTableEntries(1).value(0);
             entry.setChangedLogInterval(i.value().toUInt());
             igotuConfig.setScheduleTableEntry(1, 0, entry);

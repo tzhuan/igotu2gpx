@@ -39,7 +39,41 @@ using namespace igotu;
 #define IGOTU2GPX_USB_MANUALCANCEL
 #endif
 
-// TODO: better error messages with libusb error codes
+QString usbErrorMessage(int code)
+{
+    switch (code) {
+    case LIBUSB_SUCCESS:
+        return QLatin1String("LIBUSB_SUCCESS");
+    case LIBUSB_ERROR_IO:
+        return QLatin1String("LIBUSB_ERROR_IO");
+    case LIBUSB_ERROR_INVALID_PARAM:
+        return QLatin1String("LIBUSB_ERROR_INVALID_PARAM");
+    case LIBUSB_ERROR_ACCESS:
+        return QLatin1String("LIBUSB_ERROR_ACCESS");
+    case LIBUSB_ERROR_NO_DEVICE:
+        return QLatin1String("LIBUSB_ERROR_NO_DEVICE");
+    case LIBUSB_ERROR_NOT_FOUND:
+        return QLatin1String("LIBUSB_ERROR_NOT_FOUND");
+    case LIBUSB_ERROR_BUSY:
+        return QLatin1String("LIBUSB_ERROR_BUSY");
+    case LIBUSB_ERROR_TIMEOUT:
+        return QLatin1String("LIBUSB_ERROR_TIMEOUT");
+    case LIBUSB_ERROR_OVERFLOW:
+        return QLatin1String("LIBUSB_ERROR_OVERFLOW");
+    case LIBUSB_ERROR_PIPE:
+        return QLatin1String("LIBUSB_ERROR_PIPE");
+    case LIBUSB_ERROR_INTERRUPTED:
+        return QLatin1String("LIBUSB_ERROR_INTERRUPTED");
+    case LIBUSB_ERROR_NO_MEM:
+        return QLatin1String("LIBUSB_ERROR_NO_MEM");
+    case LIBUSB_ERROR_NOT_SUPPORTED:
+        return QLatin1String("LIBUSB_ERROR_NOT_SUPPORTED");
+    case LIBUSB_ERROR_OTHER:
+        return QLatin1String("LIBUSB_ERROR_OTHER");
+    default:
+        return QString::number(code);
+    }
+}
 
 class Libusb10Connection : public DataConnection
 {
@@ -104,7 +138,8 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId,
 
     libusb_context *contextPtr;
     if (int result = libusb_init(&contextPtr))
-        throw IgotuError(tr("Unable to initialize libusb: %1").arg(result));
+        throw IgotuError(tr("Unable to initialize libusb: %1")
+                .arg(usbErrorMessage(result)));
     context.reset(contextPtr, libusb_exit);
 
     if (Messages::verbose() > 1)
@@ -143,13 +178,14 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId,
             throw IgotuError(Common::tr
                     ("Unable to detach kernel driver from device '%1': %2")
                     .arg(QString().sprintf("%04x:%04x", vendorId, productId))
-                    .arg(result));
+                    .arg(usbErrorMessage(result)));
         hadKernelDriver = true;
     }
 
-    if (libusb_claim_interface(handle.get(), 0) != 0)
-        throw IgotuError(Common::tr("Unable to claim interface 0 on device '%1'")
-                .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
+    if (int result = libusb_claim_interface(handle.get(), 0))
+        throw IgotuError(Common::tr("Unable to claim interface 0 on device '%1': %2")
+                .arg(QString().sprintf("%04x:%04x", vendorId, productId))
+                .arg(usbErrorMessage(result)));
 }
 
 Libusb10Connection::~Libusb10Connection()
@@ -198,11 +234,12 @@ void Libusb10Connection::send(const QByteArray &query)
 
     if (result < 0)
         throw IgotuError(Common::tr("Unable to send data to device: %1")
-                .arg(result));
+                .arg(usbErrorMessage(result)));
     if (result != query.size())
         throw IgotuError(Common::tr("Unable to send data to device: %1")
                 .arg(Common::tr("Only %1/%2 bytes could be sent"))
-                .arg(result).arg(query.size()));
+                .arg(usbErrorMessage(result))
+                .arg(query.size()));
 }
 
 static void transferCallback(struct libusb_transfer *transfer)
@@ -238,7 +275,7 @@ QByteArray Libusb10Connection::receive(unsigned expected)
         int result = libusb_submit_transfer(transfer.get());
         if (result < 0)
             throw IgotuError(Common::tr("Unable to read data from device: %1")
-                    .arg(result));
+                    .arg(usbErrorMessage(result)));
 
 #ifdef IGOTU2GPX_USB_MANUALCANCEL
         timeval time;
@@ -263,7 +300,7 @@ QByteArray Libusb10Connection::receive(unsigned expected)
                         break;
                 if (!manualCancel)
                     throw IgotuError(Common::tr("Unable to read data from device: %1")
-                            .arg(result));
+                            .arg(usbErrorMessage(result)));
             }
         }
 

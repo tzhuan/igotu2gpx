@@ -122,8 +122,7 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId,
         Messages::verboseMessage(Common::tr
                 ("Interface 0 already claimed by kernel driver, detaching"));
 
-        int result = usb_detach_kernel_driver_np(handle.get(), 0);
-        if (result < 0)
+        if (int result = usb_detach_kernel_driver_np(handle.get(), 0))
             throw IgotuError(Common::tr
                     ("Unable to detach kernel driver from device '%1': %2")
                     .arg(QString().sprintf("%04x:%04x", vendorId, productId))
@@ -131,9 +130,10 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId,
     }
 #endif
 
-    if (usb_claim_interface(handle.get(), 0) != 0)
-        throw IgotuError(Common::tr("Unable to claim interface 0 on device '%1'")
-                .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
+    if (int result = usb_claim_interface(handle.get(), 0))
+        throw IgotuError(Common::tr("Unable to claim interface 0 on device '%1': %2")
+                .arg(QString().sprintf("%04x:%04x", vendorId, productId))
+                .arg(QString::fromLocal8Bit(strerror(-result))));
 }
 
 LibusbConnection::~LibusbConnection()

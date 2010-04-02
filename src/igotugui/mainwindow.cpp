@@ -219,24 +219,24 @@ void MainWindowPrivate::on_actionCancel_triggered()
 
 void MainWindowPrivate::on_actionPreferences_triggered()
 {
-    if (!preferences) {
-        preferences = new PreferencesDialog(p);
-        preferences->setAttribute(Qt::WA_DeleteOnClose);
-
-        QObject::connect(preferences, SIGNAL(deviceChanged(QString)),
-                control, SLOT(setDevice(QString)));
-        QObject::connect(preferences, SIGNAL(utcOffsetChanged(int)),
-                control, SLOT(setUtcOffset(int)));
-        QObject::connect(preferences, SIGNAL(updateNotificationChanged(UpdateNotification::Type)),
-                update, SLOT(setUpdateNotification(UpdateNotification::Type)));
-        QObject::connect(preferences, SIGNAL(tracksAsSegmentsChanged(bool)),
-                control, SLOT(setTracksAsSegments(bool)));
-
-        preferences->show();
-    } else {
-        // TODO: needs also a raise?
+    if (preferences) {
         preferences->activateWindow();
+        return;
     }
+
+    preferences = new PreferencesDialog(p);
+    preferences->setAttribute(Qt::WA_DeleteOnClose);
+
+    QObject::connect(preferences, SIGNAL(deviceChanged(QString)),
+            control, SLOT(setDevice(QString)));
+    QObject::connect(preferences, SIGNAL(utcOffsetChanged(int)),
+            control, SLOT(setUtcOffset(int)));
+    QObject::connect(preferences, SIGNAL(updateNotificationChanged(UpdateNotification::Type)),
+            update, SLOT(setUpdateNotification(UpdateNotification::Type)));
+    QObject::connect(preferences, SIGNAL(tracksAsSegmentsChanged(bool)),
+            control, SLOT(setTracksAsSegments(bool)));
+
+    preferences->show();
 }
 
 void MainWindowPrivate::on_update_newVersionAvailable(const QString &version,

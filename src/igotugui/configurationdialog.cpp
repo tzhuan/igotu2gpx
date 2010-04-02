@@ -60,6 +60,7 @@ ConfigurationDialog::ConfigurationDialog(const IgotuConfig &config, QWidget *par
     d->config = config;
     d->entry = config.scheduleTableEntries(1).at(0);
     // TODO fail if (!igotuConfig.isScheduleTableEnabled())
+    // TODO getter/setter for the config, copy from igotucontrol
 
     d->ui.reset(new Ui::ConfigurationDialog);
     d->ui->setupUi(this);

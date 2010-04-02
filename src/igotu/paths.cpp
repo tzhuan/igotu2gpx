@@ -44,7 +44,7 @@ namespace igotu
 #define _WIN32_IE 0x0400
 #include <shlobj.h>
 
-// TODO: Qt 4.4 has support to retrieve these folders
+// TODO: Qt 4.4 has support to retrieve these folders, change after EOL of Hardy
 static QString windowsConfigPath(int type)
 {
     QString result;
@@ -142,7 +142,7 @@ QStringList Paths::iconDirectories()
             QLatin1String("/usr/local/share:/usr/share"),
             QLatin1String("/icons/hicolor"));
 #elif defined(Q_OS_MAC)
-    // TODO: for the MacOS X native case, user config is missing
+    // for the MacOS X native case, user config is missing
     result << directoriesFromEnvironment("XDG_DATA_HOME",
             QDir::homePath() + QLatin1String("/.local/share"),
             QLatin1String("/icons/hicolor"));
@@ -183,7 +183,7 @@ QStringList Paths::translationDirectories()
             QLatin1String("/usr/local/share:/usr/share"),
             QLatin1String("/locale"));
 #elif defined(Q_OS_MAC)
-    // TODO: for the MacOS X native case, user config is missing
+    // for the MacOS X native case, user config is missing
     result << directoriesFromEnvironment("XDG_DATA_HOME",
             QDir::homePath() + QLatin1String("/.local/share"),
             QLatin1String("/locale"));
@@ -245,7 +245,7 @@ QStringList Paths::pluginDirectories()
     result << QLatin1String("/usr/local/lib") + DIRECTORY;
     result << QLatin1String("/usr/lib") + DIRECTORY;
 #elif defined(Q_OS_MAC)
-    // TODO: for the MacOS X native case, user config is missing
+    // for the MacOS X native case, user config is missing
     result << QDir::homePath() + QLatin1String("/.local/lib") + DIRECTORY;
     result << relativeToBaseDirectory
            (QStringList() << QLatin1String("/lib") + DIRECTORY
