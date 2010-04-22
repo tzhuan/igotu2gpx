@@ -1,1 +1,1 @@
-#include "../igotugui/trackvisualizer.h"
+#include "../programs/igotugui/trackvisualizer.h"

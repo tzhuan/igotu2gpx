@@ -1,30 +1,21 @@
-CLEBS_REQUIRED *= qtversion430 boost-po
-CLEBS_SUGGESTED *= libmarble
-win32:CLEBS_REQUIRED *= libopenssl
-macx:CLEBS_REQUIRED *= libusb10
-unix:!macx:CLEBS_SUGGESTED *= libusb10 libusb chrpath
+SUBDIRS = \
+    src/exporters/kmlexporter \
+    src/exporters/rawexporter \
+    src/exporters/gpxexporter \
+    src/exporters/detailsexporter \
+    src/tests \
+    src/connections/libusbconnection \
+    src/connections/libusb10connection \
+    src/connections/serialconnection \
+    src/visualizers/listvisualizer \
+    src/visualizers/marblevisualizer \
+    src/programs/igotu2gpx \
+    src/programs/igotugui \
+    src/lib/igotu \
 
 include(clebs.pri)
 
-OBJECTS_DIR =
 TEMPLATE = subdirs
-
-clebsDirs(src/igotu)
-clebsDirs(src/igotu2gpx, src/igotu)
-clebsDirs(src/igotugui, src/igotu)
-clebsDirs(src/tests, src/igotu)
-
-clebsDirs(src/*exporter, src/igotu)
-
-clebsDirs(src/marblevisualizer, src/igotu, marblevisualizer)
-clebsDirs(src/listvisualizer, src/igotu)
-
-clebsDirs(src/serialconnection, src/igotu, serialconnection)
-clebsDirs(src/libusbconnection, src/igotu, libusbconnection)
-clebsDirs(src/libusb10connection, src/igotu, libusb10connection)
-
-clebsDirs(data)
-clebsDirs(contrib/tango)
 
 docs.files = LICENSE HACKING
 docs.path = $$DOCDIR

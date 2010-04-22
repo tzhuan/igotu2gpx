@@ -14,7 +14,7 @@
 #CLEBS *= nosilent
 
 # Uncomment to disable certain modules although all dependencies are available
-#CLEBS_DISABLED *= examples unittests
+#CLEBS_DISABLED *= src/connections/libusb10connection
 
 #unix:BOOSTINCLUDEDIR = /usr/include
 #unix:BOOSTPOLIB = boost_program_options-mt

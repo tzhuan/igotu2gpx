@@ -1,101 +1,184 @@
-# Set BASEDIR to the project base path
-# Specify CLEBS_REQUIRED/CLEBS_SUGGESTED to check for required/suggested libs
-# Specify CLEBS_INSTALL to add install commands to the make file
-# Specify CLEBS if you need libraries or special build settings
-#
-# Use clebsDirs to add subdirectories
+# Specify CLEBS if you need libraries or special build settings. Mark optional
+# ones with a leading - (the directory will be compiled without it) and
+# mandatory ones with a leading + (the project will fail completely). 
+# Specify CLEBS_INSTALL to add install commands to the make file.
 
 # Some macros ==================================================================
 
-# clebsDirs(subdirs,deps,modules): Adds directories to the project that depend
-# on other directories. If the named modules are not available or the
-# directories are already defined, the directories will be ignored.
-defineTest(clebsDirs) {
-    for(subdirs, 1) {
-	entries = $$files($$subdirs)
-	for(entry, entries) {
-	    name = $$replace(entry, [/\\\\], _)
-	    contains(SUBDIRS, $$name)|contains(CLEBS_IGNORED_SUBDIRS, $$name):next()
-	    isEmpty(3)|clebsCheckModules($$3) {
-		SUBDIRS *= $$name
-		eval($${name}.subdir = $$entry)
-		for(dep, 2):eval($${name}.depends *= $$replace(dep, [/\\\\], _))
-		export($${name}.subdir)
-		export($${name}.depends)
-	    } else {
-		CLEBS_IGNORED_SUBDIRS *= $$name
-		export(CLEBS_IGNORED_SUBDIRS)
-	    }
-	}
+# clebsFixupSubdirs(): Configures directories of the project (dependencies,
+# compile order, disabled). Compile order will be obeyed if the directory pro
+# file has a CLEBS line that depends on libs in clebs/internal that have the
+# same name as a directory in contrib or src/lib.
+defineTest(clebsFixupSubdirs) {
+    clear(CLEBS_SUBDIRS)
+    clear(CLEBS_EXTERNALDEPS)
+    for(subdir, SUBDIRS) {
+        SUBDIRS -= $$subdir
+        pro = $$basename(subdir)
+        primarydeps = $$fromfile("$$subdir/$${pro}.pro", "CLEBS")
+        deps = $$clebsRecursiveDependencies($$primarydeps)
+        CLEBS_EXTERNALDEPS *= $$clebsExternalDependencies($$deps)
+        libs = $$clebsInternalLibDependencies($$deps)
+        missing = $$clebsMissingDependencies($$deps)
+        contains(CLEBS_DISABLED, $$subdir) {
+            CLEBS_SUBDIRS += "$${subdir}_"
+            next()
+        }
+        !isEmpty(missing) {
+            message("$$subdir is missing $$missing")
+            CLEBS_SUBDIRS += "$${subdir}-"
+            next()
+        }
+        isEmpty(missing) {
+            CLEBS_SUBDIRS += "$${subdir}"
+            name = $$replace(subdir, [/\\\\], _)
+            eval($${name}.subdir = $$subdir)
+            export($${name}.subdir)
+            for(dep, libs):eval($${name}.depends *= $$replace(dep, [/\\\\], _))
+            export($${name}.depends)
+            SUBDIRS *= $$name
+        }
     }
+    CLEBS_SUBDIRS = $$clebsSort($$CLEBS_SUBDIRS)
     export(SUBDIRS)
+    export(CLEBS_EXTERNALDEPS)
+    export(CLEBS_SUBDIRS)
 }
 
-# clebsModule(module,deps): Defines a module that will be enabled if all
-# dependencies are available. clebsCheckModules can be used to test whether
-# modules are enabled.
-defineTest(clebsModule) {
-    clebsCheckDependencies($$2):!contains(CLEBS_DISABLED, $$1) {
-	CLEBS_MODULES *= $$1
-	included = yes
-    } else {
-	included = no
+# Returns the .pri file for a dependency
+defineReplace(clebsDependencyFile) {
+    1 ~= s|^[-+]||
+    subdirs = clebs $$files(clebs/*)
+    for(subdir, subdirs):exists($${subdir}/$${1}.pri):return($${subdir}/$${1}.pri)
+    error("Build configuration requested for unknown dependency $$1!")
+}
+
+# Tries to temporarily include the specified dependency include files and
+# returns the missing ones (without +-)
+defineReplace(clebsMissingDependencies) {
+    clear(missing)
+    for(dep, 1) {
+        contains(dep, "^[-].*"):next()
+        dep ~= s|^[-+]||
+        CLEBS = $$dep
+        include($$clebsDependencyFile($$dep))
+        !contains(CLEBS_DEPENDENCIES, $$dep):missing *= $$dep
     }
-    export(CLEBS_MODULES)
-    clebsVerbose() {
-	temp = "Building with $$1 ______________"
-	temp ~= s/(.{31}).*/\1: $$included/
-	temp ~= s/_/ /
-	message($$temp)
+    return($$missing)
+}
+
+# Recursively determines all dependencies of the given dependencies
+defineReplace(clebsRecursiveDependencies) {
+    clear(result)
+    for(ever) {
+        clear(includedsomething)
+        for(dep, 1) {
+            contains(result, $$replace(dep, "^[-+]?", "[-+]?")):next()
+            CLEBS = $$dep
+            include($$clebsDependencyFile($$dep))
+            result *= $$dep
+            1 *= $$CLEBS
+            includedsomething = true
+        }
+        isEmpty(includedsomething):break()
     }
+    return($$result)
 }
 
-# clebsCheckModules(list): Returns true if all specified modules are available
-defineTest(clebsCheckModules) {
-    for(module, 1):!contains(CLEBS_MODULES, $$module):return(false)
-    return(true)
+# Looks through the dependencies and returns the one that seem to refer to a lib
+# in src/lib or contrib
+defineReplace(clebsInternalLibDependencies) {
+    clear(libs)
+    for(dep, 1) {
+        dep ~= s|^[-+]||
+        exists(clebs/internal/$${dep}.pri) {
+            libdirs = src/lib contrib
+            clear(foundinclude)
+            for(libdir, libdirs) {
+                exists($${libdir}/$${dep}) {
+                    foundinclude = true
+                    libs *= $${libdir}/$${dep}
+                    break()
+                }
+            }
+            isEmpty(foundinclude):error("Unable to find internal lib $$dep!")
+        }
+    }
+    return($$libs)
 }
 
-# clebsCheckModulesOne(list): Returns true if at least one of the specified
-# modules is available
-defineTest(clebsCheckModulesOne) {
-    for(module, 1):contains(CLEBS_MODULES, $$module):return(true)
-    return(false)
+# Looks through the dependencies and returns the one that seem to refer to external libs
+defineReplace(clebsExternalDependencies) {
+    clear(libs)
+    for(rawdep, 1) {
+        dep = $$rawdep
+        dep ~= s|^[-+]||
+        exists(clebs/external/$${dep}.pri):libs *= $${rawdep}
+    }
+    return($$libs)
 }
 
-# clebsCheckDependencies(deps): Returns true if all specified dependencies are
-# available
-defineTest(clebsCheckDependencies) {
-    for(dep, 1):!contains(CLEBS_DEPENDENCIES, $$dep):return(false)
-    return(true)
+# Looks through the dependencies and returns the ones with a - or without a +
+# in front of it
+defineReplace(clebsOptionalNormalDependencies) {
+    clear(result)
+    for(dep, 1) {
+        contains(dep, "[+].*"):next()
+        dep ~= s|^[-+]||
+        contains(1, "[+]$$dep"):next()
+        result += $$dep
+    }
+    return($$clebsSort($$result))
 }
 
-# clebsCheck(modulename): Used in clebs dependency include files to mark the
+# Looks through the dependencies and returns the ones with a + in front of it
+defineReplace(clebsMandatoryDependencies) {
+    clear(result)
+    for(dep, 1) {
+        !contains(dep, "[+].*"):next()
+        dep ~= s|^[-+]||
+        result += $$dep
+    }
+    return($$clebsSort($$result))
+}
+
+# Selection sort
+defineReplace(clebsSort) {
+    clear(result)
+    list = $$1
+    for(ever) {
+        isEmpty(list):break()
+        smallest = $$first(list)
+        for(value, list):lessThan(value, $$smallest):smallest = $$value
+        result += $$smallest
+        list -= $$smallest
+    }
+    return($$result)
+}
+
+# clebsCheck(dependency): Used in clebs dependency include files to mark the
 # block that determines whether a dependency is available. The block should add
-# the module name to CLEBS_DEPENDENCIES if the dependency is available
+# the dependency name to CLEBS_DEPENDENCIES if the dependency is available
 defineTest(clebsCheck) {
-    contains(CLEBS, $$1) | \
-    contains(CLEBS_INSTALL, $$1) | \
-    contains(CLEBS_REQUIRED, $$1) | \
-    contains(CLEBS_SUGGESTED, $$1) {
-	return(true)
-    }
+    contains(CLEBS, "[-+]?$$1")|contains(CLEBS_INSTALL, "[-+]?$$1"):return(true)
     return(false)
 }
 
-# clebsInstall(modulename): Used in clebs dependency include files to mark the
+# clebsInstall(dependency): Used in clebs dependency include files to mark the
 # block that installs the library.
 defineTest(clebsInstall) {
-    contains(CLEBS_INSTALL, $$1):contains(CLEBS_DEPENDENCIES, $$1):return(true)
+    1 ~= s|^[-+]||
+    contains(CLEBS_INSTALL, "[-+]?$$1"):contains(CLEBS_DEPENDENCIES, "[-+]?$$1"):return(true)
     return(false)
 }
 
-# clebsDependency(modulename): Used in clebs dependency include files to mark
+# clebsDependency(dependency): Used in clebs dependency include files to mark
 # the block that does the setup for a dependency like adding include dirs and
 # library dependencies. If the library in turn requires other additional
 # libraries, add them to the CLEBS variable.
 defineTest(clebsDependency) {
-    contains(CLEBS, $$1):contains(CLEBS_DEPENDENCIES, $$1):return(true)
+    1 ~= s|^[-+]||
+    contains(CLEBS, "[-+]?$$1"):contains(CLEBS_DEPENDENCIES,  "[-+]?$$1"):return(true)
     return(false)
 }
 
@@ -116,35 +199,100 @@ defineTest(clebsCheckQtVersion) {
     return(true)
 }
 
-defineTest(clebsPrintAndCheckDependency) {
-    contains(CLEBS_DEPENDENCIES, $$1) {
-	found = yes
-	2 = ignore
-    } else {
-	found = no
-    }
-    temp = "Looking for $$1 ________________"
-    temp ~= s/(.{31}).*/\1: $$found/
-    temp ~= s/_/ /
-    message($$temp)
-    isEmpty(2):error("Please install the necessary (devel) packages for $$1!")
+defineTest(clebsCheckDependencies) {
+    clear(somethingmissing)
+    missing = $$clebsMissingDependencies($$1)
+    !isEmpty(missing):error("Please install the necessary (devel) packages for $$missing!")
 }
 
-defineTest(clebsVerbose) {
-    isEmpty(CLEBS_REQUIRED):isEmpty(CLEBS_SUGGESTED):return(false)
-    return(true)
+defineTest(clebsPrintDependencies) {
+    !isEmpty(2) {
+        message("------------------------------------")
+        message("$$1 dependencies:")
+        message("------------------------------------")
+        for(dep, 2) {
+            found = "no"
+            missing = $$clebsMissingDependencies($$dep)
+            isEmpty(missing):found = "yes"
+            temp = "Looking for $$dep ________________"
+            temp ~= s/(.{31}).*/\1: $$found/
+            temp ~= s/_/ /
+            message($$temp)
+        }
+    }
+}
+
+defineTest(clebsPrintSubdirs) {
+    !isEmpty(1) {
+        message("------------------------------------")
+        message("Build overview:")
+        message("------------------------------------")
+        clear(oldpath)
+        clear(indent)
+        for(dir, 1) {
+            build = "yes"
+            contains(dir, ".*-$"):build = "no"
+            contains(dir, ".*_$"):build = "disabled"
+            dir ~= s|[-_]$||
+            name = $$section(dir, '/', -1, -1)
+            path = $$section(dir, '/', 0, -2)
+            oldtemppath = $$oldpath
+            clear(oldpath)
+            clear(indent)
+            !isEmpty(path):for(ever) {
+                dirpart = $$section(path, '/', 0, 0)
+                olddirpart = $$section(oldtemppath, '/', 0, 0)
+                isEqual(dirpart, $$olddirpart) {
+                } else {
+                    clebsPrintSubdir("$$indent$$dirpart/")
+                }
+                indent = "$${indent}__"
+                isEmpty(oldpath) {
+                    oldpath = $$dirpart
+                } else {
+                    oldpath = "$$oldpath/$$dirpart"
+                }
+                path = $$section(path, '/', 1, -1)
+                oldtemppath = $$section(oldtemppath, '/', 1, -1)
+                isEmpty(path):break()
+            }
+            clebsPrintSubdir("$$indent$$name", $$build)
+        }
+    }
+}
+
+defineTest(clebsPrintSubdir) {
+    dir = $$1
+    build = $$2
+    temp = "$$dir ____________________________"
+    isEmpty(build) {
+        temp ~= s/(.{31}).*/\1/
+    } else {
+        temp ~= s/(.{31}).*/\1: $$build/
+    }
+    temp ~= s/_/ /
+    message($$temp)
 }
 
 # General settings =============================================================
 
-unix|win32-x-g++* {
-    BASEDIR = $$system(pwd)
-} else {
-    BASEDIR = $$system(cd)
-}
+# base dir as needed by the pri files and localconfig.pri
+BASEDIR = $$PWD
 
 isEmpty(LOCALCONFIG):LOCALCONFIG = localconfig.pri
-include($$LOCALCONFIG)
+exists($$LOCALCONFIG):include($$LOCALCONFIG)
+
+# Calculate the relative path to the pro file
+pwdparts = $$split(PWD, '/')
+PRORELPATH = $$_PRO_FILE_PWD_
+PRORELPATH ~= s|^/||
+for(part, pwdparts):PRORELPATH = $$section(PRORELPATH, '/', 1)
+
+# Calculate the package name
+mainprofiles = $$files($$BASEDIR/*.pro)
+mainprofile = $$first(mainprofiles)
+mainprofile = $$basename(mainprofile)
+PACKAGE = $$section(mainprofile, '.', 0, 0)
 
 CONFIG += stl warn_on exceptions thread rtti silent
 CONFIG += debug
@@ -157,13 +305,14 @@ CONFIG -= debug_and_release
 }
 
 QT -= gui
+DEFINES += QT_NO_CAST_FROM_ASCII QT_NO_CAST_TO_ASCII
 
 CONFIG(release, debug|release) {
-    DESTDIR = $$BASEDIR/bin/release
-    OBJECTS_DIR = .build/release
+    DESTDIR = $$PWD/bin/release
+    OBJECTS_DIR = $$PWD/.build/release/$$PRORELPATH
 } else {
-    DESTDIR = $$BASEDIR/bin/debug
-    OBJECTS_DIR = .build/debug
+    DESTDIR = $$PWD/bin/debug
+    OBJECTS_DIR = $$PWD/.build/debug/$$PRORELPATH
 }
 MOC_DIR = $$OBJECTS_DIR/moc
 UI_DIR = $$OBJECTS_DIR/ui
@@ -171,15 +320,13 @@ RCC_DIR = $$OBJECTS_DIR/rcc
 unix {
     isEmpty(PREFIXDIR):PREFIXDIR = /usr/local
     isEmpty(CONFDIR):CONFDIR = /etc
-    isEmpty(DATADIR):DATADIR = $$PREFIXDIR/share/igotu2gpx
-    isEmpty(DOCDIR):DOCDIR = $$PREFIXDIR/share/doc/igotu2gpx
+    isEmpty(DATADIR):DATADIR = $$PREFIXDIR/share/$$PACKAGE
+    isEmpty(DOCDIR):DOCDIR = $$PREFIXDIR/share/doc/$$PACKAGE
     isEmpty(APPDIR):APPDIR = $$PREFIXDIR/share/applications
     isEmpty(ICONDIR):ICONDIR = $$PREFIXDIR/share/icons/hicolor
-    isEmpty(MANDIR):MANDIR = $$PREFIXDIR/share/man
-    isEmpty(TRANSLATIONDIR):TRANSLATIONDIR = $$PREFIXDIR/share/locale
     isEmpty(BINDIR):BINDIR = $$PREFIXDIR/bin
     isEmpty(LIBDIR):LIBDIR = $$PREFIXDIR/lib
-    isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIXDIR/lib/igotu2gpx
+    isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIXDIR/lib/$$PACKAGE
 }
 win32 {
     isEmpty(PREFIXDIR):PREFIXDIR = $${DESTDIR}-installed
@@ -187,17 +334,16 @@ win32 {
     isEmpty(DATADIR):DATADIR = $$PREFIXDIR/share
     isEmpty(DOCDIR):DOCDIR = $$PREFIXDIR/doc
     isEmpty(ICONDIR):ICONDIR = $$PREFIXDIR/icons
-    isEmpty(MANDIR):MANDIR = $$PREFIXDIR/man
-    isEmpty(TRANSLATIONDIR):TRANSLATIONDIR = $$PREFIXDIR/locale
     isEmpty(BINDIR):BINDIR = $$PREFIXDIR/bin
     isEmpty(LIBDIR):LIBDIR = $$PREFIXDIR/bin
-    isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIXDIR/lib
+    # the same as the executables so that SxS dlls also work for plugins
+    isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIXDIR/bin
 }
 
 # Programs may need internal libraries...
 LIBS *= -L$$DESTDIR
 # ...and these libraries may need more internal libraries
-unix:!macx:QMAKE_LFLAGS *=-Wl,-rpath-link=$$DESTDIR
+unix:QMAKE_LFLAGS *=-Wl,-rpath-link=$$DESTDIR
 # For includes from .ui files on MinGW
 INCLUDEPATH *= .
 DEPENDPATH *= .
@@ -209,16 +355,14 @@ INSTALLS *= target
 # mingw creates scripts if there are too many source files
 win32-g++|win32-x-g++*:QMAKE_CLEAN *= object_script.*
 
-DEFINES += QT_NO_CAST_FROM_ASCII QT_NO_CAST_TO_ASCII
-
 unix {
     CONFIG += link_pkgconfig
 
     #QMAKE_CXXFLAGS_DEBUG *= -O2
-}
 
-macx {
-    CONFIG -= app_bundle
+    # Code coverage tests with gcov
+    #QMAKE_CXXFLAGS_DEBUG *= -fprofile-arcs -ftest-coverage
+    #LIBS *= -lgcov
 }
 
 win32 {
@@ -229,66 +373,24 @@ win32 {
 
     # STL iterators and fopen are unsafe, we know that
     DEFINES *= _SCL_SECURE_NO_WARNINGS _CRT_SECURE_NO_WARNINGS
-    # Use our own assert handler so that we can coredump, does not work because
-    # the boost definition has the wrong linkage
-    # DEFINES *= BOOST_ENABLE_ASSERT_HANDLER
+}
+
+# Fixup subdir compile order and dependencies. check dependencies  =============
+
+clebsFixupSubdirs()
+!isEmpty(CLEBS_EXTERNALDEPS) {
+    CONFIG(release, debug|release) {
+        message("------------------------------------")
+        message("BUILDING IN RELEASE MODE")
+    }
+    clebsPrintDependencies("Required", $$clebsMandatoryDependencies($$CLEBS_EXTERNALDEPS))
+    clebsPrintDependencies("Optional", $$clebsOptionalNormalDependencies($$CLEBS_EXTERNALDEPS))
+    clebsCheckDependencies($$clebsMandatoryDependencies($$CLEBS_EXTERNALDEPS))
+    clebsPrintSubdirs($$CLEBS_SUBDIRS)
+    message("------------------------------------")
 }
 
 # Linking against libraries ====================================================
 
-libstoinclude = $$CLEBS_REQUIRED $$CLEBS_SUGGESTED $$CLEBS_INSTALL $$CLEBS
-for(ever) {
-    includedsomething =
-    for(ever) {
-	isEmpty(libstoinclude):break()
-	dep = $$first(libstoinclude)
-	!contains(libsincluded, $$dep) {
-	    foundinclude =
-	    subdirs = clebs $$files(clebs/*)
-	    for(subdir, subdirs) {
-		exists($${subdir}/$${dep}.pri) {
-		    include($${subdir}/$${dep}.pri)
-		    foundinclude = true
-		    break()
-		}
-	    }
-	    isEmpty(foundinclude):error("Build configuration requested for unknown dependency $$dep!")
-	    libsincluded *= $$dep
-	    includedsomething = true
-	}
-	libstoinclude -= $$dep
-	isEmpty(libstoinclude):break()
-    }
-    isEmpty(includedsomething):break()
-    libstoinclude = $$CLEBS
-}
-
-clebsVerbose() {
-    CONFIG(release, debug|release) {
-	message("------------------------------------")
-        message("BUILDING IN RELEASE MODE")
-    }
-    message("------------------------------------")
-}
-
-clebsVerbose() {
-    message("Required dependencies:")
-    message("------------------------------------")
-    for(dep, CLEBS_REQUIRED):clebsPrintAndCheckDependency($$dep)
-    message("------------------------------------")
-    message("Suggested dependencies:")
-    message("------------------------------------")
-    for(dep, CLEBS_SUGGESTED):clebsPrintAndCheckDependency($$dep, ignore)
-    message("------------------------------------")
-}
-
-# Module dependencies ==========================================================
-
-clebsVerbose() {
-    message("Additional features:")
-    message("------------------------------------")
-}
-include(modules.pri)
-clebsVerbose() {
-    message("------------------------------------")
-}
+CLEBS *= $$clebsRecursiveDependencies($$CLEBS)
+for(dep, CLEBS):include($$clebsDependencyFile($$dep))

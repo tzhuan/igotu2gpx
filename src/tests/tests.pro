@@ -1,7 +1,6 @@
-BASEDIR = ../..
-CLEBS *= libigotu boost-po
+CLEBS *= igotu boost-po
 TARGET = tester
-include($$BASEDIR/clebs.pri)
+include(../../clebs.pri)
 
 CONFIG += qtestlib
 
