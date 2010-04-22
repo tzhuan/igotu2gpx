@@ -1,6 +1,6 @@
 # Specify CLEBS if you need libraries or special build settings. Mark optional
 # ones with a leading - (the directory will be compiled without it) and
-# mandatory ones with a leading + (the project will fail completely). 
+# mandatory ones with a leading + (the project will fail completely).
 # Specify CLEBS_INSTALL to add install commands to the make file.
 
 # Some macros ==================================================================
@@ -14,9 +14,9 @@ defineTest(clebsFixupSubdirs) {
     clear(CLEBS_EXTERNALDEPS)
     for(subdir, SUBDIRS) {
         SUBDIRS -= $$subdir
+        subdir ~= s|/$||
         pro = $$basename(subdir)
-        primarydeps = $$fromfile("$$subdir/$${pro}.pro", "CLEBS")
-        deps = $$clebsRecursiveDependencies($$primarydeps)
+        deps = $$fromfile("$$subdir/$${pro}.pro", "CLEBS")
         CLEBS_EXTERNALDEPS *= $$clebsExternalDependencies($$deps)
         libs = $$clebsInternalLibDependencies($$deps)
         missing = $$clebsMissingDependencies($$deps)
@@ -25,7 +25,6 @@ defineTest(clebsFixupSubdirs) {
             next()
         }
         !isEmpty(missing) {
-            message("$$subdir is missing $$missing")
             CLEBS_SUBDIRS += "$${subdir}-"
             next()
         }
@@ -65,24 +64,6 @@ defineReplace(clebsMissingDependencies) {
         !contains(CLEBS_DEPENDENCIES, $$dep):missing *= $$dep
     }
     return($$missing)
-}
-
-# Recursively determines all dependencies of the given dependencies
-defineReplace(clebsRecursiveDependencies) {
-    clear(result)
-    for(ever) {
-        clear(includedsomething)
-        for(dep, 1) {
-            contains(result, $$replace(dep, "^[-+]?", "[-+]?")):next()
-            CLEBS = $$dep
-            include($$clebsDependencyFile($$dep))
-            result *= $$dep
-            1 *= $$CLEBS
-            includedsomething = true
-        }
-        isEmpty(includedsomething):break()
-    }
-    return($$result)
 }
 
 # Looks through the dependencies and returns the one that seem to refer to a lib
@@ -276,13 +257,13 @@ defineTest(clebsPrintSubdir) {
 
 # General settings =============================================================
 
-# base dir as needed by the pri files and localconfig.pri
+# base dir as needed by the .pri files and localconfig.pri
 BASEDIR = $$PWD
 
 isEmpty(LOCALCONFIG):LOCALCONFIG = localconfig.pri
 exists($$LOCALCONFIG):include($$LOCALCONFIG)
 
-# Calculate the relative path to the pro file
+# Calculate the relative path to the .pro file
 pwdparts = $$split(PWD, '/')
 PRORELPATH = $$_PRO_FILE_PWD_
 PRORELPATH ~= s|^/||
@@ -392,5 +373,13 @@ clebsFixupSubdirs()
 
 # Linking against libraries ====================================================
 
-CLEBS *= $$clebsRecursiveDependencies($$CLEBS)
-for(dep, CLEBS):include($$clebsDependencyFile($$dep))
+alldeps = $$CLEBS $$CLEBS_INSTALL
+for(ever) {
+    isEmpty(alldeps):break()
+    dep = $$first(alldeps)
+    alldeps -= $$dep
+    contains(result, $$replace(dep, "^[-+]?", "[-+]?")):next()
+    result += $$dep
+    include($$clebsDependencyFile($$dep))
+    alldeps += $$CLEBS $$CLEBS_INSTALL
+}
