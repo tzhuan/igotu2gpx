@@ -3,7 +3,7 @@ Section: utils
 Priority: extra
 Maintainer: Michael Hofmann <mh21@piware.de>
 Build-Depends: cdbs, debhelper, pkg-config, libqt4-dev, libboost-dev,
- libmarble-dev | libmarble-dev-kde4
+ libusb-1.0-0-dev | libusb-dev, libmarble-dev | libmarble-dev-kde4
 Standards-Version: 3.8.0
 Homepage: http://mh21.de/igotu2gpx/
 
@@ -12,20 +12,7 @@ Section: utils
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends},
  marble-data (>= 4:4.0.0) | marble-data-kde4, openssl, lsb-release
-Recommends: igotu-dkms
 Description: Gives access to the i-gotU GPS trackers
  Gives access to the i-gotU GPS trackers via an USB connection. It is possible
  to see the configuration of the GPS tracker, export tracks and waypoints in
  gpx format and clear the memory of the tracker.
-
-Package: igotu-dkms
-Section: devel
-Architecture: all
-Depends: dkms, make, libc6-dev
-Recommends: igotu-linux
-Description: i-gotU GPS tracker kernel driver (dkms)
- Gives access to the i-gotU GPS trackers via an USB connection. This package
- provides a serial driver to connect to the GPS trackers.
- .
- The dkms package will automatically compile the driver for your current
- kernel version.
