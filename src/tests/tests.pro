@@ -1,4 +1,4 @@
-CLEBS *= igotu boost-po
+CLEBS *= igotu
 TARGET = tester
 include(../../clebs.pri)
 

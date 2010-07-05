@@ -1,5 +1,5 @@
 CLEBS *= +boost pch builddll
-CLEBS_INSTALL *= boost-po libopenssl
+CLEBS_INSTALL *= libopenssl
 TARGET = igotu
 include(../../../clebs.pri)
 
@@ -13,7 +13,8 @@ SOURCES *= \
     igotudata.cpp \
     igotupoints.cpp \
     messages.cpp \
-    optionutils.cpp \
+    optioncontext.cpp \
+    optionparser.cpp \
     paths.cpp \
     pluginloader.cpp \
     utils.cpp \
@@ -31,7 +32,8 @@ HEADERS *= \
     igotudata.h \
     igotupoints.h \
     messages.h \
-    optionutils.h \
+    optioncontext.cpp \
+    optionparser.cpp \
     paths.h \
     pch.h \
     pluginloader.h \

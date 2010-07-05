@@ -83,7 +83,6 @@ cp /Applications/Marble.app/Contents/Resources/data/bitmaps/pole_1.png "$RESOURC
 cp /Applications/Marble.app/Contents/Resources/data/placemarks/b*.cache "$RESOURCES"/marble/placemarks
 cp /Applications/Marble.app/Contents/Resources/data/LICENSE.txt "$RESOURCES"/marble
 
-cp /usr/local/lib/libboost_program_options-xgcc40-mt-1_39.dylib "$FRAMEWORKS"
 cp /usr/local/lib/libusb-1.0.0.dylib "$FRAMEWORKS"
 
 if [ "$1" != "debug" ]; then
@@ -91,7 +90,6 @@ if [ "$1" != "debug" ]; then
 	strip -x "$FRAMEWORKS"/Qt$i.framework/Versions/Current/Qt$i
     done
     strip -x "$FRAMEWORKS"/libigotu.1.dylib
-    strip -x "$FRAMEWORKS"/libboost_program_options-xgcc40-mt-1_39.dylib
     strip -x "$FRAMEWORKS"/libusb-1.0.0.dylib
     strip -x "$MACOS"/"$CMDLINE"
     strip -x "$MACOS"/"$GUI"
@@ -102,7 +100,6 @@ for i in "$FRAMEWORKS"/Qt*.framework/Versions/Current/Qt* "$PLUGINS"/*.dylib "$P
 	install_name_tool -change Qt$j.framework/Versions/4/Qt$j @executable_path/../FrameWorks/Qt$j.framework/Versions/4/Qt$j "$i"
     done
     install_name_tool -change libigotu.1.dylib @executable_path/../FrameWorks/libigotu.1.dylib "$i"
-    install_name_tool -change libboost_program_options-xgcc40-mt-1_39.dylib @executable_path/../FrameWorks/libboost_program_options-xgcc40-mt-1_39.dylib "$i"
     install_name_tool -change /usr/local/lib/libusb-1.0.0.dylib @executable_path/../FrameWorks/libusb-1.0.0.dylib "$i"
     install_name_tool -change @executable_path/lib/libmarblewidget.7.dylib @executable_path/../FrameWorks/libmarblewidget.0.7.1.dylib "$i"
 done

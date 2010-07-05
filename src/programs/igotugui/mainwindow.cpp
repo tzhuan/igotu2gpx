@@ -421,7 +421,7 @@ void MainWindowPrivate::saveTracks
 
         QFile file(filePath);
         if (!file.open(QIODevice::WriteOnly))
-            throw IgotuError(MainWindow::tr("Unable to create file: %1")
+            throw Exception(MainWindow::tr("Unable to create file: %1")
                     .arg(file.errorString()));
 
         QByteArray data;
@@ -432,7 +432,7 @@ void MainWindowPrivate::saveTracks
             data = exporter->save(tracks,
                 control->tracksAsSegments(), control->utcOffset());
         if (file.write(data) != data.length())
-            throw IgotuError(MainWindow::tr("Unable to save file: %1")
+            throw Exception(MainWindow::tr("Unable to save file: %1")
                     .arg(file.errorString()));
     } catch (const std::exception &e) {
         QMessageBox::critical(p, MainWindow::tr("File Error"),

@@ -23,14 +23,13 @@
 #include "igotu/igotucontrol.h"
 #include "igotu/igotupoints.h"
 #include "igotu/messages.h"
-#include "igotu/optionutils.h"
+#include "igotu/optioncontext.h"
 #include "igotu/paths.h"
 #include "igotu/pluginloader.h"
 
 #include "mainobject.h"
 
-#include <boost/program_options.hpp>
-#include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <QFile>
 #include <QFileInfo>
@@ -39,13 +38,8 @@
 #include <QSet>
 #include <QTranslator>
 
-#include <iostream>
-
 using namespace igotu;
 
-namespace po = boost::program_options;
-
-po::variables_map variables;
 QString imagePath, device, format;
 
 // Put translations in the right context
@@ -100,80 +94,85 @@ int main(int argc, char *argv[])
                     exporter->formatDescription()));
 
     QString action;
-    QStringList parameters;
+    QMap<QString, QString> parameters;
+    bool segments = false;
+    bool version = false;
+    int verbose = 0;
     int offset = 0;
 
-    po::options_description options("Options");
-    options.add_options()
-        ("action",
-         po::value<QString>(&action),
-         //: Do not translate the word before the colon
-         MainObject::tr("info: show GPS tracker configuration")
-         .toLocal8Bit() + '\n' +
-         //: Do not translate the word before the colon
-         MainObject::tr("dump: output trackpoints")
-         .toLocal8Bit() + '\n' +
-         //: Do not translate the word before the colon
-         MainObject::tr("config: change the configuration of the GPS tracker")
-         .toLocal8Bit() + '\n' +
-         //: Do not translate the word before the colon
-         MainObject::tr("clear: clear memory of the GPS tracker")
-         .toLocal8Bit() + '\n' +
-         //: Do not translate the word before the colon
-         MainObject::tr("reset: reset the GPS tracker to factory defaults")
-         .toLocal8Bit() + '\n' +
-         //: Do not translate the word before the colon
-         MainObject::tr("diff: show configuration differences relative to an image file")
-         .toLocal8Bit())
-
-        ("device,d",
-         po::value<QString>(&device),
-         MainObject::tr("connect to the specified device "
-             "(usb:<vendor>:<product> (Unix) or serial:<n> "
-             "(Windows))").toLocal8Bit())
-        ("image,i",
-         po::value<QString>(&imagePath),
-         MainObject::tr("read memory contents from file "
-             "(saved by \"dump -f raw\")").toLocal8Bit())
-
-        ("set,s",
-         po::value<QStringList>(&parameters),
-         MainObject::tr("change the configuration:").toLocal8Bit() + '\n'
-         + parameterList(IgotuControl::configureParameters()).toLocal8Bit())
-
-        ("format,f",
-         po::value<QString>(&format),
-         MainObject::tr("use the specified output format:").toLocal8Bit() + '\n'
-         + parameterList(exporterMap).toLocal8Bit())
-
-        ("segments",
-         MainObject::tr("group trackpoints into segments instead of tracks")
-         .toLocal8Bit())
-        ("utc-offset",
-         po::value<int>(&offset),
-         MainObject::tr("time zone offset in seconds")
-         .toLocal8Bit())
-
-        ("help",
-         Common::tr("output this help and exit").toLocal8Bit())
-        ("version",
-         Common::tr("output version information and exit").toLocal8Bit())
-        ("verbose,v",
-         Common::tr("increase verbosity").toLocal8Bit())
-        ("really-verbose",
-         Common::tr("very high verbosity").toLocal8Bit())
-    ;
-    po::positional_options_description positionalOptions;
-    positionalOptions.add("action", 1);
-    positionalOptions.add("set", -1);
+    OptionContext context(app.arguments(),
+            MainObject::tr("info|dump|config|clear|reset|diff [OPTION...]"),
+            OptionGroup(QString(), Common::tr("Program Options"), QString(),
+                QString(), QList<OptionEntry>()
+             << OptionEntry(QLatin1String("action"), 0, 0,
+                 OptionEntry::RequiredArgument, &action,
+                 //: Do not translate the word before the colon
+                 MainObject::tr("info: show GPS tracker configuration")
+                 + QLatin1Char('\n') +
+                 //: Do not translate the word before the colon
+                 MainObject::tr("dump: output trackpoints")
+                 + QLatin1Char('\n') +
+                 //: Do not translate the word before the colon
+                 MainObject::tr("config: change the configuration of the GPS tracker")
+                 + QLatin1Char('\n') +
+                 //: Do not translate the word before the colon
+                 MainObject::tr("clear: clear memory of the GPS tracker")
+                 + QLatin1Char('\n') +
+                 //: Do not translate the word before the colon
+                 MainObject::tr("reset: reset the GPS tracker to factory defaults")
+                 + QLatin1Char('\n') +
+                 //: Do not translate the word before the colon
+                 MainObject::tr("diff: show configuration differences relative to an image file"),
+                 MainObject::tr("ACTION"))
+             << OptionEntry(QLatin1String("device"), QLatin1Char('d'), 0,
+                 OptionEntry::RequiredArgument, &device,
+                 MainObject::tr("connect to the specified device "
+                     "(usb:<vendor>:<product> (Unix) or serial:<n> "
+                     "(Windows))"),
+                 MainObject::tr("DEVICE"))
+             << OptionEntry(QLatin1String("image"), QLatin1Char('i'), 0,
+                 OptionEntry::RequiredArgument, &imagePath,
+                 MainObject::tr("read memory contents from file "
+                     "(saved by \"dump -f raw\")"),
+                 MainObject::tr("FILE"))
+             << OptionEntry(QLatin1String("set"), QLatin1Char('s'), 0,
+                 OptionEntry::RequiredArgument, mapOptionValue(&parameters),
+                 MainObject::tr("change the configuration:") + QLatin1Char('\n')
+                 + parameterList(IgotuControl::configureParameters()),
+                 MainObject::tr("PARAM=VALUE"))
+             << OptionEntry(QLatin1String("format"), QLatin1Char('f'), 0,
+                 OptionEntry::RequiredArgument, &format,
+                 MainObject::tr("use the specified output format:") + QLatin1Char('\n')
+                 + parameterList(exporterMap),
+                 MainObject::tr("FORMAT"))
+             << OptionEntry(QLatin1String("segments"), 0, 0,
+                 OptionEntry::NoArgument, &segments,
+                 MainObject::tr("group trackpoints into segments instead of tracks"))
+             << OptionEntry(QLatin1String("utc-offset"), 0, 0,
+                 OptionEntry::RequiredArgument, &offset,
+                 MainObject::tr("time zone offset in seconds"),
+                 MainObject::tr("SECONDS"))
+            << OptionEntry(QLatin1String("version"), 0, 0,
+                 OptionEntry::NoArgument, &version,
+                 Common::tr("output version information and exit"))
+            << OptionEntry(QLatin1String("verbose"), 0, 0,
+                 OptionEntry::NoArgument, incrementOptionValue(&verbose),
+                 Common::tr("increase verbosity"))));
 
     try {
-        po::store(po::command_line_parser(arguments())
-                .options(options)
-                .positional(positionalOptions).run(), variables);
-        po::notify(variables);
+        QStringList additionalParams = context.parse();
 
-        if (variables.count("version")) {
+        for (unsigned i = 0; i < unsigned(additionalParams.size()); ++i) {
+            switch (i) {
+            case 0:
+                action = additionalParams[i];
+                break;
+            default:
+                mapOptionValue(&parameters).setValue(additionalParams[i]);
+            }
+        }
+
+        if (version) {
             Messages::textOutput(Common::tr(
                     "<h3>Igotu2gpx %1</h3><br/>"
                     "Downloads tracks and waypoints from MobileAction i-gotU USB GPS travel loggers.<br/><br/>"
@@ -186,15 +185,8 @@ int main(int argc, char *argv[])
                     .arg(QLatin1String(IGOTU_VERSION_STR)));
             return 0;
         }
-        if (variables.count("help") || action.isEmpty()) {
-            Messages::textOutput(Common::tr("Usage: %1")
-                    //: Do not translate the actions (info|dump|clear|diff)
-                    .arg(MainObject::tr("%1 info|dump|config|clear|reset|diff [OPTIONS...]")
-                        .arg(QFileInfo(app.applicationFilePath()).fileName())));
-            Messages::normalMessage(QString());
-            std::cout << options << "\n";
-            return 1;
-        }
+        if (action.isEmpty())
+            context.printShortHelp();
     } catch (const std::exception &e) {
         Messages::errorMessage(Common::tr("Unable to parse command line parameters: %1")
                     .arg(QString::fromLocal8Bit(e.what())));
@@ -205,25 +197,25 @@ int main(int argc, char *argv[])
         if (!imagePath.isEmpty() && (action != QLatin1String("diff"))) {
             QFile file(imagePath);
             if (!file.open(QIODevice::ReadOnly))
-                throw IgotuError(MainObject::tr
+                throw Exception(MainObject::tr
                         ("Unable to read file '%1'").arg(imagePath));
             QByteArray contents = file.readAll();
             device = QLatin1String("image:") +
                 QString::fromAscii(contents.toBase64());
         }
 
-        Messages::setVerbose(2 * variables.count("really-verbose") + variables.count("verbose"));
+        Messages::setVerbose(verbose);
 
-        MainObject mainObject(device, variables.count("segments"), offset);
+        MainObject mainObject(device, segments, offset);
 
         if (action == QLatin1String("info")) {
             mainObject.info();
         } else if (action == QLatin1String("diff")) {
             if (imagePath.isEmpty())
-                throw IgotuError(MainObject::tr("Diff action requires --image"));
+                throw Exception(MainObject::tr("Diff action requires --image"));
             QFile file(imagePath);
             if (!file.open(QIODevice::ReadOnly))
-                throw IgotuError(MainObject::tr("Unable to read file '%1'")
+                throw Exception(MainObject::tr("Unable to read file '%1'")
                         .arg(imagePath));
             mainObject.info(file.readAll().left(0x1000));
         } else if (action == QLatin1String("dump")) {
@@ -240,7 +232,7 @@ int main(int argc, char *argv[])
                             part.section(QLatin1Char('='), 1));
             mainObject.configure(configParams);
         } else {
-            throw IgotuError(MainObject::tr("Unknown action: %1")
+            throw Exception(MainObject::tr("Unknown action: %1")
                     .arg(action));
         }
         return app.exec();

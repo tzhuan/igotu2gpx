@@ -3,6 +3,15 @@
 # mandatory ones with a leading + (the project will fail completely).
 # Specify CLEBS_INSTALL to add install commands to the make file.
 
+# clebs/
+#   external: external libraries/programs, you can define whether configuration
+#             fails or a depending subdirectory is omitted from the build with
+#             -/+ as described above.
+#   internal: internal libraries, the .pri file needs to have the same name as
+#             the subdirectory in contrib or src/lib the contains the
+#             corresponding library.
+#   build:    special build settings (dll, plugin, pch, etc.)
+
 # Some macros ==================================================================
 
 # clebsFixupSubdirs(): Configures directories of the project (dependencies,
@@ -17,26 +26,25 @@ defineTest(clebsFixupSubdirs) {
         subdir ~= s|/$||
         pro = $$basename(subdir)
         deps = $$fromfile("$$subdir/$${pro}.pro", "CLEBS")
-        CLEBS_EXTERNALDEPS *= $$clebsExternalDependencies($$deps)
         libs = $$clebsInternalLibDependencies($$deps)
-        missing = $$clebsMissingDependencies($$deps)
+        external = $$clebsExternalDependencies($$deps)
+        missingexternal = $$clebsMissingDependencies($$external)
+        CLEBS_EXTERNALDEPS *= $$external
         contains(CLEBS_DISABLED, $$subdir) {
             CLEBS_SUBDIRS += "$${subdir}_"
             next()
         }
-        !isEmpty(missing) {
+        !isEmpty(missingexternal) {
             CLEBS_SUBDIRS += "$${subdir}-"
             next()
         }
-        isEmpty(missing) {
-            CLEBS_SUBDIRS += "$${subdir}"
-            name = $$replace(subdir, [/\\\\], _)
-            eval($${name}.subdir = $$subdir)
-            export($${name}.subdir)
-            for(dep, libs):eval($${name}.depends *= $$replace(dep, [/\\\\], _))
-            export($${name}.depends)
-            SUBDIRS *= $$name
-        }
+        CLEBS_SUBDIRS += "$${subdir}"
+        name = $$replace(subdir, [/\\\\], _)
+        eval($${name}.subdir = $$subdir)
+        export($${name}.subdir)
+        for(dep, libs):eval($${name}.depends *= $$replace(dep, [/\\\\], _))
+        export($${name}.depends)
+        SUBDIRS *= $$name
     }
     CLEBS_SUBDIRS = $$clebsSort($$CLEBS_SUBDIRS)
     export(SUBDIRS)
@@ -49,7 +57,11 @@ defineReplace(clebsDependencyFile) {
     1 ~= s|^[-+]||
     subdirs = clebs $$files(clebs/*)
     for(subdir, subdirs):exists($${subdir}/$${1}.pri):return($${subdir}/$${1}.pri)
-    error("Build configuration requested for unknown dependency $$1!")
+    # only error out if the error occured in the top-level pro file (not included)
+    profile = $$_PRO_FILE_
+    !isEmpty(profile):error("Build configuration requested for unknown dependency $$1!")
+    # fail gracefully
+    return ""
 }
 
 # Tries to temporarily include the specified dependency include files and
@@ -60,7 +72,8 @@ defineReplace(clebsMissingDependencies) {
         contains(dep, "^[-].*"):next()
         dep ~= s|^[-+]||
         CLEBS = $$dep
-        include($$clebsDependencyFile($$dep))
+        file = $$clebsDependencyFile($$dep)
+        !isEmpty(file):include($$file)
         !contains(CLEBS_DEPENDENCIES, $$dep):missing *= $$dep
     }
     return($$missing)
@@ -264,9 +277,10 @@ isEmpty(LOCALCONFIG):LOCALCONFIG = localconfig.pri
 exists($$LOCALCONFIG):include($$LOCALCONFIG)
 
 # Calculate the relative path to the .pro file
-pwdparts = $$split(PWD, '/')
-PRORELPATH = $$_PRO_FILE_PWD_
+profile = $$_PRO_FILE_ # do not remove, _PRO_FILE_ needs to be copied
+!isEmpty(profile):PRORELPATH = $$_PRO_FILE_PWD_
 PRORELPATH ~= s|^/||
+pwdparts = $$split(PWD, '/')
 for(part, pwdparts):PRORELPATH = $$section(PRORELPATH, '/', 1)
 
 # Calculate the package name
@@ -380,6 +394,7 @@ for(ever) {
     alldeps -= $$dep
     contains(result, $$replace(dep, "^[-+]?", "[-+]?")):next()
     result += $$dep
-    include($$clebsDependencyFile($$dep))
+    file = $$clebsDependencyFile($$dep)
+    !isEmpty(file):include($$file)
     alldeps += $$CLEBS $$CLEBS_INSTALL
 }

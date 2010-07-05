@@ -89,7 +89,7 @@ unsigned IgotuCommandPrivate::sendCommand(const QByteArray &data)
         connection->send(command.mid(i * 8, 8));
         responseSize = receiveResponseSize();
         if (responseSize < 0)
-            throw IgotuDeviceError(IgotuCommand::tr("Device responded with "
+            throw DeviceException(IgotuCommand::tr("Device responded with "
                         "error code: %1").arg(responseSize));
         if (responseSize != 0 && i + 1 < pieces)
             throw IgotuProtocolError(IgotuCommand::tr
@@ -187,7 +187,7 @@ QByteArray IgotuCommand::sendAndReceive()
                     continue;
                 }
                 throw;
-            } catch (const IgotuDeviceError &e) {
+            } catch (const DeviceException &e) {
                 // Device error codes mean we can try again
                 ++deviceErrors;
                 if (deviceErrors <= 3) {

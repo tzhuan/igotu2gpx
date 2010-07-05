@@ -138,7 +138,7 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId,
 
     libusb_context *contextPtr;
     if (int result = libusb_init(&contextPtr))
-        throw IgotuError(tr("Unable to initialize libusb: %1")
+        throw Exception(tr("Unable to initialize libusb: %1")
                 .arg(usbErrorMessage(result)));
     context.reset(contextPtr, libusb_exit);
 
@@ -155,7 +155,7 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId,
     if (devs.isEmpty())
         devs = find_devices(vendorId, 0);
     if (devs.isEmpty())
-        throw IgotuError(Common::tr("Unable to find device '%1'")
+        throw Exception(Common::tr("Unable to find device '%1'")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
 
     Q_FOREACH (const Device &dev, devs) {
@@ -167,7 +167,7 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId,
     }
 
     if (!handle)
-        throw IgotuError(Common::tr("Unable to open device '%1'")
+        throw Exception(Common::tr("Unable to open device '%1'")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
 
     if (libusb_kernel_driver_active(handle.get(), 0) == 1) {
@@ -175,7 +175,7 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId,
                 ("Interface 0 already claimed by kernel driver, detaching"));
 
         if (int result = libusb_detach_kernel_driver(handle.get(), 0))
-            throw IgotuError(Common::tr
+            throw Exception(Common::tr
                     ("Unable to detach kernel driver from device '%1': %2")
                     .arg(QString().sprintf("%04x:%04x", vendorId, productId))
                     .arg(usbErrorMessage(result)));
@@ -183,7 +183,7 @@ Libusb10Connection::Libusb10Connection(unsigned vendorId, unsigned productId,
     }
 
     if (int result = libusb_claim_interface(handle.get(), 0))
-        throw IgotuError(Common::tr("Unable to claim interface 0 on device '%1': %2")
+        throw Exception(Common::tr("Unable to claim interface 0 on device '%1': %2")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId))
                 .arg(usbErrorMessage(result)));
 }
@@ -203,7 +203,7 @@ Libusb10Connection::DeviceList Libusb10Connection::find_devices
     libusb_device **list;
     ssize_t count = libusb_get_device_list(context.get(), &list);
     if (count < 0)
-        throw IgotuError(Libusb10Connection::tr
+        throw Exception(Libusb10Connection::tr
                 ("Unable to enumerate usb devices: %1").arg(count));
 
     for (ssize_t i = 0; i < count; ++i) {
@@ -233,10 +233,10 @@ void Libusb10Connection::send(const QByteArray &query)
             0x0000, (unsigned char*)(query.data()), query.size(), 1000);
 
     if (result < 0)
-        throw IgotuError(Common::tr("Unable to send data to device: %1")
+        throw Exception(Common::tr("Unable to send data to device: %1")
                 .arg(usbErrorMessage(result)));
     if (result != query.size())
-        throw IgotuError(Common::tr("Unable to send data to device: %1")
+        throw Exception(Common::tr("Unable to send data to device: %1")
                 .arg(Common::tr("Only %1/%2 bytes could be sent"))
                 .arg(usbErrorMessage(result))
                 .arg(query.size()));
@@ -274,7 +274,7 @@ QByteArray Libusb10Connection::receive(unsigned expected)
         completed = 0;
         int result = libusb_submit_transfer(transfer.get());
         if (result < 0)
-            throw IgotuError(Common::tr("Unable to read data from device: %1")
+            throw Exception(Common::tr("Unable to read data from device: %1")
                     .arg(usbErrorMessage(result)));
 
 #ifdef IGOTU2GPX_USB_MANUALCANCEL
@@ -299,7 +299,7 @@ QByteArray Libusb10Connection::receive(unsigned expected)
                     if (libusb_handle_events(context.get()) < 0)
                         break;
                 if (!manualCancel)
-                    throw IgotuError(Common::tr("Unable to read data from device: %1")
+                    throw Exception(Common::tr("Unable to read data from device: %1")
                             .arg(usbErrorMessage(result)));
             }
         }

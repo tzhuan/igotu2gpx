@@ -1,4 +1,4 @@
-CLEBS *= igotu boost-po
+CLEBS *= igotu
 TARGET = igotugui
 include(../../../clebs.pri)
 

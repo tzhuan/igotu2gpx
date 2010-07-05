@@ -18,13 +18,13 @@
 
 #include "igotu/commonmessages.h"
 #include "igotu/messages.h"
-#include "igotu/optionutils.h"
+#include "igotu/optioncontext.h"
 #include "igotu/paths.h"
 
 #include "iconstorage.h"
 #include "mainwindow.h"
 
-#include <boost/program_options.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <QApplication>
 #include <QFileInfo>
@@ -32,11 +32,7 @@
 #include <QLocale>
 #include <QTranslator>
 
-#include <iostream>
-
 using namespace igotu;
-
-namespace po = boost::program_options;
 
 // Put translations in the right context
 //
@@ -71,30 +67,24 @@ int main(int argc, char *argv[])
         app.installTranslator(translator.get());
     }
 
-    // Command line parsing (uses C++ output)
+    bool version = false;
+    int verbose = 0;
 
-    po::variables_map variables;
-
-    po::options_description options("Options");
-    options.add_options()
-        ("help",
-         Common::tr("output this help and exit").toLocal8Bit())
-        ("version",
-         Common::tr("output version information and exit").toLocal8Bit())
-
-        ("verbose,v",
-         Common::tr("increase verbosity")
-         .toLocal8Bit())
-        ("really-verbose",
-         Common::tr("very high verbosity").toLocal8Bit())
-    ;
+    OptionContext context(app.arguments(),
+            MainWindow::tr("[OPTION...]"),
+            OptionGroup(QString(), Common::tr("Program Options"), QString(),
+                QString(), QList<OptionEntry>()
+            << OptionEntry(QLatin1String("version"), 0, 0,
+                 OptionEntry::NoArgument, &version,
+                 Common::tr("output version information and exit"))
+            << OptionEntry(QLatin1String("verbose"), 0, 0,
+                 OptionEntry::NoArgument, incrementOptionValue(&verbose),
+                 Common::tr("increase verbosity"))));
 
     try {
-        po::store(po::command_line_parser(arguments())
-                .options(options).run(), variables);
-        po::notify(variables);
+        QStringList additionalParams = context.parse();
 
-        if (variables.count("version")) {
+        if (version) {
             Messages::textOutput(Common::tr(
                     "<h3>Igotu2gpx %1</h3><br/>"
                     "Downloads tracks and waypoints from MobileAction i-gotU USB GPS travel loggers.<br/><br/>"
@@ -107,20 +97,13 @@ int main(int argc, char *argv[])
                     .arg(QLatin1String(IGOTU_VERSION_STR)));
             return 0;
         }
-        if (variables.count("help")) {
-            Messages::textOutput(Common::tr("Usage: %1")
-                    .arg(MainWindow::tr("%1 [OPTIONS...]")
-                        .arg(QFileInfo(app.applicationFilePath()).fileName())));
-            std::cout << options << "\n";
-            return 1;
-        }
     } catch (const std::exception &e) {
         Messages::errorMessage(Common::tr("Unable to parse command line parameters: %1")
                     .arg(QString::fromLocal8Bit(e.what())));
         return 2;
     }
 
-    Messages::setVerbose(2 * variables.count("really-verbose") + variables.count("verbose"));
+    Messages::setVerbose(verbose);
 
     MainWindow mainWindow;
     mainWindow.show();

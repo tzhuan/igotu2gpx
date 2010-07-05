@@ -17,20 +17,12 @@
 #CLEBS_DISABLED *= src/connections/libusb10connection
 
 #unix:BOOSTINCLUDEDIR = /usr/include
-#unix:BOOSTPOLIB = boost_program_options-mt
 
 #macx:BOOSTROOT = /usr/local
 #macx:BOOSTINCLUDEDIR = $${BOOSTROOT}/include/boost-1_38
-#macx:BOOSTLIBDIR = $${BOOSTROOT}/lib
-#macx:BOOSTPOLIB = boost_program_options-xgcc40-mt
 
 #win32:BOOSTROOT = $$BASEDIR/../api/boost
 #win32:BOOSTINCLUDEDIR = $${BOOSTROOT}/include/boost-1_33_1
-#win32:BOOSTLIBDIR = $${BOOSTROOT}/lib
-#win32:BOOSTLIBDIR_RELEASE = $${BOOSTLIBDIR}
-#win32:BOOSTLIBDIR_DEBUG = $${BOOSTLIBDIR}
-#win32:BOOSTPOLIB_RELEASE = boost_program_options-vc71-mt-1_33_1
-#win32:BOOSTPOLIB_DEBUG = boost_program_options-vc71-mt-gd-1_33_1
 
 #win32:OPENSSLROOT = $$BASEDIR/../api/openssl
 #win32:OPENSSLLIBDIR = $${OPENSSLROOT}

@@ -34,7 +34,7 @@ namespace igotu
 /** Exception that provides a simple error message. All derived classes must be
  * marked with IGOTU_EXPORT, otherwise exceptions will just terminate()!
  */
-class IGOTU_EXPORT IgotuError: public std::exception
+class IGOTU_EXPORT Exception: public std::exception
 {
 public:
     /** Creates a new instance with the given error message. Please use a
@@ -47,13 +47,13 @@ public:
      *
      * @see what()
      */
-    IgotuError(const QString &message) throw() :
+    Exception(const QString &message) throw() :
         message(message.toLocal8Bit())
     {
     }
 
     /** Virtual destructor to make the compiler happy. */
-    virtual ~IgotuError() throw()
+    virtual ~Exception() throw()
     {
     }
 
@@ -73,11 +73,11 @@ private:
 /** Exception for igotu protocol errors. These are errors where the device
  * response does not conform to its own protocol.
  */
-class IGOTU_EXPORT IgotuProtocolError: public IgotuError
+class IGOTU_EXPORT IgotuProtocolError: public Exception
 {
 public:
     IgotuProtocolError(const QString &message) throw() :
-        IgotuError(message)
+        Exception(message)
     {
     }
 };
@@ -85,11 +85,11 @@ public:
 /** Exception for igotu device errors. These are errors where the device
  * response correctly, but with an error code.
  */
-class IGOTU_EXPORT IgotuDeviceError: public IgotuError
+class IGOTU_EXPORT DeviceException: public Exception
 {
 public:
-    IgotuDeviceError(const QString &message) throw() :
-        IgotuError(message)
+    DeviceException(const QString &message) throw() :
+        Exception(message)
     {
     }
 };

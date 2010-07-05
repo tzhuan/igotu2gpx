@@ -1,4 +1,4 @@
-CLEBS *= igotu +boost-po
+CLEBS *= igotu
 TARGET = igotu2gpx
 include(../../../clebs.pri)
 

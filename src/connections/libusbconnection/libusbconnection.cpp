@@ -103,7 +103,7 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId,
     if (devs.isEmpty())
         devs = find_devices(vendorId, 0);
     if (devs.isEmpty())
-        throw IgotuError(Common::tr("Unable to find device '%1'")
+        throw Exception(Common::tr("Unable to find device '%1'")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
 
     Q_FOREACH (struct usb_device *dev, devs) {
@@ -113,7 +113,7 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId,
     }
 
     if (!handle)
-        throw IgotuError(Common::tr("Unable to open device '%1'")
+        throw Exception(Common::tr("Unable to open device '%1'")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId)));
 
 #ifdef Q_OS_LINUX
@@ -123,7 +123,7 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId,
                 ("Interface 0 already claimed by kernel driver, detaching"));
 
         if (int result = usb_detach_kernel_driver_np(handle.get(), 0))
-            throw IgotuError(Common::tr
+            throw Exception(Common::tr
                     ("Unable to detach kernel driver from device '%1': %2")
                     .arg(QString().sprintf("%04x:%04x", vendorId, productId))
                     .arg(QString::fromLocal8Bit(strerror(-result))));
@@ -131,7 +131,7 @@ LibusbConnection::LibusbConnection(unsigned vendorId, unsigned productId,
 #endif
 
     if (int result = usb_claim_interface(handle.get(), 0))
-        throw IgotuError(Common::tr("Unable to claim interface 0 on device '%1': %2")
+        throw Exception(Common::tr("Unable to claim interface 0 on device '%1': %2")
                 .arg(QString().sprintf("%04x:%04x", vendorId, productId))
                 .arg(QString::fromLocal8Bit(strerror(-result))));
 }
@@ -168,10 +168,10 @@ void LibusbConnection::send(const QByteArray &query)
             const_cast<char*>(query.data()), query.size(), 1000);
 
     if (result < 0)
-        throw IgotuError(Common::tr("Unable to send data to device: %1")
+        throw Exception(Common::tr("Unable to send data to device: %1")
                 .arg(QString::fromLocal8Bit(strerror(-result))));
     if (result != query.size())
-        throw IgotuError(Common::tr("Unable to send data to device: %1")
+        throw Exception(Common::tr("Unable to send data to device: %1")
                 .arg(Common::tr("Only %1/%2 bytes could be sent"))
                 .arg(result).arg(query.size()));
 }
@@ -192,7 +192,7 @@ QByteArray LibusbConnection::receive(unsigned expected)
         int result = usb_interrupt_read(handle.get(), 0x81, data.data(), 0x10,
                 timeOut);
         if (result < 0)
-            throw IgotuError(Common::tr("Unable to read data from device: %1")
+            throw Exception(Common::tr("Unable to read data from device: %1")
                 .arg(QString::fromLocal8Bit(strerror(-result))));
         if (result == 0)
             ++emptyCount;

@@ -206,7 +206,7 @@ void IgotuControlPrivateWorker::connect()
             break;
         }
         if (!connection)
-            throw IgotuError(IgotuControl::tr("Unable to connect via '%1'")
+            throw Exception(IgotuControl::tr("Unable to connect via '%1'")
                     .arg(p->device));
     }
 }
@@ -248,7 +248,7 @@ void IgotuControlPrivateWorker::waitForWrite()
                 .sendAndReceive() == QByteArray(1, '\x00'))
             break;
         if (retries == 1)
-            throw IgotuError(IgotuControl::tr("Command timeout"));
+            throw Exception(IgotuControl::tr("Command timeout"));
     }
 }
 
@@ -294,7 +294,7 @@ bool IgotuControlPrivateWorker::info(QString *infoText, QByteArray *configDump)
 
         IgotuConfig igotuPoints(contents);
         if (!igotuPoints.isValid())
-            throw IgotuError(IgotuControl::tr("Uninitialized GPS tracker"));
+            throw Exception(IgotuControl::tr("Uninitialized GPS tracker"));
 
         status += IgotuControl::tr("Schedule date: %1")
             .arg(QLocale::system().toString(igotuPoints.firstScheduleDate() ,
@@ -432,7 +432,7 @@ bool IgotuControlPrivateWorker::contents(QByteArray *memoryDump, unsigned *block
             for (unsigned i = 0; i < blocks; ++i) {
                 emit commandRunning(i, blocks);
                 if (p->cancelRequested())
-                    throw IgotuError(IgotuControl::tr("Cancelled"));
+                    throw Exception(IgotuControl::tr("Cancelled"));
                 data += ReadCommand(connection.get(), i * 0x1000,
                         0x1000).sendAndReceive();
             }
@@ -440,7 +440,7 @@ bool IgotuControlPrivateWorker::contents(QByteArray *memoryDump, unsigned *block
         } else {
             data = image;
             if (data.size() < 0x1000)
-                throw IgotuError(IgotuControl::tr("Invalid data"));
+                throw Exception(IgotuControl::tr("Invalid data"));
             count = (data.size() - 0x1000) / 0x20;
         }
 
@@ -469,7 +469,7 @@ bool IgotuControlPrivateWorker::purge()
         connect();
 
         if (!connection)
-            throw IgotuError(IgotuControl::tr("No device specified"));
+            throw Exception(IgotuControl::tr("No device specified"));
 
         IdentificationCommand id(connection.get());
         id.sendAndReceive();
@@ -490,7 +490,7 @@ bool IgotuControlPrivateWorker::purge()
             blocks = 0x100;
             break;
         default:
-            throw IgotuError(IgotuControl::tr
+            throw Exception(IgotuControl::tr
                     ("%1: Unable to clear memory of this GPS tracker model. "
                      "Instructions how to help with this can be found at "
                      "https://answers.launchpad.net/igotu2gpx/+faq/480.")
@@ -502,7 +502,7 @@ bool IgotuControlPrivateWorker::purge()
             for (unsigned i = blocks - 1; i > 0; --i) {
                 emit commandRunning(blocks - i - 1, blocks);
                 if (p->cancelRequested())
-                    throw IgotuError(IgotuControl::tr("Cancelled"));
+                    throw Exception(IgotuControl::tr("Cancelled"));
                 if (purgeBlocks) {
                     waitForWrite();
                 } else {
@@ -529,7 +529,7 @@ bool IgotuControlPrivateWorker::purge()
             for (unsigned i = blocks - 1; i > 0; --i) {
                 emit commandRunning(blocks - i - 1, blocks);
                 if (p->cancelRequested())
-                    throw IgotuError(IgotuControl::tr("Cancelled"));
+                    throw Exception(IgotuControl::tr("Cancelled"));
                 if (purgeBlocks) {
                     waitForWrite();
                 } else {
@@ -588,7 +588,7 @@ bool IgotuControlPrivateWorker::write(const IgotuConfig &config)
             for (unsigned i = 0; i < blocks; ++i) {
                 emit commandRunning(i, blocks + 1);
                 if (p->cancelRequested())
-                    throw IgotuError(IgotuControl::tr("Cancelled"));
+                    throw Exception(IgotuControl::tr("Cancelled"));
                 UnknownWriteCommand1(connection.get(), 0x00).sendAndReceive();
                 WriteCommand(connection.get(), 0x02, i * 0x0100,
                         configData.mid(i * 0x0100, 0x100)).sendAndReceive();
