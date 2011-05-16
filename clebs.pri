@@ -209,7 +209,7 @@ defineTest(clebsPrintDependencies) {
             missing = $$clebsMissingDependencies($$dep)
             isEmpty(missing):found = "yes"
             temp = "Looking for $$dep ________________"
-            temp ~= s/(.{31}).*/\1: $$found/
+            temp ~= s/(.{31}).*/\\1: $$found/
             temp ~= s/_/ /
             message($$temp)
         }
@@ -260,9 +260,9 @@ defineTest(clebsPrintSubdir) {
     build = $$2
     temp = "$$dir ____________________________"
     isEmpty(build) {
-        temp ~= s/(.{31}).*/\1/
+        temp ~= s/(.{31}).*/\\1/
     } else {
-        temp ~= s/(.{31}).*/\1: $$build/
+        temp ~= s/(.{31}).*/\\1: $$build/
     }
     temp ~= s/_/ /
     message($$temp)
@@ -322,6 +322,7 @@ unix {
     isEmpty(ICONDIR):ICONDIR = $$PREFIXDIR/share/icons/hicolor
     isEmpty(BINDIR):BINDIR = $$PREFIXDIR/bin
     isEmpty(LIBDIR):LIBDIR = $$PREFIXDIR/lib
+    isEmpty(INCLUDEDIR):INCLUDEDIR = $$PREFIXDIR/include/$$PACKAGE
     isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIXDIR/lib/$$PACKAGE
 }
 win32 {
@@ -370,6 +371,10 @@ win32 {
 
     # STL iterators and fopen are unsafe, we know that
     DEFINES *= _SCL_SECURE_NO_WARNINGS _CRT_SECURE_NO_WARNINGS
+
+    # we want debugging symbol files (for visual studio)
+    !win32-g++: QMAKE_CXXFLAGS += /Zi
+    !win32-g++: QMAKE_LFLAGS += /INCREMENTAL:NO /DEBUG /OPT:REF /OPT:ICF
 }
 
 # Fixup subdir compile order and dependencies. check dependencies  =============
@@ -385,6 +390,10 @@ clebsFixupSubdirs()
     clebsCheckDependencies($$clebsMandatoryDependencies($$CLEBS_EXTERNALDEPS))
     clebsPrintSubdirs($$CLEBS_SUBDIRS)
     message("------------------------------------")
+    CONFIG(release, debug|release) {
+        message("BUILDING IN RELEASE MODE")
+        message("------------------------------------")
+    }
 }
 
 # Linking against libraries ====================================================
