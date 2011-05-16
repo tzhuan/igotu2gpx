@@ -318,6 +318,7 @@ unix {
     isEmpty(DATADIR):DATADIR = $$PREFIXDIR/share/$$PACKAGE
     isEmpty(DOCDIR):DOCDIR = $$PREFIXDIR/share/doc/$$PACKAGE
     isEmpty(APPDIR):APPDIR = $$PREFIXDIR/share/applications
+    isEmpty(MANDIR):MANDIR = $$PREFIXDIR/share/man
     isEmpty(ICONDIR):ICONDIR = $$PREFIXDIR/share/icons/hicolor
     isEmpty(BINDIR):BINDIR = $$PREFIXDIR/bin
     isEmpty(LIBDIR):LIBDIR = $$PREFIXDIR/lib
@@ -328,6 +329,7 @@ win32 {
     isEmpty(CONFDIR):CONFDIR = $$PREFIXDIR/etc
     isEmpty(DATADIR):DATADIR = $$PREFIXDIR/share
     isEmpty(DOCDIR):DOCDIR = $$PREFIXDIR/doc
+    isEmpty(MANDIR):MANDIR = $$PREFIXDIR/share
     isEmpty(ICONDIR):ICONDIR = $$PREFIXDIR/icons
     isEmpty(BINDIR):BINDIR = $$PREFIXDIR/bin
     isEmpty(LIBDIR):LIBDIR = $$PREFIXDIR/bin
