@@ -21,7 +21,7 @@ docs.files = LICENSE HACKING
 docs.path = $$DOCDIR
 INSTALLS *= docs
 
-todo.commands = @grep -Rn '\'TODO\|FIXME\|XXX\|\\todo\'' src/*/*.pro src/*/*.h src/*/*.cpp tools/*
+todo.commands = @grep -Rn "'TODO\\|FIXME\\|XXX\\|\\\\todo'" src/*/*.pro src/*/*.h src/*/*.cpp tools/*
 QMAKE_EXTRA_TARGETS *= todo
 
 test.commands = @echo [tester] Entering dir "\\'src/tests\\'" && $$DESTDIR/tester -silent
