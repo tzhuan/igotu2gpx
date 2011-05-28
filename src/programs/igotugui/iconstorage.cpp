@@ -19,7 +19,6 @@
 #include "igotu/paths.h"
 
 #include "iconstorage.h"
-#include "qticonloader.h"
 
 #include <QDir>
 #include <QFile>
@@ -55,7 +54,7 @@ QIcon IconStoragePrivate::get(IconStorage::IconName name)
 
     const QString freeDesktopBaseName = fileName(name).replace
         (QRegExp(QLatin1String(".*//")), QString());
-    if (!(cache[name] = QtIconLoader::icon(freeDesktopBaseName)).isNull())
+    if (!(cache[name] = QIcon::fromTheme(freeDesktopBaseName)).isNull())
         return cache.value(name);
 
     const QString rbaBaseName = fileName(name).replace

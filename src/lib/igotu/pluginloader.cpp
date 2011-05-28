@@ -18,12 +18,12 @@
 
 #include "paths.h"
 #include "pluginloader.h"
-#include "threadutils.h"
 
 #include <QDir>
 #include <QMap>
 #include <QMutex>
 #include <QPluginLoader>
+#include <QThread>
 
 namespace igotu
 {
@@ -39,7 +39,8 @@ public:
     QString pluginPath(const QObject *object);
     QMap<QString, QString> pluginsWithErrors();
 
-    void reloadPlugins();
+    void loadRemainingPlugins();
+    void reloadAllPlugins();
 
 Q_SIGNALS:
     void pluginsLoaded();
@@ -79,7 +80,7 @@ public:
     PluginLoaderPrivate();
     ~PluginLoaderPrivate();
 
-    EventThread thread;
+    QThread thread;
     PluginLoaderWorker worker;
 };
 
@@ -132,12 +133,17 @@ QMap<QString, QString> PluginLoaderWorker::pluginsWithErrors()
     return errors;
 }
 
-void PluginLoaderWorker::reloadPlugins()
+void PluginLoaderWorker::reloadAllPlugins()
 {
     QMutexLocker locker(&lock);
 
     initializeLoading();
-    emit dispatchBackgroundInitialization();
+    Q_EMIT dispatchBackgroundInitialization();
+}
+
+void PluginLoaderWorker::loadRemainingPlugins()
+{
+    Q_EMIT dispatchBackgroundInitialization();
 }
 
 void PluginLoaderWorker::backgroundInitialization()
@@ -187,7 +193,7 @@ bool PluginLoaderWorker::loadNextPlugin()
     while (fileNames.isEmpty()) {
         if (pluginDirectories.isEmpty()) {
             allPluginsLoaded = true;
-            emit pluginsLoaded();
+            Q_EMIT pluginsLoaded();
             return false;
         }
         dir = QDir(pluginDirectories.takeFirst());
@@ -254,9 +260,14 @@ QMap<QString, QString> PluginLoader::pluginsWithErrors() const
     return pluginLoaderPrivate()->worker.pluginsWithErrors();
 }
 
-void PluginLoader::reloadPlugins()
+void PluginLoader::reloadAllPlugins()
 {
-    return pluginLoaderPrivate()->worker.reloadPlugins();
+    return pluginLoaderPrivate()->worker.reloadAllPlugins();
+}
+
+void PluginLoader::loadRemainingPlugins()
+{
+    return pluginLoaderPrivate()->worker.loadRemainingPlugins();
 }
 
 } // namespace igotu

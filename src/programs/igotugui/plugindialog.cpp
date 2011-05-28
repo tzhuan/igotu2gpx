@@ -151,7 +151,7 @@ void PluginDialogPrivate::on_refresh_clicked()
     Q_FOREACH (const QString &group, settings.childGroups())
         if (group.startsWith(QLatin1String("Qt Plugin Cache ")))
             settings.remove(group);
-    PluginLoader().reloadPlugins();
+    PluginLoader().reloadAllPlugins();
     scanPlugins();
 }
 

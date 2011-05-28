@@ -41,7 +41,8 @@ public:
     QMap<QString, QString> pluginsWithErrors() const;
 
 public Q_SLOTS:
-    void reloadPlugins();
+    void loadRemainingPlugins();
+    void reloadAllPlugins();
 
 Q_SIGNALS:
     void pluginsLoaded();

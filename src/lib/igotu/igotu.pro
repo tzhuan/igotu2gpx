@@ -37,7 +37,6 @@ HEADERS *= \
     paths.h \
     pch.h \
     pluginloader.h \
-    threadutils.h \
     utils.h \
     xmlutils.h \
 

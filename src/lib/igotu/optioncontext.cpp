@@ -210,7 +210,7 @@ QString OptionContext::formatDescription(const QString &description,
     QString result;
     QString descriptionText = description;
     bool newLine = true;
-    unsigned indent;
+    unsigned indent = 0;
     while (!descriptionText.isEmpty()) {
         if (newLine) {
             indentExpression.indexIn(descriptionText);

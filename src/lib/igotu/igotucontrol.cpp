@@ -24,7 +24,6 @@
 #include "igotudata.h"
 #include "igotupoints.h"
 #include "pluginloader.h"
-#include "threadutils.h"
 #include "utils.h"
 
 #include <QDir>
@@ -33,6 +32,7 @@
 #include <QSemaphore>
 #include <QSet>
 #include <QStringList>
+#include <QThread>
 
 namespace igotu
 {
@@ -113,7 +113,7 @@ public:
     QSemaphore semaphore;
     mutable QMutex cancelLock;
     bool cancel;
-    EventThread thread;
+    QThread thread;
     IgotuControlPrivateWorker worker;
     QString device;
     int utcOffset;

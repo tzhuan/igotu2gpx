@@ -16,7 +16,6 @@ SOURCES *= \
     plugindialog.cpp \
     preferencesdialog.cpp \
     updatenotification.cpp \
-    qticonloader.cpp \
 
 HEADERS *= \
     configurationdialog.h \
@@ -25,7 +24,6 @@ HEADERS *= \
     plugindialog.h \
     preferencesdialog.h \
     updatenotification.h \
-    qticonloader.h \
 
 FORMS *= \
     configurationdialog.ui \
