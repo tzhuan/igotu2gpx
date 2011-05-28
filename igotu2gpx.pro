@@ -40,16 +40,16 @@ QMAKE_EXTRA_TARGETS *= po
 pofiles = $$files(translations/*.po)
 tsfiles = $$files(translations/*.ts)
 for(pofile, pofiles) {
-    language = $$replace(pofile, '(.*)/(.*)\.po$', '\2')
-    tsfile = $$replace(pofile, '(.*)/(.*)\.po$', '\1/igotu2gpx_\2.ts')
-    qmfiles *= $$replace(tsfile, '\.ts$', '.qm')
+    language = $$replace(pofile, '(.*)/(.*)\\.po$', '\\2')
+    tsfile = $$replace(pofile, '(.*)/(.*)\\.po$', '\\1/igotu2gpx_\\2.ts')
+    qmfiles *= $$replace(tsfile, '\\.ts$', '.qm')
     poconvertcommand += lconvert $$pofile -o $$tsfile -of ts --target-language $$language;
     # Untranslated entries are not marked with fuzzy in the launchpad exports,
     # fiddle a bit with the xml output
     poconvertcommand += perl -0pi -e \'s!(<translation)(>\\s*(?:<numerusform></numerusform>\\s*)*</translation>)!\\1 type=\"unfinished\"\\2!g\' $$tsfile;
 }
 for(tsfile, tsfiles) {
-    qmfiles *= $$replace(tsfile, '\.ts$', '.qm')
+    qmfiles *= $$replace(tsfile, '\\.ts$', '.qm')
     win32:tsrelease += lrelease $$tsfile &&
 }
 win32 {
