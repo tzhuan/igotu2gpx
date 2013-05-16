@@ -25,6 +25,7 @@ defineTest(clebsFixupSubdirs) {
         SUBDIRS -= $$subdir
         subdir ~= s|/$||
         pro = $$basename(subdir)
+        !exists("$${subdir}/$${pro}.pro"):next()
         deps = $$fromfile("$$subdir/$${pro}.pro", "CLEBS")
         libs = $$clebsInternalLibDependencies($$deps)
         external = $$clebsExternalDependencies($$deps)
@@ -35,7 +36,7 @@ defineTest(clebsFixupSubdirs) {
             next()
         }
         !isEmpty(missingexternal) {
-            CLEBS_SUBDIRS += "$${subdir}-"
+            CLEBS_SUBDIRS += "$${subdir}+$${missingexternal}-"
             next()
         }
         CLEBS_SUBDIRS += "$${subdir}"
@@ -201,15 +202,15 @@ defineTest(clebsCheckDependencies) {
 
 defineTest(clebsPrintDependencies) {
     !isEmpty(2) {
-        message("------------------------------------")
+        message("----------------------------------------------")
         message("$$1 dependencies:")
-        message("------------------------------------")
+        message("----------------------------------------------")
         for(dep, 2) {
             found = "no"
             missing = $$clebsMissingDependencies($$dep)
             isEmpty(missing):found = "yes"
-            temp = "Looking for $$dep ________________"
-            temp ~= s/(.{31}).*/\\1: $$found/
+            temp = "Looking for $$dep __________________________"
+            temp ~= s/(.{41}).*/\\1: $$found/
             temp ~= s/_/ /
             message($$temp)
         }
@@ -218,16 +219,20 @@ defineTest(clebsPrintDependencies) {
 
 defineTest(clebsPrintSubdirs) {
     !isEmpty(1) {
-        message("------------------------------------")
+        message("----------------------------------------------")
         message("Build overview:")
-        message("------------------------------------")
+        message("----------------------------------------------")
         clear(oldpath)
         clear(indent)
         for(dir, 1) {
             build = "yes"
-            contains(dir, ".*-$"):build = "no"
+            contains(dir, ".*-$") {
+                missing = $$section(dir, '+', 1, 1)
+                missing ~= s/-$//
+                build = "no ($$missing)"
+            }
             contains(dir, ".*_$"):build = "disabled"
-            dir ~= s|[-_]$||
+            dir ~= s/([-_]|\\+.*)$//
             name = $$section(dir, '/', -1, -1)
             path = $$section(dir, '/', 0, -2)
             oldtemppath = $$oldpath
@@ -258,11 +263,11 @@ defineTest(clebsPrintSubdirs) {
 defineTest(clebsPrintSubdir) {
     dir = $$1
     build = $$2
-    temp = "$$dir ____________________________"
+    temp = "$$dir ______________________________________"
     isEmpty(build) {
-        temp ~= s/(.{31}).*/\\1/
+        temp ~= s/(.{41}).*/\\1/
     } else {
-        temp ~= s/(.{31}).*/\\1: $$build/
+        temp ~= s/(.{41}).*/\\1: $$build/
     }
     temp ~= s/_/ /
     message($$temp)
@@ -273,15 +278,16 @@ defineTest(clebsPrintSubdir) {
 # base dir as needed by the .pri files and localconfig.pri
 BASEDIR = $$PWD
 
-isEmpty(LOCALCONFIG):LOCALCONFIG = localconfig.pri
-exists($$LOCALCONFIG):include($$LOCALCONFIG)
-
-# Calculate the relative path to the .pro file
+# Calculate the relative path to the .pro file, relative base dir
 profile = $$_PRO_FILE_ # do not remove, _PRO_FILE_ needs to be copied
 !isEmpty(profile):PRORELPATH = $$_PRO_FILE_PWD_
 PRORELPATH ~= s|^/||
 pwdparts = $$split(PWD, '/')
 for(part, pwdparts):PRORELPATH = $$section(PRORELPATH, '/', 1)
+RELBASEDIR = $$replace(PRORELPATH, "[^/]+", "..")
+
+isEmpty(LOCALCONFIG):LOCALCONFIG = localconfig.pri
+exists($$LOCALCONFIG):include($$LOCALCONFIG)
 
 # Calculate the package name
 mainprofiles = $$files($$BASEDIR/*.pro)
@@ -302,17 +308,31 @@ CONFIG -= debug_and_release
 QT -= gui
 DEFINES += QT_NO_CAST_FROM_ASCII QT_NO_CAST_TO_ASCII
 
+android:DIRECTORY_PREFIX=android-
 CONFIG(release, debug|release) {
-    DESTDIR = $$PWD/bin/release
-    OBJECTS_DIR = $$PWD/.build/release/$$PRORELPATH
+    DESTDIR = $$PWD/bin/$${DIRECTORY_PREFIX}release
+    OBJECTS_DIR = $$PWD/.build/$${DIRECTORY_PREFIX}release/$$PRORELPATH
 } else {
-    DESTDIR = $$PWD/bin/debug
-    OBJECTS_DIR = $$PWD/.build/debug/$$PRORELPATH
+    DESTDIR = $$PWD/bin/$${DIRECTORY_PREFIX}debug
+    OBJECTS_DIR = $$PWD/.build/$${DIRECTORY_PREFIX}debug/$$PRORELPATH
 }
 MOC_DIR = $$OBJECTS_DIR/moc
 UI_DIR = $$OBJECTS_DIR/ui
 RCC_DIR = $$OBJECTS_DIR/rcc
-unix {
+android {
+    # Uses INSTALL_ROOT instead of PREFIXDIR because target path is hardcoded
+    isEmpty(CONFDIR):CONFDIR = /etc
+    isEmpty(DATADIR):DATADIR = /assets
+    isEmpty(DOCDIR):DOCDIR = /assets
+    isEmpty(APPDIR):APPDIR = /assets
+    isEmpty(MANDIR):MANDIR = /assets
+    isEmpty(TRANSLATIONDIR):TRANSLATIONDIR = /assets
+    isEmpty(ICONDIR):ICONDIR = /assets/icons
+    isEmpty(BINDIR):BINDIR = /libs/armeabi
+    isEmpty(LIBDIR):LIBDIR = /libs/armeabi
+    isEmpty(INCLUDEDIR):INCLUDEDIR = /assets/include
+    isEmpty(PLUGINDIR):PLUGINDIR = /libs/armeabi
+} else:unix {
     isEmpty(PREFIXDIR):PREFIXDIR = /usr/local
     isEmpty(CONFDIR):CONFDIR = /etc
     isEmpty(DATADIR):DATADIR = $$PREFIXDIR/share/$$PACKAGE
@@ -325,8 +345,7 @@ unix {
     isEmpty(LIBDIR):LIBDIR = $$PREFIXDIR/lib
     isEmpty(INCLUDEDIR):INCLUDEDIR = $$PREFIXDIR/include/$$PACKAGE
     isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIXDIR/lib/$$PACKAGE
-}
-win32 {
+} else:win32 {
     isEmpty(PREFIXDIR):PREFIXDIR = $${DESTDIR}-installed
     isEmpty(CONFDIR):CONFDIR = $$PREFIXDIR/etc
     isEmpty(DATADIR):DATADIR = $$PREFIXDIR/share
@@ -371,8 +390,10 @@ win32 {
     # Creates a console window so we see debug messages
     CONFIG(debug, debug|release):CONFIG += console
 
-    # STL iterators and fopen are unsafe, we know that
+    # STL iterators and fopen are unsafe
     DEFINES *= _SCL_SECURE_NO_WARNINGS _CRT_SECURE_NO_WARNINGS
+    # Template warnings
+    !win32-g++: QMAKE_CXXFLAGS += /wd4661
 
     # we want debugging symbol files (for visual studio)
     !win32-g++: QMAKE_CXXFLAGS += /Zi
@@ -384,17 +405,17 @@ win32 {
 clebsFixupSubdirs()
 !isEmpty(CLEBS_EXTERNALDEPS) {
     CONFIG(release, debug|release) {
-        message("------------------------------------")
+        message("----------------------------------------------")
         message("BUILDING IN RELEASE MODE")
     }
     clebsPrintDependencies("Required", $$clebsMandatoryDependencies($$CLEBS_EXTERNALDEPS))
     clebsPrintDependencies("Optional", $$clebsOptionalNormalDependencies($$CLEBS_EXTERNALDEPS))
     clebsCheckDependencies($$clebsMandatoryDependencies($$CLEBS_EXTERNALDEPS))
     clebsPrintSubdirs($$CLEBS_SUBDIRS)
-    message("------------------------------------")
+    message("----------------------------------------------")
     CONFIG(release, debug|release) {
         message("BUILDING IN RELEASE MODE")
-        message("------------------------------------")
+        message("----------------------------------------------")
     }
 }
 

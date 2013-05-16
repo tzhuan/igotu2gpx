@@ -23,11 +23,9 @@
 #include "trackvisualizer.h"
 
 #include <marble/MarbleDirs.h>
-#include <marble/MarbleWidget.h>
-
-#ifdef MARBLE_VERSION
 #include <marble/MarbleMap.h>
-#endif
+#include <marble/MarbleModel.h>
+#include <marble/MarbleWidget.h>
 
 #include <QDir>
 #include <QTemporaryFile>
@@ -111,17 +109,10 @@ void MarbleVisualizer::initMarble()
 
     verticalLayout->addWidget(tracks);
 
-#if defined(MARBLE_VERSION)
-#if MARBLE_VERSION < 0x000800
-    // This is a hack to get a HttpDownloadManager instance from MarbleMap
-    // because we can't instantiate it ourselves
-    tracks->map()->setDownloadUrl(QUrl());
-#endif
-//    tracks->map()->setProjection(Mercator);
+    tracks->setProjection(Mercator);
     tracks->setMapThemeId(QLatin1String
             ("earth/openstreetmap/openstreetmap.dgml"));
     // TODO: disable plugins that are not used (wikipedia)
-#endif
 }
 
 void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points,
@@ -158,11 +149,7 @@ void MarbleVisualizer::setTracks(const igotu::IgotuPoints &points,
     }
     kmlFile->write(pointsToKml(trackPoints, false));
     kmlFile->flush();
-#if MARBLE_VERSION < 0x000800
-    tracks->addPlaceMarkFile(kmlFile->fileName());
-#else
-    tracks->addPlacemarkFile(kmlFile->fileName());
-#endif
+    tracks->model()->addGeoDataFile(kmlFile->fileName());
     if (!trackPoints.isEmpty()) {
         highlightTrack(trackPoints.at(0));
     } else if (restoreView) {

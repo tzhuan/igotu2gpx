@@ -24,9 +24,10 @@
 #ifdef Q_OS_WIN32
 #include <windows.h>
 #else
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
 #include <termios.h>
+#include <unistd.h>
 #endif
 
 #include <QCoreApplication>
