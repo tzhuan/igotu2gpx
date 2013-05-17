@@ -2,12 +2,8 @@ CLEBS *= igotu
 TARGET = igotu2gpx
 include(../../../clebs.pri)
 
-SOURCES *= \
-    igotu2gpx.cpp \
-    mainobject.cpp \
-
-HEADERS *= \
-    mainobject.h \
+SOURCES *= $$files(*.cpp)
+HEADERS *= $$files(*.h)
 
 manual.files = igotu2gpx.1
 manual.path = $$MANDIR/man1

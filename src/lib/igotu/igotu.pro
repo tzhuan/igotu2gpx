@@ -5,40 +5,8 @@ include(../../../clebs.pri)
 
 DEFINES *= IGOTU_MAKEDLL
 
-SOURCES *= \
-    commands.cpp \
-    igotucommand.cpp \
-    igotuconfig.cpp \
-    igotucontrol.cpp \
-    igotudata.cpp \
-    igotupoints.cpp \
-    messages.cpp \
-    optioncontext.cpp \
-    optionparser.cpp \
-    paths.cpp \
-    pluginloader.cpp \
-    utils.cpp \
-    xmlutils.cpp \
-
-HEADERS *= \
-    commands.h \
-    dataconnection.h \
-    exception.h \
-    fileexporter.h \
-    global.h \
-    igotucommand.h \
-    igotuconfig.h \
-    igotucontrol.h \
-    igotudata.h \
-    igotupoints.h \
-    messages.h \
-    optioncontext.cpp \
-    optionparser.cpp \
-    paths.h \
-    pch.h \
-    pluginloader.h \
-    utils.h \
-    xmlutils.h \
+SOURCES *= $$files(*.cpp)
+HEADERS *= $$files(*.h)
 
 unix:ctags.commands  = echo !_TAG_FILE_FORMAT 2 dummy > $$BASEDIR/tags;
 unix:ctags.commands += echo !_TAG_FILE_SORTED 1 dummy >> $$BASEDIR/tags;

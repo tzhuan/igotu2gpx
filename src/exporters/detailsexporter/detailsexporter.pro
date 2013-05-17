@@ -2,5 +2,5 @@ CLEBS *= buildplugin fileexporter igotu
 TARGET = detailsexporter
 include(../../../clebs.pri)
 
-SOURCES *= detailsexporter.cpp
+SOURCES *= $$files(*.cpp)
 

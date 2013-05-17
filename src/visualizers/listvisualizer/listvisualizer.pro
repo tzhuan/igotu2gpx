@@ -4,4 +4,4 @@ include(../../../clebs.pri)
 
 QT *= gui
 
-SOURCES *= listvisualizer.cpp
+SOURCES *= $$files(*.cpp)
