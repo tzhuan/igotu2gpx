@@ -1,17 +1,11 @@
 SUBDIRS = \
-    src/exporters/kmlexporter \
-    src/exporters/rawexporter \
-    src/exporters/gpxexporter \
-    src/exporters/detailsexporter \
+    $$files(src/exporters/*) \
+    $$files(src/connections/*) \
+    $$files(src/visualizers/*) \
+    $$files(src/programs/*) \
     src/tests \
-    src/connections/libusbconnection \
-    src/connections/libusb10connection \
-    src/connections/serialconnection \
-    src/visualizers/listvisualizer \
-    src/visualizers/marblevisualizer \
-    src/programs/igotu2gpx \
-    src/programs/igotugui \
     src/lib/igotu \
+    data \
 
 include(clebs.pri)
 
