@@ -26,6 +26,7 @@
 #include <marble/MarbleMap.h>
 #include <marble/MarbleModel.h>
 #include <marble/MarbleWidget.h>
+#include <marble/RenderPlugin.h>
 
 #include <QDir>
 #include <QTemporaryFile>
@@ -112,6 +113,8 @@ void MarbleVisualizer::initMarble()
     tracks->setProjection(Mercator);
     tracks->setMapThemeId(QLatin1String
             ("earth/openstreetmap/openstreetmap.dgml"));
+    tracks->setShowGrid(false);
+    tracks->goHome(Instant);
     // TODO: disable plugins that are not used (wikipedia)
 }
 
