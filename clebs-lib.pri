@@ -320,7 +320,7 @@ MOC_DIR = $$OBJECTS_DIR/moc
 UI_DIR = $$OBJECTS_DIR/ui
 RCC_DIR = $$OBJECTS_DIR/rcc
 android {
-    # Uses INSTALL_ROOT instead of PREFIXDIR because target path is hardcoded
+    # Uses INSTALL_ROOT instead of PREFIX because target path is hardcoded
     isEmpty(CONFDIR):CONFDIR = /etc
     isEmpty(DATADIR):DATADIR = /assets
     isEmpty(DOCDIR):DOCDIR = /assets
@@ -333,30 +333,30 @@ android {
     isEmpty(INCLUDEDIR):INCLUDEDIR = /assets/include
     isEmpty(PLUGINDIR):PLUGINDIR = /libs/armeabi
 } else:unix {
-    isEmpty(PREFIXDIR):PREFIXDIR = /usr/local
+    isEmpty(PREFIX):PREFIX = /usr/local
     isEmpty(CONFDIR):CONFDIR = /etc
-    isEmpty(DATADIR):DATADIR = $$PREFIXDIR/share/$$PACKAGE
-    isEmpty(DOCDIR):DOCDIR = $$PREFIXDIR/share/doc/$$PACKAGE
-    isEmpty(APPDIR):APPDIR = $$PREFIXDIR/share/applications
-    isEmpty(MANDIR):MANDIR = $$PREFIXDIR/share/man
-    isEmpty(TRANSLATIONDIR):TRANSLATIONDIR = $$PREFIXDIR/share/locale
-    isEmpty(ICONDIR):ICONDIR = $$PREFIXDIR/share/icons/hicolor
-    isEmpty(BINDIR):BINDIR = $$PREFIXDIR/bin
-    isEmpty(LIBDIR):LIBDIR = $$PREFIXDIR/lib
-    isEmpty(INCLUDEDIR):INCLUDEDIR = $$PREFIXDIR/include/$$PACKAGE
-    isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIXDIR/lib/$$PACKAGE
+    isEmpty(DATADIR):DATADIR = $$PREFIX/share/$$PACKAGE
+    isEmpty(DOCDIR):DOCDIR = $$PREFIX/share/doc/$$PACKAGE
+    isEmpty(APPDIR):APPDIR = $$PREFIX/share/applications
+    isEmpty(MANDIR):MANDIR = $$PREFIX/share/man
+    isEmpty(TRANSLATIONDIR):TRANSLATIONDIR = $$PREFIX/share/locale
+    isEmpty(ICONDIR):ICONDIR = $$PREFIX/share/icons/hicolor
+    isEmpty(BINDIR):BINDIR = $$PREFIX/bin
+    isEmpty(LIBDIR):LIBDIR = $$PREFIX/lib
+    isEmpty(INCLUDEDIR):INCLUDEDIR = $$PREFIX/include/$$PACKAGE
+    isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIX/lib/$$PACKAGE
 } else:win32 {
-    isEmpty(PREFIXDIR):PREFIXDIR = $${DESTDIR}-installed
-    isEmpty(CONFDIR):CONFDIR = $$PREFIXDIR/etc
-    isEmpty(DATADIR):DATADIR = $$PREFIXDIR/share
-    isEmpty(DOCDIR):DOCDIR = $$PREFIXDIR/doc
-    isEmpty(MANDIR):MANDIR = $$PREFIXDIR/share
-    isEmpty(TRANSLATIONDIR):TRANSLATIONDIR = $$PREFIXDIR/locale
-    isEmpty(ICONDIR):ICONDIR = $$PREFIXDIR/icons
-    isEmpty(BINDIR):BINDIR = $$PREFIXDIR/bin
-    isEmpty(LIBDIR):LIBDIR = $$PREFIXDIR/bin
+    isEmpty(PREFIX):PREFIX = $${DESTDIR}-installed
+    isEmpty(CONFDIR):CONFDIR = $$PREFIX/etc
+    isEmpty(DATADIR):DATADIR = $$PREFIX/share
+    isEmpty(DOCDIR):DOCDIR = $$PREFIX/doc
+    isEmpty(MANDIR):MANDIR = $$PREFIX/share
+    isEmpty(TRANSLATIONDIR):TRANSLATIONDIR = $$PREFIX/locale
+    isEmpty(ICONDIR):ICONDIR = $$PREFIX/icons
+    isEmpty(BINDIR):BINDIR = $$PREFIX/bin
+    isEmpty(LIBDIR):LIBDIR = $$PREFIX/bin
     # the same as the executables so that SxS dlls also work for plugins
-    isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIXDIR/bin
+    isEmpty(PLUGINDIR):PLUGINDIR = $$PREFIX/bin
 }
 
 # Programs may need internal libraries...
