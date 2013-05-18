@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2007  Michael Hofmann <mh21@piware.de>                       *
+ * Copyright (C) 2007  Michael Hofmann <mh21@mh21.de>                         *
  * Portions Copyright (C) 1992-2007 Trolltech ASA.                            *
  *                                                                            *
  * This program is free software; you can redistribute it and/or modify       *

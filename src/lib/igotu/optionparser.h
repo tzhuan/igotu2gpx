@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (C) 2010  Michael Hofmann <mh21@piware.de>                       *
+ * Copyright (C) 2010  Michael Hofmann <mh21@mh21.de>                         *
  *                                                                            *
  * Based on Java port of getOpt() by Aaron M. Renn <arenn@urbanophile.com>.   *
  *                                                                            *

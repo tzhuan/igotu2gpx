@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 ###############################################################################
-# Copyright (C) 2010  Michael Hofmann <mh21@piware.de>                        #
+# Copyright (C) 2010  Michael Hofmann <mh21@mh21.de>                          #
 #                                                                             #
 # This program is free software; you can redistribute it and/or modify        #
 # it under the terms of the GNU General Public License as published by        #

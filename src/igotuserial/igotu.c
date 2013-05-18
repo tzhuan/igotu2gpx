@@ -1,7 +1,7 @@
 /*
  * Mobileaction i-gotU Travel Logger Serial USB driver
  *
- * Copyright (C) 2009 Michael Hofmann <mh21@piware.de>
+ * Copyright (C) 2009 Michael Hofmann <mh21@mh21.de>  
  *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
