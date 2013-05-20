@@ -215,11 +215,6 @@ void UpdateNotificationPrivate::requestReleases(const QString &os)
     RETURN_IF_FAIL(url.scheme().toLower() == QLatin1String("https") ||
                    url.scheme().toLower() == QLatin1String("http"));
 
-    // SSL certificate validation crashes on Ubuntu 8.04
-#if QT_VERSION < 0x040400
-    url.setScheme(QLatin1String("http"));
-#endif
-
     url.addQueryItem(QLatin1String("os"), os);
     url.addQueryItem(QLatin1String("version"), QLatin1String(IGOTU_VERSION_STR));
     url.addQueryItem(QLatin1String("uuid"), uuid());

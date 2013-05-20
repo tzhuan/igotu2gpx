@@ -45,9 +45,8 @@ int main(int argc, char *argv[])
     app.setOrganizationName(QLatin1String("mh21.de"));
     app.setOrganizationDomain(QLatin1String("mh21.de"));
     app.setWindowIcon(IconStorage::get(IconStorage::GuiIcon));
-#if defined(Q_OS_MAC) && QT_VERSION >= 0x040400
+    // clean menus
     app.setAttribute(Qt::AA_DontShowIconsInMenus);
-#endif
 
     QTranslator qtTranslator;
     qtTranslator.load(QLatin1String("qt_" )+ QLocale::system().name(),

@@ -451,9 +451,7 @@ MainWindow::MainWindow() :
     d->ui.reset(new Ui::MainWindow);
     d->ui->setupUi(this);
 
-#if QT_VERSION >= 0x040600
     setToolButtonStyle(Qt::ToolButtonFollowStyle);
-#endif
 
     d->ui->actionReload->setIcon
         (IconStorage::get(IconStorage::ReloadIcon));
